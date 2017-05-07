@@ -1,7 +1,7 @@
 from astropy.io import fits, ascii
 from astropy.table import Table, vstack, Column
 import numpy as np
-import spectra_stacking as ss
+import library as lib
 
 
 # Loading zcat files
@@ -39,7 +39,7 @@ for nm, new_nm in zip(colnames, new_names):
 
 
 #Replacing duplicate id's
-ID = ss.duplicates(zcat['id'])
+ID = lib.duplicates(zcat['id'])
 zcat.remove_column('id')
 zcat.add_column(Column(ID, name='id'), 0) 
 
@@ -60,15 +60,17 @@ colnames = zcat.colnames
 fluxes = [ii for ii in xrange(len(colnames)) if 'err' not in colnames[ii]][2:]
 errs = [ii for ii in xrange(len(colnames)) if 'err' in colnames[ii]]
 for ff, ee in zip(fluxes, errs):
-    w_data = np.where(zcat[colnames[ff]] >= 0)[0]                      #avoiding -9999.0
-    m_col = zcat[colnames[ff]][w_data]
-    del_m = zcat[colnames[ee]][w_data]
+	w_data = np.where(zcat[colnames[ff]] >= 0)[0]                      #avoiding -9999.0
+	m_col = zcat[colnames[ff]][w_data]
+	del_m = zcat[colnames[ee]][w_data]
+	
+	flux = 10**(-0.4*(m_col-23.9))                                     #arbitrary unit to microJy
+	pos = 10**(-0.4*(m_col-delm-23.9)) - flux
+	neg = flux - 10**(-0.4*(m_col+delm-23.9))
+	err = np.mean(pos,neg)
+	zcat[colnames[ff]][w_data] = flux/1000                                   #microJy to mJy
     
-    flux = 10**(-0.4*(m_col-23.9))                                     #arbitrary unit to microJy
-    pos = 10**(-0.4*(zcat[colnames[col]][w_data]-delm-23.9)-flux
-    zcat[col][w_data] = new_col/1000                                   #microJy to mJy
-    
-for col in errs:
+def sadalk():
     
 
 print 'Table conversion completed'
