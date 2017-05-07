@@ -1,5 +1,6 @@
 from astropy.io import fits, ascii
 from astropy.table import Table, vstack, Column
+import pdb
 import numpy as np
 import library as lib
 
@@ -65,17 +66,18 @@ for ff, ee in zip(fluxes, errs):
 	del_m = zcat[colnames[ee]][w_data]
 	
 	flux = 10**(-0.4*(m_col-23.9))                                     #arbitrary unit to microJy
-	pos = 10**(-0.4*(m_col-delm-23.9)) - flux
-	neg = flux - 10**(-0.4*(m_col+delm-23.9))
-	err = np.mean(pos,neg)
+	pos = 10**(-0.4*(m_col-del_m-23.9)) - flux
+	neg = flux - 10**(-0.4*(m_col+del_m-23.9))
+	err = (pos + neg)/2.
 	zcat[colnames[ff]][w_data] = flux/1000                                   #microJy to mJy
+	zcat[colnames[ee]][w_data] = err/1000
+	#pdb.set_trace()
     
-def sadalk():
     
 
 print 'Table conversion completed'
 
-ascii.write(zcat, 'stacked_deep_fields.mag', format = 'commented_header')
+ascii.write(zcat, '../magfiles/deep_fields.mag', format = 'commented_header')
 print 'wrote original file'
-ascii.write(zcat[0:30], 'stacked_deep_fields_sh.mag', format = 'commented_header')
+ascii.write(zcat[0:30], '../magfiles/deep_fields_sh.mag', format = 'commented_header')
 print 'wrote short file'
