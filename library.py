@@ -1,4 +1,5 @@
 from astropy.io import fits, ascii
+from astropy.table import Table
 from collections import Counter
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,7 +9,7 @@ import glob, pdb, string
 
 
 
-def stack_spectra(fname, plot = False, section = False):
+def stack_spectra(fname, plot = False, indices = 'placeholder'):
     hdu = fits.open(fname)
     temp1 = fname.split('/')
     temp2 = temp1[1].split('.')
@@ -16,10 +17,10 @@ def stack_spectra(fname, plot = False, section = False):
     image = hdu[0].data
     header = hdu[0].header
     wavelen = header["CRVAL1"] + np.array(header["CDELT1"])*range(header['NAXIS1'])
-    if (section == False):
+    if (indices == 'placeholder'):
         flux = np.mean(image, axis = 0)
     else:
-        flux = np.mean(image[section[0]:section[1]], axis = 0)
+        flux = np.mean(image[indices], axis = 0)
     if plot == True:
         plt.plot(wavelen, flux)
         plt.xlabel("Wavelength")
@@ -37,12 +38,16 @@ def stack_spectra(fname, plot = False, section = False):
 
 
 
-def binning(x, y, bin_pts, spectra_plot = False, filename = False):
+def binning(temp_x, y, bin_pts, spectra_plot = False, filename = False):
     """
-    x = quantity to be divided into bins [must be sorted]
-    y = quantity that falls into the bins [must be sorted]
+    temp_x = quantity to be divided into bins [must NOT be sorted]
+    y = quantity that falls into the bins
     bin_pts = Number of points in each bin
     """
+    
+    x = np.sort(temp_x)
+    ind = np.argsort(temp_x)
+    
     start = 0
     bin_start = x[start]
     bin_edge = []
@@ -53,35 +58,37 @@ def binning(x, y, bin_pts, spectra_plot = False, filename = False):
     count = 0
     while (bin_start < x[-1]):
         stop = start + bin_pts
-        if (stop < len(x)):
-            count += 1
-            bin_stop = x[stop]
-            dist = len(y[start:stop])
-            distribution.append(dist)
-            bin_edge.append(bin_start)
-            bin_size.append((bin_stop - bin_start))
-            if filename != False:
-                _, flx, wave = stack_spectra(filename, section = [start, stop])
-                flux.append(flx)
-                wavelength.append(wave)
-            start, bin_start = stop, bin_stop
-        else:
-            break
+        if (stop > len(x)):
+            stop = len(x) - 1
+        count += 1
+        bin_stop = x[stop]
+        dist = len(y[start:stop])
+        distribution.append(dist)
+        bin_edge.append(bin_start)
+        bin_size.append((bin_stop - bin_start))
+        if filename != False:
+            _, flx, wave = stack_spectra(filename, indices = ind[start:stop])
+            flux.append(flx)
+            wavelength.append(wave)
+        start, bin_start = stop, bin_stop
     
     if (spectra_plot == True):
         for i in range(count):
             plt.subplot(count/2, 2, i+1)
             plt.plot(wavelength[i], flux[i])
+            plt.ylim(-0.2e-17, 2.0e-17)
+            plt.axvline(x=5007, color='k', linestyle = 'dashed')
+            plt.axvline(x=4363, color='r', linestyle = 'dashed')
     else:
         plt.bar(bin_edge, distribution, align = 'edge', width = bin_size)
         
-    return distribution, bin_edge
+    return distribution, bin_edge, flux
 
 
 
 
 
-def gen_hist(fname, hist): 
+def gen_hist(fname, hist, nbins = 10): 
 
 #hist options: mass, chi2
 
@@ -89,16 +96,14 @@ def gen_hist(fname, hist):
 
     if hist == 'mass':
         mass = result['best.stellar.m_star']
-        ind = np.where(np.isfinite(mass) == True)[0]
-        plt.hist(np.log10(mass[ind]))
+        ind = np.where((np.isfinite(mass) == True) & (mass>0))[0]
+        plt.hist(np.log10(mass[ind]), bins = nbins)
         plt.title('Distribution of stellar mass')
-        plt.show()
         
     if hist == 'chi2':
         chi2 = result['best.reduced_chi_square']
         ind = np.where(np.isfinite(chi2) == True)[0]
         plt.hist(np.log10(chi2[ind]))
-        plt.show()
 
 
 
