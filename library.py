@@ -38,15 +38,18 @@ def stack_spectra(fname, plot = False, indices = 'placeholder'):
 
 
 
-def binning(temp_x, y, bin_pts, spectra_plot = False, filename = False):
+def binning(temp_x, bin_pts, spectra_plot = False, filename = False):
     """
     temp_x = quantity to be divided into bins [must NOT be sorted]
-    y = quantity that falls into the bins
     bin_pts = Number of points in each bin
     """
     
-    x = np.sort(temp_x)
-    ind = np.argsort(temp_x)
+    temp_x1 = np.sort(temp_x)
+    temp_ind = np.argsort(temp_x)
+    temp_ind1 = np.where((np.isfinite(temp_x1)==True) & (temp_x1>0) & (temp_x1 < 1e13))[0]
+    x = np.log10(temp_x1[temp_ind1])
+    ind = temp_ind[temp_ind1]
+    y = range(len(x))
     
     start = 0
     bin_start = x[start]
