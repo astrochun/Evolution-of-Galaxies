@@ -137,10 +137,10 @@ def duplicates(column):
     keys    = np.array(counts.keys())
     for ii in xrange(len(idx_dup)):
         s = keys[idx_dup[ii]]
-        print ii, s
+        print(ii, s)
         t_dup = [cc for cc in xrange(len(col)) if s in col[cc]]
         suffix0 = list(string.ascii_lowercase[0:len(t_dup)])
         for ind,suffix in zip(t_dup,suffix0):
             col[ind] = s + suffix
-            print ii, s, 'converted to', col[ind] 
+            print(ii, s, 'converted to', col[ind])
     return np.array(col)
