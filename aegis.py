@@ -15,7 +15,7 @@ all_line = Table(fits.getdata('../DEEP2/DEEP2_Field1_all_line_fit.cat.fits'))
 aegis_crd = crd.SkyCoord(ra = aegis['ra']*u.degree, dec = aegis['dec']*u.degree)
 zcat_crd = crd.SkyCoord(ra = zcat['RA_DEEP']*u.degree, dec = zcat['DEC_DEEP']*u.degree)
 indexa, indexz, d2d, d3d = zcat_crd.search_around_sky(aegis_crd, 1*u.arcsec)
-print 'aeigs length', len(indexa), 'zcat length', len(indexz)
+print('aeigs length', len(indexa), 'zcat length', len(indexz))
 
 
 #making a table with objno (zcat), id (aegis) & redshift (all_line)
@@ -44,7 +44,7 @@ for a,b in zip(names, new_names):
 
 
 #converting flux to mJy
-print field1.colnames
+print(field1.colnames)
 for col in new_names:
     w_data = np.where(field1[col] >= 0)[0]                      #avoiding -9999
     new_col = field1[col][w_data]*(10**-0.44)       #arbitrary units to microJy
@@ -56,5 +56,5 @@ for col in new_names:
 
 
 ascii.write(field1, '../magfiles/aegis5.1_deep2_crossmatch.mag', format = 'commented_header')
-print 'completed writing the mag file. Length:', len(field1)
+print('completed writing the mag file. Length:', len(field1))
 
