@@ -4,6 +4,7 @@ import pdb
 import numpy as np
 import library as lib
 
+from getpass import getuser
 
 # Loading zcat files
 zcat1 = Table(fits.getdata('../DEEP2/DEEP2_Field1_zcat_ext.fits'))
@@ -75,9 +76,9 @@ for ff, ee in zip(fluxes, errs):
     
     
 
-print 'Table conversion completed'
+print('Table conversion completed')
 
 ascii.write(zcat, '../magfiles/deep_fields.mag', format = 'commented_header')
-print 'wrote original file'
+print('wrote original file')
 ascii.write(zcat[0:30], '../magfiles/deep_fields_sh.mag', format = 'commented_header')
-print 'wrote short file'
+print('wrote short file')
