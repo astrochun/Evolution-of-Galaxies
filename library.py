@@ -132,13 +132,13 @@ def duplicates(column):
 def duplicates(column):
     col = [str(a) for a in column.data]
     counts  = Counter(col)
-    N       = np.array(counts.values())
+    N       = np.array(list(counts.values()))
     idx_dup = np.where(N > 1)[0]
-    keys    = np.array(counts.keys())
-    for ii in xrange(len(idx_dup)):
+    keys    = np.array(list(counts.keys()))
+    for ii in range(len(idx_dup)):
         s = keys[idx_dup[ii]]
         print(ii, s)
-        t_dup = [cc for cc in xrange(len(col)) if s in col[cc]]
+        t_dup = [cc for cc in range(len(col)) if s in col[cc]]
         suffix0 = list(string.ascii_lowercase[0:len(t_dup)])
         for ind,suffix in zip(t_dup,suffix0):
             col[ind] = s + suffix
