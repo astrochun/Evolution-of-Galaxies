@@ -5,19 +5,26 @@ import numpy as np
 import library as lib
 
 from getpass import getuser
+if getuser() == 'carol':
+    path = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
+    path2 = path
+else: 
+    path = "../DEEP2/"
+    path2 = "../"
+print(path)
 
 # Loading zcat files
-zcat1 = Table(fits.getdata('../DEEP2/DEEP2_Field1_zcat_ext.fits'))
-zcat2 = Table(fits.getdata('../DEEP2/DEEP2_Field2_zcat_ext.fits'))
-zcat3 = Table(fits.getdata('../DEEP2/DEEP2_Field3_zcat_ext.fits'))
-zcat4 = Table(fits.getdata('../DEEP2/DEEP2_Field4_zcat_ext.fits'))
+zcat1 = Table(fits.getdata(path + 'DEEP2_Field1_zcat_ext.fits'))
+zcat2 = Table(fits.getdata(path + 'DEEP2_Field2_zcat_ext.fits'))
+zcat3 = Table(fits.getdata(path + 'DEEP2_Field3_zcat_ext.fits'))
+zcat4 = Table(fits.getdata(path + 'DEEP2_Field4_zcat_ext.fits'))
 
 
 # Loading all_line files
-all_line1 = Table(fits.getdata('../DEEP2/DEEP2_Field1_all_line_fit.cat.fits'))
-all_line2 = Table(fits.getdata('../DEEP2/DEEP2_Field2_all_line_fit.cat.fits'))
-all_line3 = Table(fits.getdata('../DEEP2/DEEP2_Field3_all_line_fit.cat.fits'))
-all_line4 = Table(fits.getdata('../DEEP2/DEEP2_Field4_all_line_fit.cat.fits'))
+all_line1 = Table(fits.getdata(path + 'DEEP2_Field1_all_line_fit.cat.fits'))
+all_line2 = Table(fits.getdata(path + 'DEEP2_Field2_all_line_fit.cat.fits'))
+all_line3 = Table(fits.getdata(path + 'DEEP2_Field3_all_line_fit.cat.fits'))
+all_line4 = Table(fits.getdata(path + 'DEEP2_Field4_all_line_fit.cat.fits'))
 
 
 # Creating 1 table of each for easier cross-matching
@@ -78,7 +85,7 @@ for ff, ee in zip(fluxes, errs):
 
 print('Table conversion completed')
 
-ascii.write(zcat, '../magfiles/deep_fields.mag', format = 'commented_header')
+ascii.write(zcat, path2 + 'magfiles/deep_fields.mag', format = 'commented_header')
 print('wrote original file')
-ascii.write(zcat[0:30], '../magfiles/deep_fields_sh.mag', format = 'commented_header')
+ascii.write(zcat[0:30], path2 + 'magfiles/deep_fields_sh.mag', format = 'commented_header')
 print('wrote short file')
