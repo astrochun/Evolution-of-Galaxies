@@ -54,7 +54,7 @@ zcat.add_column(Column(ID, name='id'), 0)
 
 
 # Differentiating between sloan & cfht ugriz
-sdss_ind = [ii for ii in xrange(len(zcat)) if 'SDSS' in zcat['source'][ii]]
+sdss_ind = [ii for ii in range(len(zcat)) if 'SDSS' in zcat['source'][ii]]
 for a, b in zip(new_names[19:29], new_names[8:18]):
     # a = SDSS ugriz and their errors
     # b = CFHT ugriz and their errors
@@ -66,8 +66,8 @@ zcat.remove_column('source')
 
 # Converting flux to mJy
 colnames = zcat.colnames
-fluxes = [ii for ii in xrange(len(colnames)) if 'err' not in colnames[ii]][2:]
-errs = [ii for ii in xrange(len(colnames)) if 'err' in colnames[ii]]
+fluxes = [ii for ii in range(len(colnames)) if 'err' not in colnames[ii]][2:]
+errs = [ii for ii in range(len(colnames)) if 'err' in colnames[ii]]
 for ff, ee in zip(fluxes, errs):
 	w_data = np.where(zcat[colnames[ff]] >= 0)[0]                      #avoiding -9999.0
 	m_col = zcat[colnames[ff]][w_data]
@@ -85,7 +85,7 @@ for ff, ee in zip(fluxes, errs):
 
 print('Table conversion completed')
 
-ascii.write(zcat, path2 + 'magfiles/deep_fields.mag', format = 'commented_header')
+ascii.write(zcat, path2 + 'magfiles/deep_fields.mag', format = 'commented_header', overwrite = True)
 print('wrote original file')
-ascii.write(zcat[0:30], path2 + 'magfiles/deep_fields_sh.mag', format = 'commented_header')
+ascii.write(zcat[0:30], path2 + 'magfiles/deep_fields_sh.mag', format = 'commented_header', overwrite = True)
 print('wrote short file')
