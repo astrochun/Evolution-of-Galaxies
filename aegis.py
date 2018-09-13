@@ -4,11 +4,19 @@ import astropy.units as u
 import astropy.coordinates as crd
 import numpy as np
 
+from getpass import getuser
+if getuser() == 'carol':
+    path = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
+    path2 = path
+else:
+    path = "../DEEP2/"
+    path2 = "../"    
+
 
 #loading catalogs
-aegis = Table(ascii.read('../DEEP2/aegis-n2.deblend.v5.1.cat'))
-zcat = Table(fits.getdata('../DEEP2/DEEP2_Field1_zcat_ext.fits'))
-all_line = Table(fits.getdata('../DEEP2/DEEP2_Field1_all_line_fit.cat.fits'))
+aegis = Table(ascii.read(path + 'aegis-n2.deblend.v5.1.cat'))
+zcat = Table(fits.getdata(path + 'DEEP2_Field1_zcat_ext.fits'))
+all_line = Table(fits.getdata(path + 'DEEP2_Field1_all_line_fit.cat.fits'))
 
 
 #cross matching coordinates
@@ -24,7 +32,7 @@ obj = Column(zcat[indexz]['OBJNO'])
 redshift = Column(all_line[indexz]['ZBEST'])
 field1.add_column(obj, index = 0)
 field1.add_column(redshift, index = 2)
-ascii.write(field1, '../magfiles/aegis_objno_id.mag', format = 'commented_header')
+ascii.write(field1, path2 + 'magfiles/aegis_objno_id.mag', format = 'commented_header')
 
 
 #deleting unnecessary columns
@@ -55,6 +63,6 @@ for col in new_names:
     field1[col+'_err'][w_data_err] = new_err/1000
 
 
-ascii.write(field1, '../magfiles/aegis5.1_deep2_crossmatch.mag', format = 'commented_header')
+ascii.write(field1, path2 + 'magfiles/aegis5.1_deep2_crossmatch.mag', format = 'commented_header')
 print('completed writing the mag file. Length:', len(field1))
 
