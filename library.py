@@ -57,8 +57,9 @@ def binning(temp_x, bin_pts, mname = '', spectra_plot = False, filename = False)
     temp_ind = np.argsort(temp_x)
     temp_ind1 = np.where((np.isfinite(temp_x1)==True) & (temp_x1>0) & (temp_x1 < 1e13))[0]
     x = np.log10(temp_x1[temp_ind1])
+    #print(x)
     ind = temp_ind[temp_ind1]
-    print(len(x))
+    #print(len(x))
     y = range(len(x))
     
     start = 0
@@ -69,9 +70,11 @@ def binning(temp_x, bin_pts, mname = '', spectra_plot = False, filename = False)
     flux = []
     wavelength = []
     count = 0
+    
+    N = []
     while (bin_start < x[-1]):
         stop = start + bin_pts
-        if (stop > len(x)):
+        if ((stop + bin_pts) > len(x)):
             stop = len(x) - 1
         count += 1
         bin_stop = x[stop]
@@ -85,6 +88,7 @@ def binning(temp_x, bin_pts, mname = '', spectra_plot = False, filename = False)
             _, flx, wave = stack_spectra(filename, mname, indices = ind[start:stop])
             flux.append(flx)
             wavelength.append(wave)
+        N.append(len(ind[start:stop]))
         start, bin_start = stop, bin_stop
     
     if (spectra_plot == True):
@@ -95,6 +99,9 @@ def binning(temp_x, bin_pts, mname = '', spectra_plot = False, filename = False)
             plt.xlim(4700,5100)
             plt.axvline(x=5007, color='k', linestyle = 'dashed', alpha=0.5)
             plt.axvline(x=4363, color='r', linestyle = 'dashed', alpha=0.5)
+            plt.suptitle(str(i))
+            plt.annotate('N = '+str(N[i]), [0.05,0.95], xycoords='axes fraction',
+                         ha='left', va='top')
     else:
         plt.bar(bin_edge, distribution, align = 'edge', width = bin_size)
         
