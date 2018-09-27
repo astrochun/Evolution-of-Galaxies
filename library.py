@@ -46,7 +46,8 @@ def stack_spectra(fname, mname='', plot = False, indices = 'placeholder'):
 
 
 
-def binning(temp_x, bin_pts, mname = '', spectra_plot = False, filename = False):
+def binning(temp_x, bin_pts, mname = '', bin_array_file = '', spectra_plot = False,
+            filename = False):
     """
     temp_x = quantity to be divided into bins [must NOT be sorted]
     bin_pts = Number of points in each bin
@@ -89,6 +90,8 @@ def binning(temp_x, bin_pts, mname = '', spectra_plot = False, filename = False)
             flux.append(flx)
             wavelength.append(wave)
         N.append(len(ind[start:stop]))
+        if bin_array_file != '':
+            np.savez(bin_array_file+'_'+str(count)+'.npz', indices=ind[start:stop])
         start, bin_start = stop, bin_stop
     
     if (spectra_plot == True):
