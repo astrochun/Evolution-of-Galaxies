@@ -63,4 +63,6 @@ def stack_check(fname, bin_array_file, out_pdf, mname=''):
     
     fig, ax = plt.subplots()
     ax.hist(sigma_array, bins=50)
+    extreme_sigma = [indices[ii] for ii in range(len(sigma_array)) if sigma_array[ii] > 2]
+    print(extreme_sigma)
     fig.savefig(out_pdf.replace(".pdf", "_hist.pdf"))
