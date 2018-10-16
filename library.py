@@ -6,7 +6,14 @@ import matplotlib.pyplot as plt
 import glob, pdb, string
 
 
-
+def exclude_outliers(objno):
+    flag = np.zeros(len(objno), dtype=int)
+    bad_data = np.array(['32007727', '32101412', '42006031a', '32035286', '14023705'])
+    for ii in range(len(bad_data)):
+        idx = [xx for xx in range(len(objno)) if bad_data[ii] == objno[xx]]
+        flag[idx] = 1
+    
+    return flag
 
 
 def stack_spectra(fname, mname='', plot = False, indices = 'placeholder'):
@@ -46,21 +53,26 @@ def stack_spectra(fname, mname='', plot = False, indices = 'placeholder'):
 
 
 
-def binning(temp_x, bin_pts, mname = '', bin_array_file = '', spectra_plot = False,
+def binning(temp_x, objno, bin_pts, mname = '', bin_array_file = '', spectra_plot = False,
             filename = False):
     """
     temp_x = quantity to be divided into bins [must NOT be sorted]
     bin_pts = Number of points in each bin
     """
-   
-    
+
     temp_x1 = np.sort(temp_x)
     temp_ind = np.argsort(temp_x)
-    temp_ind1 = np.where((np.isfinite(temp_x1)==True) & (temp_x1>0) & (temp_x1 < 1e13))[0]
+    objno = objno[temp_ind]
+
+    temp_flag = exclude_outliers(objno)
+
+    #Remove bad data and initially excluded data
+    temp_ind1 = np.where((np.isfinite(temp_x1)==True) & (temp_x1>0) & (temp_x1 < 1e13) & (temp_flag == 0))[0]
+    #temp_ind2 = np.flatnonzero(temp_flag)
+    #temp_ind1 = np.intersect1d(temp_ind1, temp_ind2)
+    
     x = np.log10(temp_x1[temp_ind1])
-    #print(x)
     ind = temp_ind[temp_ind1]
-    #print(len(x))
     y = range(len(x))
     
     start = 0
@@ -98,8 +110,8 @@ def binning(temp_x, bin_pts, mname = '', bin_array_file = '', spectra_plot = Fal
         for i in range(count):
             plt.subplot(np.ceil(count/2.0), 2, i+1)
             plt.plot(wavelength[i], flux[i])
-            plt.ylim(-0.05e-17, 2.0e-17)
-            plt.xlim(4700,5100)
+            plt.ylim(-0.05e-17, 0.5e-17)
+            plt.xlim(4250,4450)
             plt.axvline(x=5007, color='k', linestyle = 'dashed', alpha=0.5)
             plt.axvline(x=4363, color='r', linestyle = 'dashed', alpha=0.5)
             plt.suptitle(str(i))
