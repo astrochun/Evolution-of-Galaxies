@@ -47,19 +47,24 @@ def stack_spectra(fname, mname='', plot = False, indices = 'placeholder'):
     return image, flux, wavelen
 
 
+def interpolate_data(interp_file):
+    npz_file = np.load(interp_file)
+    interp_data, mag_no_mass, no_mass_idx = npz_file['interp_data'], npz_file['mag_no_mass'], npz_file['no_mass_idx']
+    interp_mass = interp_data(mag_no_mass)
+    return interp_mass, no_mass_idx
+    
 
 
-
-
-
-
-def binning(temp_x, objno, bin_pts, mname = '', bin_array_file = '', spectra_plot = False,
+def binning(temp_x, objno, bin_pts, interp_file, mname = '', bin_array_file = '', spectra_plot = False,
             filename = False):
     """
     temp_x = quantity to be divided into bins [must NOT be sorted]
     bin_pts = Number of points in each bin
     """
-
+    
+    interp_mass, no_mass_idx = interpolate_data(interp_file)
+    temp_x[no_mass_idx] = interp_mass
+    
     temp_x1 = np.sort(temp_x)
     temp_ind = np.argsort(temp_x)
     objno = objno[temp_ind]
@@ -71,6 +76,21 @@ def binning(temp_x, objno, bin_pts, mname = '', bin_array_file = '', spectra_plo
     #temp_ind2 = np.flatnonzero(temp_flag)
     #temp_ind1 = np.intersect1d(temp_ind1, temp_ind2)
     
+    
+    '''excluded = [ii for ii in range(len(temp_x1)) if ii not in temp_ind1]
+    print("total =", len(excluded))
+    #con1 = is not finite, con2 = less than (a) or equal to (b) zero, con3 = greater than (a) or equal to (b) 1e13
+    con1 = np.where(np.isfinite(temp_x1)==False)[0]
+    con2a = np.where(temp_x1 < 0)[0]
+    con2b = np.where(temp_x1 == 0)[0]
+    con3a = np.where(temp_x1 > 1e13)[0]
+    con3b = np.where(temp_x1 == 1e13)[0]
+    print("condition 1 =", len(con1))
+    print("condition 2a =", len(con2a))
+    print("condition 2b =", len(con2b))
+    print("condition 3a =", len(con3a))
+    print("condition 3b =", len(con3b))''' 
+     
     x = np.log10(temp_x1[temp_ind1])
     ind = temp_ind[temp_ind1]
     y = range(len(x))
@@ -119,6 +139,7 @@ def binning(temp_x, objno, bin_pts, mname = '', bin_array_file = '', spectra_plo
                          ha='left', va='top')
     else:
         plt.bar(bin_edge, distribution, align = 'edge', width = bin_size)
+        
         
     return distribution, bin_edge, flux
 
