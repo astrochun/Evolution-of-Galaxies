@@ -18,7 +18,7 @@ else:
     fitspath = "../DEEP2/" 
     fitspath2 = "../"
 
-flux = fitspath + "flux.fits"                                       
+flux = fitspath + 'flux_400_bin_4089.fits'                                      
 
 '''stack2D, header = fits.getdata(flux, header = True)
 wave = header['CRVAL1'] + header['CDELT1']*np.arange(header['NAXIS1'])'''
@@ -31,10 +31,10 @@ a = 1.0
 c = 2.0
 s1 = 1.3
 a1 = 1.5
-s2 = 1
+s2 = 5
 a2 = 1.8
 
-lambda0 =[3727.00, 4101.73, 4340.46, 4363.21, 4861.32, 4958.91, 5006.84]
+lambda0 = [3726.18, 4101.73, 4340.46, 4363.21, 4861.32, 4958.91, 5006.84]
 line_type = ['Oxy2', 'Balmer', 'Balmer', 'Single', 'Balmer', 'Single', 'Single']
 line_name = ['OII_3727', 'HDELTA', 'HGAMMA', 'OIII_4363', 'HBETA', 'OIII_4958', 'OIII_5007'] 
 
@@ -58,8 +58,8 @@ def oxy2_gauss(x, xbar, s1, a1, c, s2, a2):
     return a1 * np.exp(-(x - xbar)**2 / (2 * s1**2)) + c + a2 * np.exp(-(x - (xbar * con1))**2 / (2 * s2**2)) 
 
 
-def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, line_type):
-    med0 = np.median(y_norm[x_idx])
+def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type):
+    med0 = np.median(y_norm[x_idx_mask])
     max0 = np.max(y_norm[x_idx]) - med0
 
     fail = 0
@@ -73,8 +73,8 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, line_type):
             fail = 1
             
     if line_type == 'Balmer': 
-        p0 = [working_wave, 1.0, max0, med0, s2, -0.5 * max0] #must have some reasonable values
-        para_bound = (working_wave - 3.0, 0.0, 0.0, med0 - 0.05 * np.abs(med0), 0.0, -max0), (working_wave + 3.0, 10.0, 100.0, med0 + 0.05 * np.abs(med0), 10.0, 0)
+        p0 = [working_wave, 1.0, max0, med0, s2, -0.05 * max0] #must have some reasonable values
+        para_bound = (working_wave - 3.0, 0.0, 0.0, med0 - 0.05 * np.abs(med0), 0.0, -max0), (working_wave + 3.0, 10.0, 100.0, med0 + 0.05 * np.abs(med0), 25.0, 0)
         try:
             o1, o2 = curve_fit(double_gauss, x0[x_idx], y_norm[x_idx], p0 = p0, sigma = None, bounds = para_bound)
         except ValueError:
@@ -118,15 +118,26 @@ def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_nam
     dispersion = header['CDELT1']
     wave = header['CRVAL1'] + dispersion*np.arange(header['NAXIS1'])
     if outpdf == '':
-        outpdf = fitspath + 'mass_bin_300.pdf'
+        outpdf = fitspath + 'mass_bin_400.pdf'
     
     pdf_pages = PdfPages(outpdf)
-    nrows = 4
-    ncols = 4
+    nrows = 2
+    ncols = 5
+    
+    mask_flag = np.zeros(len(wave))
+    for t_lam in lambda0:
+        em_idx = np.where(wave >= (t_lam-5) & (wave <= (t_lam+5)))[0]
+        if len(em_idx) > 0: mask_flag[em_idx] = 1
+
     x_idx = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)))[0] 
+    x_idx_mask = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)) &
+                          (mask_flag == 0))[0]
     x0 = wave   
     scalefact = 1e-17
-
+    
+    
+    #mask_flag[x_idx_mask] = [1 for ii in range(len(wave))]
+    
     #Initializing Arrays
     flux_g_array = np.zeros(Spect_1D.shape[0])
     flux_s_array = np.zeros(Spect_1D.shape[0])
@@ -152,11 +163,11 @@ def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_nam
         y0 = Spect_1D[rr]
         y_norm = y0 / scalefact
 
-        row = np.int(np.floor(rr / nrows % ncols))
+        row = np.int(np.floor(rr / ncols))
         col = np.int(np.floor(rr % ncols))
         
         if rr % (nrows*ncols) == 0:
-            fig, ax_arr = plt.subplots(nrows = nrows, ncols = ncols, squeeze = False)
+            fig, ax_arr = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey='row', squeeze=False) 
        
         t_ax = ax_arr[row, col]
         
@@ -165,7 +176,7 @@ def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_nam
 
         y_smooth = movingaverage_box1D(Spect_1D[rr] / scalefact, 2, boundary = 'extend')
 
-        o1, med0, max0 = get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, line_type)
+        o1, med0, max0 = get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type)
      
         #Calculating Flux: Signal Line Fit
         if type(o1) != type(None):
@@ -226,21 +237,33 @@ def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_nam
             t_ax.plot(x0, gauss0, 'b--', linewidth = 0.5, label = 'Gauss Fit')
             t_ax.plot(x0[x_sigsnip], resid, 'r', linestyle = 'dashed', linewidth = 0.2, label = 'Residuals')
             t_ax.legend(bbox_to_anchor = (0.25,0.1), borderaxespad = 0, ncol = 2, fontsize = 3)
-            #t_ax.annotate(txt0, [0.95,0.95], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+            #t_ax.annotate(np.nanmax(gauss0[x_idx]), [0.95,0.95], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+            if line_type == 'Balmer' or line_type == 'Oxy2': 
+                t_ax.annotate(np.round_(o1[0], decimals=2), [0.95,0.95], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+                t_ax.annotate(np.round_(o1[1], decimals=2), [0.95,0.90], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+                t_ax.annotate(np.round_(o1[2], decimals=2), [0.95,0.85], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+                t_ax.annotate(np.round_(o1[3], decimals=2), [0.95,0.80], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+                t_ax.annotate(np.round_(o1[4], decimals=2), [0.95,0.75], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+                t_ax.annotate(np.round_(o1[5], decimals=2), [0.95,0.70], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+            if line_type == 'Single':
+                t_ax.annotate(np.round_(o1[0], decimals=2), [0.95,0.95], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+                t_ax.annotate(np.round_(o1[1], decimals=2), [0.95,0.90], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+                t_ax.annotate(np.round_(o1[2], decimals=2), [0.95,0.85], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+                t_ax.annotate(np.round_(o1[3], decimals=2), [0.95,0.80], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
             
             for x in lambda0:
                 t_ax.axvline(x = x, linewidth = 0.3, color = 'k')
 
-            if col == 0:
-                t_ax.set_ylabel('Spect_1D')
-                t_ax.set_yticklabels([])  #sets y-tick labels 
+            '''if col != 0:
+                #t_ax.set_ylabel('Spect_1D')
+                t_ax.set_yticklabels([])  #sets y-tick labels '''
 
             if rr == Spect_1D.shape[0] - 1 and rr % (nrows * ncols) != nrows * ncols - 1:
                 for jj in range(col + 1, ncols):
-                    ax_arr[row, jj].axis('off')
+                    ax_arr[row, jj].axis('on')
             for kk in range(row + 1, nrows):
                 for zz in range(ncols):
-                    ax_arr[kk, zz].axis('off')
+                    ax_arr[kk, zz].axis('on')
                 
         if (rr % (nrows * ncols) == nrows * ncols - 1) or rr == Spect_1D.shape[0] - 1: 
             subplots_adjust(left = 0.1, right = 0.98, bottom = 0.06, top = 0.97, hspace = 0.05)
@@ -296,17 +319,17 @@ def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_nam
 def zm_general(dataset):
     for ii in range(len(lambda0)):
         if line_type[ii] == 'Single':
-            outpdf = fitspath + 'mass_bin_300_' + line_name[ii] + '.pdf'   
+            outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'   
             print(outpdf)
             zoom_gauss_plot(dataset, lambda0[ii], line_type = line_type[ii], outpdf = outpdf, line_name = line_name[ii])
             
         if line_type[ii] == 'Balmer': 
-            outpdf = fitspath + 'mass_bin_300_' + line_name[ii] + '.pdf'
+            outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'
             print(outpdf)
             zoom_gauss_plot(dataset, lambda0[ii], line_type = line_type[ii], outpdf = outpdf, line_name = line_name[ii])
             
         if line_type[ii] == 'Oxy2': 
-            outpdf = fitspath + 'mass_bin_300_' + line_name[ii] + '.pdf'
+            outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'
             print(outpdf)
             zoom_gauss_plot(dataset, lambda0[ii], line_type = line_type[ii], outpdf = outpdf, line_name = line_name[ii])
 
