@@ -18,10 +18,10 @@ else:
     fitspath = "../DEEP2/" 
     fitspath2 = "../"
 
-flux = fitspath + 'flux_400_bin_4089.fits'                                      
-
-'''stack2D, header = fits.getdata(flux, header = True)
-wave = header['CRVAL1'] + header['CDELT1']*np.arange(header['NAXIS1'])'''
+flux = fitspath + 'flux_400_bin_4089.fits'   
+Spect_1D, header = fits.getdata(flux, header=True)
+dispersion = header['CDELT1']
+wave = header['CRVAL1'] + dispersion*np.arange(header['NAXIS1'])                                   
 
 xcoor = []
 
@@ -113,20 +113,16 @@ def rms_func(wave, dispersion, lambda_in, y0, sigma_array, scalefact):
 #for each individual stack
 #electron temperature and the R23 and O32 values 
 #Plotting Zoomed 
-def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_name = ''):
-    Spect_1D, header = fits.getdata(flux, header=True)
-    dispersion = header['CDELT1']
-    wave = header['CRVAL1'] + dispersion*np.arange(header['NAXIS1'])
-    if outpdf == '':
-        outpdf = fitspath + 'mass_bin_400.pdf'
+def zoom_gauss_plot(dataset, working_wave, pdf_pages, line_type = '', outpdf = '', line_name = ''):
+#    if outpdf == '':
+#        outpdf = fitspath + 'mass_bin_400.pdf'
     
-    pdf_pages = PdfPages(outpdf)
     nrows = 2
     ncols = 5
     
     mask_flag = np.zeros(len(wave))
     for t_lam in lambda0:
-        em_idx = np.where(wave >= (t_lam-5) & (wave <= (t_lam+5)))[0]
+        em_idx = np.where((wave >= (t_lam-5)) & (wave <= (t_lam+5)))[0]
         if len(em_idx) > 0: mask_flag[em_idx] = 1
 
     x_idx = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)))[0] 
@@ -135,8 +131,6 @@ def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_nam
     x0 = wave   
     scalefact = 1e-17
     
-    
-    #mask_flag[x_idx_mask] = [1 for ii in range(len(wave))]
     
     #Initializing Arrays
     flux_g_array = np.zeros(Spect_1D.shape[0])
@@ -168,7 +162,8 @@ def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_nam
         
         if rr % (nrows*ncols) == 0:
             fig, ax_arr = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey='row', squeeze=False) 
-       
+            fig.text(0.5, 0.98, line_name)
+        
         t_ax = ax_arr[row, col]
         
         x1 = working_wave - 100
@@ -237,7 +232,8 @@ def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_nam
             t_ax.plot(x0, gauss0, 'b--', linewidth = 0.5, label = 'Gauss Fit')
             t_ax.plot(x0[x_sigsnip], resid, 'r', linestyle = 'dashed', linewidth = 0.2, label = 'Residuals')
             t_ax.legend(bbox_to_anchor = (0.25,0.1), borderaxespad = 0, ncol = 2, fontsize = 3)
-            #t_ax.annotate(np.nanmax(gauss0[x_idx]), [0.95,0.95], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+            
+            
             if line_type == 'Balmer' or line_type == 'Oxy2': 
                 t_ax.annotate(np.round_(o1[0], decimals=2), [0.95,0.95], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
                 t_ax.annotate(np.round_(o1[1], decimals=2), [0.95,0.90], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
@@ -254,10 +250,6 @@ def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_nam
             for x in lambda0:
                 t_ax.axvline(x = x, linewidth = 0.3, color = 'k')
 
-            '''if col != 0:
-                #t_ax.set_ylabel('Spect_1D')
-                t_ax.set_yticklabels([])  #sets y-tick labels '''
-
             if rr == Spect_1D.shape[0] - 1 and rr % (nrows * ncols) != nrows * ncols - 1:
                 for jj in range(col + 1, ncols):
                     ax_arr[row, jj].axis('on')
@@ -271,7 +263,6 @@ def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_nam
             fig.set_size_inches(8, 8)
             fig.savefig(pdf_pages, format ='pdf')
         
-    #endfor
     '''
     #Error Propogation 
     flux_g_err = error_prop_chuncodes(flux_g_array,1)
@@ -311,28 +302,33 @@ def zoom_gauss_plot(dataset, working_wave, line_type = '', outpdf = '', line_nam
         
         f_tab.writeto(fitspath+'/Mar19_outputs/Flux_Outputs'+line_name+'.fits', overwrite= True)'''
      
-    pdf_pages.close()
     print('Done!')
 
 
 
 def zm_general(dataset):
+    outpdf = fitspath + 'mass_bin_400_emission_lines.pdf'
+    pdf_pages = PdfPages(outpdf)
+    
     for ii in range(len(lambda0)):
-        if line_type[ii] == 'Single':
-            outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'   
-            print(outpdf)
-            zoom_gauss_plot(dataset, lambda0[ii], line_type = line_type[ii], outpdf = outpdf, line_name = line_name[ii])
+        zoom_gauss_plot(dataset, lambda0[ii], pdf_pages, line_type = line_type[ii], line_name = line_name[ii])
+        
+        '''if line_type[ii] == 'Single':
+            #outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'   
+            #print(outpdf)
+            zoom_gauss_plot(dataset, lambda0[ii], pdf_pages, line_type = line_type[ii], line_name = line_name[ii])
             
         if line_type[ii] == 'Balmer': 
-            outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'
-            print(outpdf)
-            zoom_gauss_plot(dataset, lambda0[ii], line_type = line_type[ii], outpdf = outpdf, line_name = line_name[ii])
+            #outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'
+            #print(outpdf)
+            zoom_gauss_plot(dataset, lambda0[ii], pdf_pages, line_type = line_type[ii], line_name = line_name[ii])
             
         if line_type[ii] == 'Oxy2': 
-            outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'
-            print(outpdf)
-            zoom_gauss_plot(dataset, lambda0[ii], line_type = line_type[ii], outpdf = outpdf, line_name = line_name[ii])
-
+            #outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'
+            #print(outpdf)
+            zoom_gauss_plot(dataset, lambda0[ii], pdf_pages, line_type = line_type[ii], line_name = line_name[ii])'''
+    
+    pdf_pages.close()
 
 
  
