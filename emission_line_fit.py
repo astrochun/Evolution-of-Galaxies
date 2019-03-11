@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
-from astropy.table import Table
+from astropy.table import Table, hstack
 from os.path import exists
 from pylab import subplots_adjust
 from scipy.optimize import curve_fit 
@@ -18,7 +18,14 @@ else:
     fitspath = "../DEEP2/" 
     fitspath2 = "../"
 
-flux = fitspath + 'flux_400_bin_4089.fits'   
+bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
+str_bin_pts_input = [str(val) for val in bin_pts_input]
+bin_pts_fname = "_".join(str_bin_pts_input)
+
+N_in_bin = bin_pts_fname
+dataset = 'flux_' + N_in_bin + '_bin_4089'
+
+flux = fitspath + dataset + '.fits'   
 Spect_1D, header = fits.getdata(flux, header=True)
 dispersion = header['CDELT1']
 wave = header['CRVAL1'] + dispersion*np.arange(header['NAXIS1'])                                   
@@ -97,8 +104,8 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type)
 
 
 #calculating rms
-def rms_func(wave, dispersion, lambda_in, y0, sigma_array, scalefact):
-    x_idx = np.where((np.abs(wave - lambda_in) <= 100))[0]
+def rms_func(wave, dispersion, lambda_in, y0, sigma_array, scalefact, mask_flag):
+    x_idx = np.where((np.abs(wave - lambda_in) <= 100) & (mask_flag == 0))[0]
 
     sigma = np.std(y0[x_idx])
     pix = 5 * sigma_array / dispersion 
@@ -113,12 +120,9 @@ def rms_func(wave, dispersion, lambda_in, y0, sigma_array, scalefact):
 #for each individual stack
 #electron temperature and the R23 and O32 values 
 #Plotting Zoomed 
-def zoom_gauss_plot(dataset, working_wave, pdf_pages, line_type = '', outpdf = '', line_name = ''):
-#    if outpdf == '':
-#        outpdf = fitspath + 'mass_bin_400.pdf'
-    
+def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf = '', line_name = ''):    
     nrows = 2
-    ncols = 5
+    ncols = 4
     
     mask_flag = np.zeros(len(wave))
     for t_lam in lambda0:
@@ -128,6 +132,7 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, line_type = '', outpdf = '
     x_idx = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)))[0] 
     x_idx_mask = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)) &
                           (mask_flag == 0))[0]
+    
     x0 = wave   
     scalefact = 1e-17
     
@@ -140,9 +145,6 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, line_type = '', outpdf = '
     norm_array = np.zeros(Spect_1D.shape[0])
     RMS_array = np.zeros(Spect_1D.shape[0])
     SN_array = np.zeros(Spect_1D.shape[0])
-    N_gal_array = np.zeros(Spect_1D.shape[0])
-    R_23_array = np.zeros(Spect_1D.shape[0])
-    O_32_array = np.zeros(Spect_1D.shape[0])
 
     '''#Initialize Error Propogation
     flux_g_err = np.zeros(Spect_1D.shape[0])
@@ -153,7 +155,7 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, line_type = '', outpdf = '
     RMS_err = np.zeros(Spect_1D.shape[0])
     SN_err = np.zeros(Spect_1D.shape[0])'''
 
-    for rr in range(Spect_1D.shape[0]):
+    for rr in range(Spect_1D.shape[0]):       
         y0 = Spect_1D[rr]
         y_norm = y0 / scalefact
 
@@ -172,7 +174,7 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, line_type = '', outpdf = '
         y_smooth = movingaverage_box1D(Spect_1D[rr] / scalefact, 2, boundary = 'extend')
 
         o1, med0, max0 = get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type)
-     
+        
         #Calculating Flux: Signal Line Fit
         if type(o1) != type(None):
             dx = x0[2] - x0[1]  #0.16866575
@@ -202,7 +204,7 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, line_type = '', outpdf = '
                 flux_s = np.sum(y_norm_diff * dx)
 
             #Calculating RMS
-            ini_sig1, RMS_pix = rms_func(wave, dispersion, working_wave, y0, o1[1], scalefact)
+            ini_sig1, RMS_pix = rms_func(wave, dispersion, working_wave, y0, o1[1], scalefact, mask_flag)
             
             #Filling In Arrays
             flux_g_array[rr] = flux_g 
@@ -212,6 +214,7 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, line_type = '', outpdf = '
             norm_array[rr] = max0
             RMS_array[rr] = ini_sig1
             SN_array[rr] = (flux_s / ini_sig1)
+            
 
             resid = y_norm[x_sigsnip] - gauss0[x_sigsnip] + o1[3]  
             
@@ -231,21 +234,33 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, line_type = '', outpdf = '
 
             t_ax.plot(x0, gauss0, 'b--', linewidth = 0.5, label = 'Gauss Fit')
             t_ax.plot(x0[x_sigsnip], resid, 'r', linestyle = 'dashed', linewidth = 0.2, label = 'Residuals')
-            t_ax.legend(bbox_to_anchor = (0.25,0.1), borderaxespad = 0, ncol = 2, fontsize = 3)
+            #t_ax.legend(bbox_to_anchor = (0.25,0.1), borderaxespad = 0, ncol = 2, fontsize = 3)
             
             
-            if line_type == 'Balmer' or line_type == 'Oxy2': 
-                t_ax.annotate(np.round_(o1[0], decimals=2), [0.95,0.95], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
-                t_ax.annotate(np.round_(o1[1], decimals=2), [0.95,0.90], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
-                t_ax.annotate(np.round_(o1[2], decimals=2), [0.95,0.85], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
-                t_ax.annotate(np.round_(o1[3], decimals=2), [0.95,0.80], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
-                t_ax.annotate(np.round_(o1[4], decimals=2), [0.95,0.75], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
-                t_ax.annotate(np.round_(o1[5], decimals=2), [0.95,0.70], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+            if line_type == 'Balmer' or line_type == 'Oxy2':
+                str1 = 'Amp:%.2f, Sigma:%.2f, Const:%.2f' % (o1[2], o1[1], o1[3])
+                str2 = 'Amp:%.2f, Sigma:%.2f' % (o1[5], o1[4])
+                str3 = 'S/N:%.2f' % (np.round_(SN_array[rr], decimals=2))
+                str4 = 'Flux_Obs:%.2f' % (flux_s_array[rr])
+                str5 = 'Flux_Gauss:%.2f' % (flux_g_array[rr])
+                str6 = 'NofGal:%.2f' % (N[rr])
+                t_ax.annotate(str1, [0.95,0.98], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
+                t_ax.annotate(str2, [0.95,0.92], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
+                t_ax.annotate(str3, [0.95, 0.86], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
+                t_ax.annotate(str4, [0.95, 0.80], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
+                t_ax.annotate(str5, [0.95, 0.74], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
+                t_ax.annotate(str6, [0.95, 0.68], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
             if line_type == 'Single':
-                t_ax.annotate(np.round_(o1[0], decimals=2), [0.95,0.95], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
-                t_ax.annotate(np.round_(o1[1], decimals=2), [0.95,0.90], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
-                t_ax.annotate(np.round_(o1[2], decimals=2), [0.95,0.85], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
-                t_ax.annotate(np.round_(o1[3], decimals=2), [0.95,0.80], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '5')
+                str1 = 'Amp:%.2f, Sigma:%.2f, Const:%.2f' % (o1[2], o1[1], o1[3])
+                str2 = 'S/N:%.2f' % (np.round_(SN_array[rr], decimals=2))
+                str3 = 'Flux_Obs:%.2f' % (flux_s_array[rr])
+                str4 = 'Flux_Gauss:%.2f' % (flux_g_array[rr])
+                str5 = 'NofGal:%.2f' % (N[rr])
+                t_ax.annotate(str1, [0.95, 0.98], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
+                t_ax.annotate(str2, [0.95, 0.92], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
+                t_ax.annotate(str3, [0.95, 0.86], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
+                t_ax.annotate(str4, [0.95, 0.80], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
+                t_ax.annotate(str5, [0.95, 0.74], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
             
             for x in lambda0:
                 t_ax.axvline(x = x, linewidth = 0.3, color = 'k')
@@ -273,60 +288,82 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, line_type = '', outpdf = '
     RMS_err =    error_prop_chuncodes(RMS_array,1)
     SN_err =     error_prop_chuncodes(SN_array,1)'''
      
-    #Writing Ascii Tables and Fits Tables
-    out_ascii = fitspath + dataset + '_gaussian_' + str(np.int(working_wave)) + '.tbl'  
-    out_fits = fitspath + dataset + '_gaussian_' + line_name + '.fits'
+    #Writing Ascii Tables and Fits Tables  
     n = ('Flux_Gaussian', 'Flux_Observed', 'Sigma', 'Median', 'Norm', 'RMS', 'S/N')
     n = tuple([line_name + '_' + val for val in n])
     tab0 = Table([flux_g_array, flux_s_array, sigma_array, median_array, norm_array, RMS_array, SN_array], names = n)
-    asc.write(tab0, out_ascii, format = 'fixed_width_two_line')
-         
-    out_ascii_single = fitspath + dataset + '_Average_R23_O32_Values.tbl'
-    if not exists(out_ascii_single):
-        n2 = ('R_23_Average', 'O_32_Average', 'N_Galaxies', 'RMS')
-        tab1 = Table([R_23_array, O_32_array, N_gal_array, RMS_array], names = n2)
-        asc.write(tab1, out_ascii_single, format = 'fixed_width_two_line') 
-       
-        '''
-        print 'Starting fits'
-        #header['Comment'] = 'This fits file contains the calculated and observed fluxs for emission line stated in file name'
-        c1 = fits.Column(name='Flux_Gaussian'+line_name, format= 'K', array=flux_g_array)
-        c2 = fits.Column(name='Flux_Observed'+line_name, format= 'K', array=flux_s_array)
-        c3 = fits.Column(name='Sigma'+line_name,  format= 'K', array=sigma_array)
-        c4 = fits.Column(name='Median'+line_name,  format= 'K', array=median_array)
-        c5 = fits.Column(name='Norm'+line_name, format= 'K',  array=norm_array)
-        c6 = fits.Column(name='RMS'+line_name, format= 'K',  array=ini_sig1)
-
-        #fits_cols = fits.ColDefs([c1,c2,c3,c4,c5])
-        f_tab= fits.BinTableHDU.from_columns([c1,c2,c3,c4,c5,c6])
-        
-        f_tab.writeto(fitspath+'/Mar19_outputs/Flux_Outputs'+line_name+'.fits', overwrite= True)'''
      
     print('Done!')
+    return tab0
 
 
 
-def zm_general(dataset):
-    outpdf = fitspath + 'mass_bin_400_emission_lines.pdf'
+
+def calculate_r23_o32():
+    em_table = asc.read(fitspath + N_in_bin + '_updated_massbin_emission_lines.tbl')
+    R_23_array = np.zeros(Spect_1D.shape[0])
+    O_32_array = np.zeros(Spect_1D.shape[0])
+    O_3727 = em_table['OII_3727_Flux_Observed'].data
+    O_4958 = em_table['OIII_4958_Flux_Observed'].data
+    O_5007 = em_table['OIII_5007_Flux_Observed'].data
+    O_4363 = em_table['OIII_4363_Flux_Observed'].data
+    H_Beta = em_table['HBETA_Flux_Observed'].data
+    avg_mass = em_table['mass_avg'].data
+    
+    #Line ratios
+    R_23_array = (O_3727 + (O_5007 * (4/3))) / H_Beta   
+    O_32_array = (O_5007 * (4/3)) / O_3727            
+    OII_HBeta = O_3727 / H_Beta
+    OIII_HBeta = (O_5007 * (4/3)) / H_Beta            
+    OIII_ratio = O_4363 / (O_5007 * (4/3))            
+    
+    fig, ax = plt.subplots(2, 2)
+    ax[0, 0].scatter(avg_mass, np.log10(R_23_array), label = 'R_23')
+    ax[0, 0].scatter(avg_mass, np.log10(O_32_array), label = 'O_32')
+    ax[0, 0].legend(loc = 'best')
+    ax[0, 0].set_xticklabels([])
+    ax[0, 1].scatter(avg_mass, np.log10(OII_HBeta), label = 'OII/HBeta')
+    ax[0, 1].legend(loc = 'best')
+    ax[0, 1].set_xticklabels([])
+    ax[1, 0].scatter(avg_mass, np.log10(OIII_HBeta), label = 'OIII/HBeta')
+    ax[1, 0].legend(loc = 'best')
+    ax[1, 0].set_xlabel('Avg Mass')
+    ax[1, 1].scatter(avg_mass, np.log10(OIII_ratio), label = '4363/(5007 * (4/3))')
+    ax[1, 1].legend(loc = 'best')
+    ax[1, 1].set_xlabel('Avg Mass')
+    
+    for t_ax in ax:
+        for tt in range(len(t_ax)):
+            t_ax[tt].set_xlim(8.5,11.0)
+    plt.subplots_adjust(left = 0.075, right = 0.97, bottom = 0.075, top = 0.99, wspace = 0.225, hspace = 0.05)
+    
+    outpdf = fitspath + dataset + '_updated_line_ratios.pdf'
     pdf_pages = PdfPages(outpdf)
+    fig.savefig(pdf_pages, format ='pdf')
+    pdf_pages.close()
+
+    out_ascii = fitspath + dataset + '_updated_Average_R23_O32_Values.tbl'        
+    n2 = ('R_23_Average', 'O_32_Average')
+    tab = Table([R_23_array, O_32_array], names = n2)
+    asc.write(tab, out_ascii, format = 'fixed_width_two_line', overwrite = True)
+    
+
+def zm_general():
+    outpdf = fitspath + 'mass_bin_' + N_in_bin +'_emission_lines.pdf'
+    pdf_pages = PdfPages(outpdf)
+    table0 = asc.read(fitspath + N_in_bin + '_massbin.tbl', format = 'fixed_width_two_line') 
+    out_ascii = fitspath + N_in_bin + '_massbin_emission_lines.tbl'
+    N = table0['Number of Galaxies'].data
     
     for ii in range(len(lambda0)):
-        zoom_gauss_plot(dataset, lambda0[ii], pdf_pages, line_type = line_type[ii], line_name = line_name[ii])
-        
-        '''if line_type[ii] == 'Single':
-            #outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'   
-            #print(outpdf)
-            zoom_gauss_plot(dataset, lambda0[ii], pdf_pages, line_type = line_type[ii], line_name = line_name[ii])
-            
-        if line_type[ii] == 'Balmer': 
-            #outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'
-            #print(outpdf)
-            zoom_gauss_plot(dataset, lambda0[ii], pdf_pages, line_type = line_type[ii], line_name = line_name[ii])
-            
-        if line_type[ii] == 'Oxy2': 
-            #outpdf = fitspath + 'mass_bin_400_' + line_name[ii] + '.pdf'
-            #print(outpdf)
-            zoom_gauss_plot(dataset, lambda0[ii], pdf_pages, line_type = line_type[ii], line_name = line_name[ii])'''
+        em_table = zoom_gauss_plot(dataset, lambda0[ii], pdf_pages, N, line_type = line_type[ii], line_name = line_name[ii])
+        if ii == 0:
+            table_stack = hstack([table0, em_table])
+        else:
+            table_stack = hstack([table_stack, em_table])
+    asc.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
+    
+    calculate_r23_o32()
     
     pdf_pages.close()
 
