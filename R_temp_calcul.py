@@ -21,56 +21,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import sys
 from getpass import getuser
     
-'''
-#Voronoi10
-#Spectral R23 and O32: Averages that are calculated from the flux calculations: spectral averages
-spectral = '/Users/reagenleimbach/Desktop/Zcalbase_gal/Voronoi10/Voronoi_combined_flux_table.tbl'
-data1 = asc.read(spectral)
-
-#Grid
-spectral = '/Users/reagenleimbach/Desktop/Zcalbase_gal/Grid_method/Grid_combined_flux_table.tbl'
-data1 = asc.read(spectral)
-
-#Voronoi14
-spectral = '/Users/reagenleimbach/Desktop/Zcalbase_gal/Voronoi14_combined_flux_table.tbl'
-data1 = asc.read(spectral)
-
-#Ascii Table Calls 
-OIII5007 = data1['OIII_5007_Flux_Observed'].data
-OIII4959 = data1['OIII_4958_Flux_Observed'].data
-OIII4363 = data1['OIII_4363_Flux_Observed'].data
-HBETA    = data1['HBETA_Flux_Observed'].data
-OII3727  = data1['OII_3727_Flux_Observed'].data
-R23_avg      = data1['R_23_Average'].data
-O32_avg      = data1['O_32_Average'].data
-N_Galaxy = data1['N_Galaxies'].data
-
-SN_5007       = data1['OIII_5007_S/N'].data
-SN_4959       = data1['OIII_4958_S/N'].data
-SN_4363       = data1['OIII_4363_S/N'].data
-SN_HBETA      = data1['HBETA_S/N'].data
-SN_3727       = data1['OII_3727_S/N'].data
-
-
-#Fits Table Calls (This is incorrect)
-OIII5007 = header['OIII_5007_Flux_Observed']
-OIII4959 =  header['OIII_4958_Flux_Observed']
-OIII4363 =  header['OIII_4363_Flux_Observed']
-HBETA    =  header['HBETA_Flux_Observed']
-OII3727  =  header['OII_3727_Flux_Observed']
-R23_avg      =  header['R_23_Average']
-O32_avg      =  header['O_32_Average']
-N_Galaxy =  header['N_Galaxies']
-
-SN_5007       =  header['OIII_5007_S/N']
-SN_4959       =  header['OIII_4958_S/N']
-SN_4363       =  header['OIII_4363_S/N']
-SN_HBETA      =  header['HBETA_S/N']
-SN_3727       =  header['OII_3727_S/N']
-
-R23_composite = np.log10((OII3727 + (1.33*OIII5007))/HBETA)
-O32_composite = np.log10((1.33*OIII5007)/OII3727)
-'''
 
 #For generalizing for several users
 if getuser() == 'carol':
@@ -80,7 +30,12 @@ else:
     fitspath = "../DEEP2/" 
     fitspath2 = "../"
     
-N_in_bin = '800'
+bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
+str_bin_pts_input = [str(val) for val in bin_pts_input]
+bin_pts_fname = "_".join(str_bin_pts_input)
+    
+    
+N_in_bin = bin_pts_fname
 
 
 #Constants
@@ -165,7 +120,7 @@ def run_function():
         tab0 = Table([R23_composite, O32_composite, R23_avg, O32_avg, N_Galaxy, OIII_5007, SN_5007,
                       OIII_4959, SN_4959, OIII_4363, SN_4363, HBETA, SN_HBETA, OII_3727, SN_3727,
                       T_e, O_s_ion, O_d_ion, com_O_log], names = n)
-        asc.write(tab0, out_ascii, format = 'fixed_width_two_line')
+        asc.write(tab0, out_ascii, format = 'fixed_width_two_line', overwrite = True)
         tab0.write(out_fits, format = 'fits', overwrite = True)
 
     #Plots
@@ -179,7 +134,6 @@ def run_function():
     ax1.set_xlabel('Temperature (K)')
     ax1.set_ylabel('R23')
     ax1.set_title('R23 vs. Temperatures')
-    #ax1.set_xlim(1000, 21500)
     pdf_pages.savefig()
      
     fig2, ax2 = plt.subplots()
@@ -188,7 +142,6 @@ def run_function():
     ax2.set_xlabel('Temperature (K)')
     ax2.set_ylabel('O32')
     ax2.set_title('O32 vs. Temperatures')
-    #ax2.set_xlim(1000, 21500)
     pdf_pages.savefig()
 
     fig3, ax3 = plt.subplots()
@@ -197,7 +150,6 @@ def run_function():
     ax3.set_xlabel('R23')
     ax3.set_ylabel('12+log(O/H) Te')
     ax3.set_title('Composite Metallicity vs. R23')
-    #ax2.set_xlim(1000, 21500)
     pdf_pages.savefig()
 
     fig4, ax4 = plt.subplots()
@@ -206,7 +158,6 @@ def run_function():
     ax4.set_xlabel('O32')
     ax4.set_ylabel('12+log(O/H) Te')
     ax4.set_title('Composite Metallicity vs. O32')
-    #ax2.set_xlim(1000, 21500)
     pdf_pages.savefig()
     
     fig5, ax5 = plt.subplots()
@@ -242,7 +193,6 @@ def run_function():
     ax_3d.set_xlabel('R23')
     ax_3d.set_ylabel('O32')
     ax_3d.set_zlabel('Temperatures')
-    #ax_3d.set_zlim(4000, 26000)
     ax_3d.scatter(R23_composite, O32_composite, T_e, marker = '.', linewidths = None)
     plt.show()
     
