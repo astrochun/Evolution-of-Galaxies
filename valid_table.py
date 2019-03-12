@@ -11,8 +11,12 @@ else:
     path = "../DEEP2/" 
     path2 = "../"
 
+bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
+str_bin_pts_input = [str(val) for val in bin_pts_input]
+bin_pts_fname = "_".join(str_bin_pts_input)
 
-N_in_bin = '800'
+N_in_bin = bin_pts_fname
+
 
 def invalid_limit():
     em_table = asc.read(path + N_in_bin + '_massbin_emission_lines.tbl')
@@ -51,6 +55,12 @@ def make_validation_table():
     if N_in_bin == '800':
         valid_OIII_4363[1] = 0
         valid_OIII_4363[4] = 0
+        
+    if N_in_bin == '75_112_113_300_600_1444_1444':
+        valid_OIII_4363[1] = 0
+        valid_OIII_4363[5] = 0
+        valid_OIII_4363[6] = 0       
+        
     
     out_ascii = path + N_in_bin + '_massbin_validation.tbl'
     n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies','Valid_OIII_4363')
