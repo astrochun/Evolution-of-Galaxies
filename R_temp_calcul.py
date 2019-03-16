@@ -25,7 +25,7 @@ from getpass import getuser
 #For generalizing for several users
 if getuser() == 'carol':
     fitspath = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
-    fitspath2 = fitspath
+    fitspath2 = fitspath + "massbin\\"
 else:
     fitspath = "../DEEP2/" 
     fitspath2 = "../"
@@ -33,7 +33,7 @@ else:
 bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
 str_bin_pts_input = [str(val) for val in bin_pts_input]
 bin_pts_fname = "_".join(str_bin_pts_input)
-    
+bin_pts_fname = 'revised_' + bin_pts_fname    
     
 N_in_bin = bin_pts_fname
 
@@ -81,8 +81,8 @@ def metallicity_calculation(T_e, OIII_5007, OIII_4959, OIII_4363, HBETA, OII_372
 
 
 def run_function():
-    em_table = asc.read(fitspath + N_in_bin + '_updated_massbin_emission_lines.tbl')
-    r23_o32_table = asc.read(fitspath + 'flux_' + N_in_bin + '_bin_4089_updated_Average_R23_O32_Values.tbl')
+    em_table = asc.read(fitspath2 + N_in_bin + '_massbin_emission_lines.tbl')
+    r23_o32_table = asc.read(fitspath2 + 'flux_' + N_in_bin + '_bin_4089_Average_R23_O32_Values.tbl')
 
     #Ascii Table Calls 
     OIII_5007 = em_table['OIII_5007_Flux_Observed'].data
@@ -92,7 +92,7 @@ def run_function():
     OII_3727 = em_table['OII_3727_Flux_Observed'].data
     N_Galaxy = em_table['Number of Galaxies'].data
     avg_mass = em_table['mass_avg'].data
-    detections = em_table['Detection'].data  
+    #detections = em_table['Detection'].data  
     R23_avg = r23_o32_table['R_23_Average'].data
     O32_avg = r23_o32_table['O_32_Average'].data
 
@@ -110,8 +110,8 @@ def run_function():
     O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, OIII_5007, OIII_4959, OIII_4363, HBETA, OII_3727)
 
     #Ascii Table
-    out_ascii = fitspath + N_in_bin + '_updated_massbin_derived_properties_metallicity.tbl'
-    out_fits = fitspath + N_in_bin + '_updated_massbin_derived_properties_metallicity.fits'
+    out_ascii = fitspath2 + N_in_bin + '_massbin_derived_properties_metallicity.tbl'
+    out_fits = fitspath2 + N_in_bin + '_massbin_derived_properties_metallicity.fits'
     if not exists(out_ascii):
         n = ('R23_Composite', 'O32_Composite', 'R_23_Average', 'O_32_Average', 'N_Galaxies',
              'Observed_Flux_5007', 'S/N_5007', 'Observed_Flux_4959', 'S/N_4959',
@@ -124,13 +124,13 @@ def run_function():
         tab0.write(out_fits, format = 'fits', overwrite = True)
 
     #Plots
-    pdf_pages = PdfPages(fitspath + N_in_bin + '_updated_massbin_derived_properties_metallicity.pdf')
+    pdf_pages = PdfPages(fitspath2 + N_in_bin + '_massbin_derived_properties_metallicity.pdf')
     
-    non_detection_mark = np.where(detections == 0)[0]
+    #non_detection_mark = np.where(detections == 0)[0]
 
     fig1, ax1 = plt.subplots()
     ax1.scatter(T_e, R23_composite, marker = '.')
-    ax1.scatter(T_e[non_detection_mark], R23_composite[non_detection_mark], marker = '^')
+    #ax1.scatter(T_e[non_detection_mark], R23_composite[non_detection_mark], marker = '^')
     ax1.set_xlabel('Temperature (K)')
     ax1.set_ylabel('R23')
     ax1.set_title('R23 vs. Temperatures')
@@ -138,7 +138,7 @@ def run_function():
      
     fig2, ax2 = plt.subplots()
     ax2.scatter(T_e, O32_composite, marker = '.')
-    ax2.scatter(T_e[non_detection_mark], O32_composite[non_detection_mark], marker = '^')
+    #ax2.scatter(T_e[non_detection_mark], O32_composite[non_detection_mark], marker = '^')
     ax2.set_xlabel('Temperature (K)')
     ax2.set_ylabel('O32')
     ax2.set_title('O32 vs. Temperatures')
@@ -146,7 +146,7 @@ def run_function():
 
     fig3, ax3 = plt.subplots()
     ax3.scatter(R23_composite, com_O_log, marker = '.')
-    ax3.scatter(R23_composite[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
+    #ax3.scatter(R23_composite[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
     ax3.set_xlabel('R23')
     ax3.set_ylabel('12+log(O/H) Te')
     ax3.set_title('Composite Metallicity vs. R23')
@@ -154,7 +154,7 @@ def run_function():
 
     fig4, ax4 = plt.subplots()
     ax4.scatter(O32_composite, com_O_log, marker = '.')
-    ax4.scatter(O32_composite[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
+    #ax4.scatter(O32_composite[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
     ax4.set_xlabel('O32')
     ax4.set_ylabel('12+log(O/H) Te')
     ax4.set_title('Composite Metallicity vs. O32')
@@ -162,7 +162,7 @@ def run_function():
     
     fig5, ax5 = plt.subplots()
     ax5.scatter(avg_mass, T_e, marker = '.')
-    ax5.scatter(avg_mass[non_detection_mark], T_e[non_detection_mark], marker = '^')
+    #ax5.scatter(avg_mass[non_detection_mark], T_e[non_detection_mark], marker = '^')
     ax5.set_xlabel('Avg Mass')
     ax5.set_ylabel('Temperature (K)')
     ax5.set_title('Temperatures vs. Avg Mass')
@@ -170,7 +170,7 @@ def run_function():
     
     fig6, ax6 = plt.subplots()
     ax6.scatter(avg_mass, com_O_log, marker = '.')
-    ax6.scatter(avg_mass[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
+    #ax6.scatter(avg_mass[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
     ax6.set_xlabel('Avg Mass')
     ax6.set_ylabel('12+log(O/H) Te')
     ax6.set_title('Composite Metallicity vs. Avg Mass')
@@ -180,7 +180,7 @@ def run_function():
 
     '''#Histogram
     name = 'Temperature_histogram.pdf'
-    pdf_pages = PdfPages(fitspath+name)
+    pdf_pages = PdfPages(fitspath2+name)
     plt.hist(valid_T_e, bins =8)
     plt.xlabel('Temperature (K)')
     #plt.set_ylabel('Spectra')
