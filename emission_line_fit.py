@@ -13,7 +13,7 @@ from getpass import getuser
 
 if getuser() == 'carol':
     fitspath = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
-    fitspath2 = fitspath
+    fitspath2 = fitspath + "massbin\\"
 else:
     fitspath = "../DEEP2/" 
     fitspath2 = "../"
@@ -21,11 +21,12 @@ else:
 bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
 str_bin_pts_input = [str(val) for val in bin_pts_input]
 bin_pts_fname = "_".join(str_bin_pts_input)
+bin_pts_fname = 'revised_' + bin_pts_fname
 
 N_in_bin = bin_pts_fname
 dataset = 'flux_' + N_in_bin + '_bin_4089'
 
-flux = fitspath + dataset + '.fits'   
+flux = fitspath2 + dataset + '.fits'   
 Spect_1D, header = fits.getdata(flux, header=True)
 dispersion = header['CDELT1']
 wave = header['CRVAL1'] + dispersion*np.arange(header['NAXIS1'])                                   
@@ -300,7 +301,7 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
 
 
 def calculate_r23_o32():
-    em_table = asc.read(fitspath + N_in_bin + '_updated_massbin_emission_lines.tbl')
+    em_table = asc.read(fitspath2 + N_in_bin + '_massbin_emission_lines.tbl')
     R_23_array = np.zeros(Spect_1D.shape[0])
     O_32_array = np.zeros(Spect_1D.shape[0])
     O_3727 = em_table['OII_3727_Flux_Observed'].data
@@ -337,22 +338,22 @@ def calculate_r23_o32():
             t_ax[tt].set_xlim(8.5,11.0)
     plt.subplots_adjust(left = 0.075, right = 0.97, bottom = 0.075, top = 0.99, wspace = 0.225, hspace = 0.05)
     
-    outpdf = fitspath + dataset + '_updated_line_ratios.pdf'
+    outpdf = fitspath2 + dataset + '_line_ratios.pdf'
     pdf_pages = PdfPages(outpdf)
     fig.savefig(pdf_pages, format ='pdf')
     pdf_pages.close()
 
-    out_ascii = fitspath + dataset + '_updated_Average_R23_O32_Values.tbl'        
+    out_ascii = fitspath2 + dataset + '_Average_R23_O32_Values.tbl'        
     n2 = ('R_23_Average', 'O_32_Average')
     tab = Table([R_23_array, O_32_array], names = n2)
     asc.write(tab, out_ascii, format = 'fixed_width_two_line', overwrite = True)
     
 
 def zm_general():
-    outpdf = fitspath + 'mass_bin_' + N_in_bin +'_emission_lines.pdf'
+    outpdf = fitspath2 + 'mass_bin_' + N_in_bin +'_emission_lines.pdf'
     pdf_pages = PdfPages(outpdf)
-    table0 = asc.read(fitspath + N_in_bin + '_massbin.tbl', format = 'fixed_width_two_line') 
-    out_ascii = fitspath + N_in_bin + '_massbin_emission_lines.tbl'
+    table0 = asc.read(fitspath2 + N_in_bin + '_massbin.tbl', format = 'fixed_width_two_line') 
+    out_ascii = fitspath2 + N_in_bin + '_massbin_emission_lines.tbl'
     N = table0['Number of Galaxies'].data
     
     for ii in range(len(lambda0)):
