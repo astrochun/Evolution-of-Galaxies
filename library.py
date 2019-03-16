@@ -10,7 +10,7 @@ from getpass import getuser
 
 if getuser() == 'carol':
     path = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
-    path2 = path
+    path2 = path + "massbin\\"
 else:
     path = "../DEEP2/" 
     path2 = "../"
@@ -153,9 +153,9 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         bin_redge.append(bin_stop)
     
     if adaptive == False:
-        out_ascii = path + str(bin_pts) + '_massbin.tbl' 
+        out_ascii = path2 + str(bin_pts) + '_massbin.tbl' 
     else:
-        out_ascii = path + bin_pts_fname + '_massbin.tbl'
+        out_ascii = path2 + bin_pts_fname + '_massbin.tbl'
     n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies')
     table_stack = Table([bin_ID, bin_edge, bin_redge, mass_avg, N], names = n)
     ascii.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
