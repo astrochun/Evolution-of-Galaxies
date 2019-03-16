@@ -6,7 +6,7 @@ from getpass import getuser
 
 if getuser() == 'carol':
     path = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
-    path2 = path
+    path2 = path + "massbin\\"
 else:
     path = "../DEEP2/" 
     path2 = "../"
@@ -14,13 +14,14 @@ else:
 bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
 str_bin_pts_input = [str(val) for val in bin_pts_input]
 bin_pts_fname = "_".join(str_bin_pts_input)
+bin_pts_fname = 'revised_' + bin_pts_fname 
 
 N_in_bin = bin_pts_fname
 
 
 def invalid_limit():
-    em_table = asc.read(path + N_in_bin + '_massbin_emission_lines.tbl')
-    valid_table = asc.read(path + N_in_bin + '_massbin_validation.tbl')
+    em_table = asc.read(path2 + N_in_bin + '_massbin_emission_lines.tbl')
+    valid_table = asc.read(path2 + N_in_bin + '_massbin_validation.tbl')
     
     O_4363_flux = em_table['OIII_4363_Flux_Observed'].data
     O_4363_SN = em_table['OIII_4363_S/N'].data
@@ -34,7 +35,7 @@ def invalid_limit():
     updated_O_4363_flux = O_4363_flux
     updated_O_4363_flux[invalid_stacks_idx] = 2 * HGamma_rms[invalid_stacks_idx]
     
-    out_ascii = path + N_in_bin + '_updated_massbin_emission_lines.tbl'
+    out_ascii = path2 + N_in_bin + '_updated_massbin_emission_lines.tbl'
     updated_em_table = Table(em_table)
     updated_em_table['OIII_4363_Flux_Observed'] = updated_O_4363_flux
     detection_col = Column(detections, name = 'Detection')
@@ -44,7 +45,7 @@ def invalid_limit():
 
 
 def make_validation_table():
-    massbin_table = asc.read(path + N_in_bin + '_massbin.tbl', format = 'fixed_width_two_line')
+    massbin_table = asc.read(path2 + N_in_bin + '_massbin.tbl', format = 'fixed_width_two_line')
     ID = massbin_table['ID'].data
     mass_min = massbin_table['mass_min'].data
     mass_max = massbin_table['mass_max'].data
@@ -59,10 +60,12 @@ def make_validation_table():
     if N_in_bin == '75_112_113_300_600_1444_1444':
         valid_OIII_4363[1] = 0
         valid_OIII_4363[5] = 0
-        valid_OIII_4363[6] = 0       
+        valid_OIII_4363[6] = 0   
+        
+    #if N_in_bin == 'revised_75_112_113_300_600_1444_1444':
         
     
-    out_ascii = path + N_in_bin + '_massbin_validation.tbl'
+    out_ascii = path2 + N_in_bin + '_massbin_validation.tbl'
     n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies','Valid_OIII_4363')
     valid_table = Table([ID, mass_min, mass_max, mass_avg, N, valid_OIII_4363], names = n)
     asc.write(valid_table, out_ascii, format = 'fixed_width_two_line', overwrite = True)
