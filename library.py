@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob, pdb, string
 from getpass import getuser
+from os.path import exists
 
 
 
@@ -69,7 +70,7 @@ def interpolate_data(interp_file):
 
 
 def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = '', bin_array_file = '',
-            spectra_plot = False, filename = False, adaptive = False):
+            spectra_plot = False, filename = False, adaptive = False, hbeta_bin = False, lum = []):
     """
     temp_x = quantity to be divided into bins [must NOT be sorted]
     bin_pts_input = Number of points in each bin
@@ -88,72 +89,94 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
 
     #Remove bad data and initially excluded data
     valid_ind = np.where((np.isfinite(x_sort)==True) & (x_sort>0) & (x_sort < 1e13) & (temp_flag == 0))[0]
-
-
-    '''excluded = [ii for ii in range(len(x_sort)) if ii not in valid_ind]
-    print("total =", len(excluded))
-    #con1 = is not finite, con2 = less than (a) or equal to (b) zero, con3 = greater than (a) or equal to (b) 1e13
-    con1 = np.where(np.isfinite(x_sort)==False)[0]
-    con2a = np.where(x_sort < 0)[0]
-    con2b = np.where(x_sort == 0)[0]
-    con3a = np.where(x_sort > 1e13)[0]
-    con3b = np.where(x_sort == 1e13)[0]
-    print("condition 1 =", len(con1))
-    print("condition 2a =", len(con2a))
-    print("condition 2b =", len(con2b))
-    print("condition 3a =", len(con3a))
-    print("condition 3b =", len(con3b))''' 
      
     x = np.log10(x_sort[valid_ind])
     ind = ind_sort[valid_ind]
     y = range(len(x))
-
-    
-    start = 0
-    bin_start = x[start]
-    bin_edge = []
-    bin_redge = []
-    distribution = []
-    flux = []
-    wavelength = []
-    mass_avg = []
-    bin_ID = []
-    N = []
-    count = 0
-
             
-    while (bin_start < x[-1]):
-        if adaptive == True:
-            bin_pts = bin_pts_input[count]
-        else:
-            bin_pts = bin_pts_input
-            
-        stop = start + bin_pts
-        if ((stop + bin_pts) > len(x)):
-            stop = len(x) - 1
-        count += 1
-        bin_stop = x[stop]
-        dist = len(y[start:stop])
-        distribution.append(dist)
-        bin_edge.append(bin_start)
-        if filename != False:
-            _, flx, wave = stack_spectra(filename, mname, indices = ind[start:stop])
-            flux.append(flx)
-            wavelength.append(wave)
-        N.append(len(ind[start:stop]))
-        mass_avg.append(np.mean(x[start:stop]))
-        bin_ID.append(count)
-        if bin_array_file != '':
-            if adaptive == False:
-                np.savez(bin_array_file + '_' + str(count) + '.npz', indices=ind[start:stop])
-            else:
-                np.savez(bin_array_file + bin_pts_fname + '_' + str(count) + '.npz', indices=ind[start:stop])
         
-        start, bin_start = stop, bin_stop
-        bin_redge.append(bin_stop)
+    if exists(bin_array_file + bin_pts_fname + '.npz'):
+        idx_file = np.load(bin_array_file + bin_pts_fname + '.npz') 
+        bin_ind = idx_file['bin_ind'] 
+        bin_start = idx_file['bin_start']
+        bin_edge = idx_file['bin_edge']
+        bin_redge = idx_file['bin_redge']
+        distribution = idx_file['distribution']
+        flux = idx_file['flux']
+        wavelength = idx_file['wavelength']
+        mass_avg = idx_file['mass_avg']
+        bin_ID = idx_file['bin_ID']
+        count = len(bin_ID)
+        N = idx_file['N']
+        
+    else:
+        bin_ind = []
+        start = 0
+        bin_start = x[start]
+        bin_edge = []
+        bin_redge = []
+        distribution = []
+        flux = []
+        wavelength = []
+        mass_avg = []
+        bin_ID = []
+        N = []
+        count = 0
+            
+        while (bin_start < x[-1]):
+            if adaptive == True:
+                bin_pts = bin_pts_input[count]
+            else:
+                bin_pts = bin_pts_input
+                
+            stop = start + bin_pts
+            if ((stop + bin_pts) > len(x)):
+                stop = len(x) - 1
+            count += 1
+            bin_stop = x[stop]
+            dist = len(y[start:stop])
+            distribution.append(dist)
+            bin_edge.append(bin_start)
+            
+            bin_ind.append([])
+            if hbeta_bin == False:
+                bin_ind[count - 1].append(ind[start:stop])
+                if filename != False:
+                    _, flx, wave = stack_spectra(filename, mname, indices = ind[start:stop])
+                    flux.append([flx])
+                    wavelength.append([wave])
+                N.append(len(ind[start:stop]))
+                mass_avg.append(np.mean(x[start:stop]))
+            else:
+                valid_hbeta = np.where(lum[ind[start:stop]] < 44)[0]
+                median = np.median(lum[ind[start:stop][valid_hbeta]])
+                invalid_hbeta = np.where(lum[ind[start:stop]] > 44)[0]
+                lum[ind[start:stop][invalid_hbeta]] = -1
+                lower_idx = np.where(lum[ind[start:stop]] <= median)[0]
+                upper_idx = np.where(lum[ind[start:stop]] > median)[0]
+                lower_idx = ind[start:stop][lower_idx]
+                upper_idx = ind[start:stop][upper_idx]
+                bin_ind[-1].append(lower_idx)
+                bin_ind[-1].append(upper_idx)
+                if filename != False:
+                    _, lower_flx, lower_wave = stack_spectra(filename, mname, indices = lower_idx)
+                    _, upper_flx, upper_wave = stack_spectra(filename, mname, indices = upper_idx)
+                    flux.append([lower_flx, upper_flx])
+                    wavelength.append([lower_wave, upper_wave])
+                N.append([len(lower_idx), len(upper_idx)])
+                mass_avg.append([np.mean(x[lower_idx]), np.mean(x[upper_idx])])
+            bin_ID.append(count)
+            
+            start, bin_start = stop, bin_stop
+            bin_redge.append(bin_stop)
+    
+    
+    np.savez(bin_array_file + bin_pts_fname + '.npz', bin_ind = bin_ind, bin_start = bin_start, bin_edge = bin_edge,
+             bin_redge = bin_redge, distribution = distribution, flux = flux, wavelength = wavelength,
+             mass_avg = mass_avg, bin_ID = bin_ID, N = N)
     
     if adaptive == False:
-        out_ascii = path2 + str(bin_pts) + '_massbin.tbl' 
+        out_ascii = path2 + str(bin_pts_input) + '_massbin.tbl' 
     else:
         out_ascii = path2 + bin_pts_fname + '_massbin.tbl'
     n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies')
@@ -163,7 +186,10 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     if (spectra_plot == True):
         for i in range(count):
             plt.subplot(np.ceil(count/2.0), 2, i+1)
-            plt.plot(wavelength[i], flux[i])
+            #plt.plot(wavelength[i], flux[i])
+            plt.plot(wavelength[i][0], flux[i][0])
+            if hbeta_bin == True:
+                plt.plot(wavelength[i][1], flux[i][1])
             plt.ylim(-0.05e-17, 0.5e-17)
             plt.xlim(4250,4450)
             plt.axvline(x=5007, color='k', linestyle = 'dashed', alpha=0.5)
