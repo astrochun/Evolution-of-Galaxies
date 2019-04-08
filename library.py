@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import glob, pdb, string
 from getpass import getuser
 from os.path import exists
+import os
 
 
 
@@ -94,20 +95,27 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     y = range(len(logx_sort))
             
     lum_sort = lum[valid_ind][ind_sort]
+    out_file = bin_array_file + bin_pts_fname + '.npz'
     
-    if exists(bin_array_file + bin_pts_fname + '.npz'):
-        idx_file = np.load(bin_array_file + bin_pts_fname + '.npz') 
-        bin_ind = idx_file['bin_ind'] 
-        bin_start = idx_file['bin_start']
-        bin_edge = idx_file['bin_edge']
-        bin_redge = idx_file['bin_redge']
-        distribution = idx_file['distribution']
-        flux = idx_file['flux']
-        wavelength = idx_file['wavelength']
-        mass_avg = idx_file['mass_avg']
-        bin_ID = idx_file['bin_ID']
-        count = len(bin_ID)
-        N = idx_file['N']
+    if exists(out_file):
+        print('File exists')
+        rinput = input('Do you want to delete file? Yes or no ')
+        if rinput.lower() == 'yes':
+            os.remove(out_file)
+            print(bin_array_file + bin_pts_fname + '.npz deleted.')
+        else:
+            idx_file = np.load(out_file) 
+            bin_ind = idx_file['bin_ind'] 
+            bin_start = idx_file['bin_start']
+            bin_edge = idx_file['bin_edge']
+            bin_redge = idx_file['bin_redge']
+            distribution = idx_file['distribution']
+            flux = idx_file['flux']
+            wavelength = idx_file['wavelength']
+            mass_avg = idx_file['mass_avg']
+            bin_ID = idx_file['bin_ID']
+            count = len(bin_ID)
+            N = idx_file['N']
         
     else:
         bin_ind = []
@@ -171,7 +179,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
             bin_redge.append(bin_stop)
     
     
-    np.savez(bin_array_file + bin_pts_fname + '.npz', bin_ind = bin_ind, bin_start = bin_start, bin_edge = bin_edge,
+    np.savez(out_file, bin_ind = bin_ind, bin_start = bin_start, bin_edge = bin_edge,
              bin_redge = bin_redge, distribution = distribution, flux = flux, wavelength = wavelength,
              mass_avg = mass_avg, bin_ID = bin_ID, N = N)
     
