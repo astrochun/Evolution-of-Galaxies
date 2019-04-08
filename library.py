@@ -80,21 +80,21 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     interp_mass = 10**(interp_mass)
     temp_x[no_mass_idx] = interp_mass
     
-    x_sort = np.sort(temp_x)
-    ind_sort = np.argsort(temp_x)
-    objno = objno[ind_sort]
-
     temp_flag = exclude_outliers(objno)
     
-
     #Remove bad data and initially excluded data
-    valid_ind = np.where((np.isfinite(x_sort)==True) & (x_sort>0) & (x_sort < 1e13) & (temp_flag == 0))[0]
-     
-    x = np.log10(x_sort[valid_ind])
-    ind = ind_sort[valid_ind]
-    y = range(len(x))
+    valid_ind = np.where((np.isfinite(temp_x)==True) & (temp_x>0) & (temp_x < 1e13) & (temp_flag == 0))[0]
+    
+    x_sort = np.sort(temp_x[valid_ind])
+    ind_sort = np.argsort(temp_x[valid_ind])
+    objno = objno[valid_ind][ind_sort]
+   
+    logx = np.log10(temp_x)
+    logx_sort = np.log10(x_sort)
+    y = range(len(logx_sort))
             
-        
+    lum_sort = lum[valid_ind][ind_sort]
+    
     if exists(bin_array_file + bin_pts_fname + '.npz'):
         idx_file = np.load(bin_array_file + bin_pts_fname + '.npz') 
         bin_ind = idx_file['bin_ind'] 
@@ -112,7 +112,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     else:
         bin_ind = []
         start = 0
-        bin_start = x[start]
+        bin_start = logx_sort[start]
         bin_edge = []
         bin_redge = []
         distribution = []
@@ -122,40 +122,40 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         bin_ID = []
         N = []
         count = 0
-            
-        while (bin_start < x[-1]):
+        
+        while (bin_start < logx_sort[-1]):
             if adaptive == True:
                 bin_pts = bin_pts_input[count]
             else:
                 bin_pts = bin_pts_input
                 
             stop = start + bin_pts
-            if ((stop + bin_pts) > len(x)):
-                stop = len(x) - 1
+            if ((stop + bin_pts) > len(logx_sort)):
+                stop = len(logx_sort) - 1
             count += 1
-            bin_stop = x[stop]
+            bin_stop = logx_sort[stop]
             dist = len(y[start:stop])
             distribution.append(dist)
             bin_edge.append(bin_start)
             
             bin_ind.append([])
             if hbeta_bin == False:
-                bin_ind[count - 1].append(ind[start:stop])
+                bin_ind[-1].append(ind_sort[start:stop])
                 if filename != False:
-                    _, flx, wave = stack_spectra(filename, mname, indices = ind[start:stop])
+                    _, flx, wave = stack_spectra(filename, mname, indices = ind_sort[start:stop])
                     flux.append([flx])
                     wavelength.append([wave])
-                N.append(len(ind[start:stop]))
-                mass_avg.append(np.mean(x[start:stop]))
+                N.append(len(ind_sort[start:stop]))
+                mass_avg.append(np.mean(logx_sort[start:stop]))
             else:
-                valid_hbeta = np.where(lum[ind[start:stop]] < 44)[0]
-                median = np.median(lum[ind[start:stop][valid_hbeta]])
-                invalid_hbeta = np.where(lum[ind[start:stop]] > 44)[0]
-                lum[ind[start:stop][invalid_hbeta]] = -1
-                lower_idx = np.where(lum[ind[start:stop]] <= median)[0]
-                upper_idx = np.where(lum[ind[start:stop]] > median)[0]
-                lower_idx = ind[start:stop][lower_idx]
-                upper_idx = ind[start:stop][upper_idx]
+                valid_hbeta = np.where(lum_sort[start:stop] < 44)[0]
+                median0 = np.median(lum_sort[start:stop][valid_hbeta])
+                invalid_hbeta = np.where((lum_sort[start:stop] > 44) | (np.isfinite(lum_sort[start:stop]) == False))[0]
+                lum[valid_ind[ind_sort[start:stop][invalid_hbeta]]] = -1
+                temp_lower = np.where(lum <= median0)[0]
+                temp_upper = np.where(lum > median0)[0]
+                lower_idx = list(set(valid_ind[ind_sort][start:stop]) & set(temp_lower))
+                upper_idx = list(set(valid_ind[ind_sort][start:stop]) & set(temp_upper))
                 bin_ind[-1].append(lower_idx)
                 bin_ind[-1].append(upper_idx)
                 if filename != False:
@@ -164,7 +164,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
                     flux.append([lower_flx, upper_flx])
                     wavelength.append([lower_wave, upper_wave])
                 N.append([len(lower_idx), len(upper_idx)])
-                mass_avg.append([np.mean(x[lower_idx]), np.mean(x[upper_idx])])
+                mass_avg.append([np.mean(logx[lower_idx]), np.mean(logx[upper_idx])])
             bin_ID.append(count)
             
             start, bin_start = stop, bin_stop
@@ -187,9 +187,9 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         for i in range(count):
             plt.subplot(np.ceil(count/2.0), 2, i+1)
             #plt.plot(wavelength[i], flux[i])
-            plt.plot(wavelength[i][0], flux[i][0])
+            plt.plot(wavelength[i][0], flux[i][0], color = 'b', linestyle = 'solid')
             if hbeta_bin == True:
-                plt.plot(wavelength[i][1], flux[i][1])
+                plt.plot(wavelength[i][1], flux[i][1], color = 'orange', linestyle = 'solid')
             plt.ylim(-0.05e-17, 0.5e-17)
             plt.xlim(4250,4450)
             plt.axvline(x=5007, color='k', linestyle = 'dashed', alpha=0.5)
@@ -199,7 +199,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
                          ha='left', va='top')
     else:
         plt.bar(bin_edge, distribution, align = 'edge', width = bin_redge)
-        
+                
     
     return distribution, bin_edge, flux
 
