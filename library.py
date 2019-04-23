@@ -94,7 +94,6 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     logx_sort = np.log10(x_sort)
     y = range(len(logx_sort))
             
-    lum_sort = lum[valid_ind][ind_sort]
     out_file = bin_array_file + bin_pts_fname + '.npz'
     
     if exists(out_file):
@@ -109,7 +108,6 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
             bin_start = idx_file['bin_start']
             bin_edge = idx_file['bin_edge']
             bin_redge = idx_file['bin_redge']
-            distribution = idx_file['distribution']
             flux = idx_file['flux']
             wavelength = idx_file['wavelength']
             mass_avg = idx_file['mass_avg']
@@ -117,19 +115,21 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
             count = len(bin_ID)
             N = idx_file['N']
         
-    else:
+    if not exists(out_file):
         bin_ind = []
         start = 0
         bin_start = logx_sort[start]
         bin_edge = []
         bin_redge = []
-        distribution = []
         flux = []
         wavelength = []
         mass_avg = []
         bin_ID = []
         N = []
+        lowest_hbeta = []
+        highest_hbeta = []
         count = 0
+        count2 = 0
         
         while (bin_start < logx_sort[-1]):
             if adaptive == True:
@@ -142,74 +142,94 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
                 stop = len(logx_sort) - 1
             count += 1
             bin_stop = logx_sort[stop]
-            dist = len(y[start:stop])
-            distribution.append(dist)
             bin_edge.append(bin_start)
             
-            bin_ind.append([])
             if hbeta_bin == False:
-                bin_ind[-1].append(ind_sort[start:stop])
+                bin_ind.append(ind_sort[start:stop])
                 if filename != False:
                     _, flx, wave = stack_spectra(filename, mname, indices = ind_sort[start:stop])
-                    flux.append([flx])
-                    wavelength.append([wave])
+                    flux.append(flx)
+                    wavelength.append(wave)
                 N.append(len(ind_sort[start:stop]))
                 mass_avg.append(np.mean(logx_sort[start:stop]))
+                bin_ID.append(count)
             else:
+                lum_sort = lum[valid_ind][ind_sort]
                 valid_hbeta = np.where(lum_sort[start:stop] < 44)[0]
                 median0 = np.median(lum_sort[start:stop][valid_hbeta])
                 invalid_hbeta = np.where((lum_sort[start:stop] > 44) | (np.isfinite(lum_sort[start:stop]) == False))[0]
                 lum[valid_ind[ind_sort[start:stop][invalid_hbeta]]] = -1
                 temp_lower = np.where(lum <= median0)[0]
                 temp_upper = np.where(lum > median0)[0]
-                lower_idx = list(set(valid_ind[ind_sort][start:stop]) & set(temp_lower))
-                upper_idx = list(set(valid_ind[ind_sort][start:stop]) & set(temp_upper))
-                bin_ind[-1].append(lower_idx)
-                bin_ind[-1].append(upper_idx)
+                lower_idx = np.array(list(set(valid_ind[ind_sort][start:stop]) & set(temp_lower)))
+                upper_idx = np.array(list(set(valid_ind[ind_sort][start:stop]) & set(temp_upper)))
+                
+                non_neg = np.where(lum[lower_idx] != -1)[0]
+                non_neg = lower_idx[non_neg]
+                lowest_hbeta.append(np.min(lum[non_neg]))
+                highest_hbeta.append(np.max(lum[non_neg]))
+                lowest_hbeta.append(np.min(lum[upper_idx]))
+                highest_hbeta.append(np.max(lum[upper_idx]))
+                
+                bin_redge.append(logx_sort[start + len(lower_idx) - 1])
+                bin_edge.append(logx_sort[start + len(lower_idx)])
+                
+                bin_ind.append(lower_idx)
+                bin_ind.append(upper_idx)
                 if filename != False:
                     _, lower_flx, lower_wave = stack_spectra(filename, mname, indices = lower_idx)
                     _, upper_flx, upper_wave = stack_spectra(filename, mname, indices = upper_idx)
-                    flux.append([lower_flx, upper_flx])
-                    wavelength.append([lower_wave, upper_wave])
-                N.append([len(lower_idx), len(upper_idx)])
-                mass_avg.append([np.mean(logx[lower_idx]), np.mean(logx[upper_idx])])
-            bin_ID.append(count)
-            
+                    flux += [lower_flx] + [upper_flx]
+                    wavelength += [lower_wave] + [upper_wave]
+                N += [len(lower_idx), len(upper_idx)]
+                mass_avg += [np.mean(logx[lower_idx])] + [np.mean(logx[upper_idx])]
+                bin_ID.append(count2)
+                count2 += 1
+                bin_ID.append(count2)
+                count2 += 1
+                
             start, bin_start = stop, bin_stop
             bin_redge.append(bin_stop)
     
     
-    np.savez(out_file, bin_ind = bin_ind, bin_start = bin_start, bin_edge = bin_edge,
-             bin_redge = bin_redge, distribution = distribution, flux = flux, wavelength = wavelength,
-             mass_avg = mass_avg, bin_ID = bin_ID, N = N)
+        np.savez(out_file, bin_ind = bin_ind, bin_start = bin_start, bin_edge = bin_edge, 
+                 bin_redge = bin_redge, flux = flux, wavelength = wavelength, mass_avg = mass_avg,
+                 bin_ID = bin_ID, N = N, lowest_hbeta = lowest_hbeta, highest_hbeta = highest_hbeta)
     
-    if adaptive == False:
-        out_ascii = path2 + str(bin_pts_input) + '_massbin.tbl' 
-    else:
-        out_ascii = path2 + bin_pts_fname + '_massbin.tbl'
-    n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies')
-    table_stack = Table([bin_ID, bin_edge, bin_redge, mass_avg, N], names = n)
-    ascii.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
-        
+        if adaptive == False:
+            out_ascii = path2 + str(bin_pts_input) + '_massbin.tbl' 
+        else:
+            out_ascii = path2 + bin_pts_fname + '_massbin.tbl'
+        n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies', 'Lowest Hbeta', 'Highest Hbeta')
+        table_stack = Table([bin_ID, bin_edge, bin_redge, mass_avg, N, lowest_hbeta, highest_hbeta], names = n)
+        ascii.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
+    
+    xlim = [4250,4450]
     if (spectra_plot == True):
         for i in range(count):
             plt.subplot(np.ceil(count/2.0), 2, i+1)
-            #plt.plot(wavelength[i], flux[i])
-            plt.plot(wavelength[i][0], flux[i][0], color = 'b', linestyle = 'solid')
+            plt.plot(wavelength[i*2], flux[i*2], color = 'b', linestyle = 'solid')
+            wavelen_idx = np.where((wavelength[i*2] > xlim[0]) & (wavelength[i*2] < xlim[1]))[0]
+            max0 = np.max(flux[i*2][wavelen_idx])
             if hbeta_bin == True:
-                plt.plot(wavelength[i][1], flux[i][1], color = 'orange', linestyle = 'solid')
-            plt.ylim(-0.05e-17, 0.5e-17)
-            plt.xlim(4250,4450)
+                plt.plot(wavelength[i*2+1], flux[i*2+1], color = 'orange', linestyle = 'solid')
+                max0 = np.max(flux[i*2+1][wavelen_idx])
+            plt.ylim(-0.05e-17, max0*1.1)
+            plt.xlim(xlim)
             plt.axvline(x=5007, color='k', linestyle = 'dashed', alpha=0.5)
             plt.axvline(x=4363, color='r', linestyle = 'dashed', alpha=0.5)
             plt.suptitle(str(i))
-            plt.annotate('N = '+str(N[i]), [0.05,0.95], xycoords='axes fraction',
+            if hbeta_bin == False:
+                an_text = 'N = '+str(N[i])
+            else:
+                an_text = 'N = [%i,%i]' %(N[i*2], N[i*2+1]) 
+            plt.annotate(an_text, [0.05,0.95], xycoords='axes fraction',
                          ha='left', va='top')
     else:
-        plt.bar(bin_edge, distribution, align = 'edge', width = bin_redge)
+        plt.bar(bin_edge, N, align = 'edge', width = bin_redge)
                 
     
-    return distribution, bin_edge, flux
+    return bin_edge, flux
 
 
 
