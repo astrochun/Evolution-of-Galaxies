@@ -17,11 +17,13 @@ if getuser() == 'carol':
 else:
     fitspath = "../DEEP2/" 
     fitspath2 = "../"
+    
+hbeta_bin = True
 
 bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
 str_bin_pts_input = [str(val) for val in bin_pts_input]
 bin_pts_fname = "_".join(str_bin_pts_input)
-bin_pts_fname = 'revised_' + bin_pts_fname
+bin_pts_fname = 'hbeta_revised_' + bin_pts_fname
 
 N_in_bin = bin_pts_fname
 dataset = 'flux_' + N_in_bin + '_bin_4089'
@@ -121,9 +123,13 @@ def rms_func(wave, dispersion, lambda_in, y0, sigma_array, scalefact, mask_flag)
 #for each individual stack
 #electron temperature and the R23 and O32 values 
 #Plotting Zoomed 
-def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf = '', line_name = ''):    
-    nrows = 2
-    ncols = 4
+def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf = '', line_name = ''):
+    if hbeta_bin == True:
+        nrows = 4
+        ncols = 4
+    else:
+        nrows = 2
+        ncols = 4
     
     mask_flag = np.zeros(len(wave))
     for t_lam in lambda0:
@@ -155,6 +161,14 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
     norm_err = np.zeros(Spect_1D.shape[0])
     RMS_err = np.zeros(Spect_1D.shape[0])
     SN_err = np.zeros(Spect_1D.shape[0])'''
+    
+    fig, ax_arr = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey='row', squeeze=False) 
+    fig.text(0.5, 0.98, line_name)
+    
+    ref_ymax = 0
+    ref_ymed = -0.25
+    ref_ymax_list = []
+    ref_ymed_list = []
 
     for rr in range(Spect_1D.shape[0]):       
         y0 = Spect_1D[rr]
@@ -163,11 +177,11 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
         row = np.int(np.floor(rr / ncols))
         col = np.int(np.floor(rr % ncols))
         
-        if rr % (nrows*ncols) == 0:
-            fig, ax_arr = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey='row', squeeze=False) 
-            fig.text(0.5, 0.98, line_name)
+        #if rr % (nrows*ncols) == 0:
+        #fig, ax_arr = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey='row', squeeze=False) 
+        #fig.text(0.5, 0.98, line_name)   moved
         
-        t_ax = ax_arr[row, col]
+        #t_ax = ax_arr[row, col]     moved
         
         x1 = working_wave - 100
         x2 = working_wave + 100
@@ -175,6 +189,21 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
         y_smooth = movingaverage_box1D(Spect_1D[rr] / scalefact, 2, boundary = 'extend')
 
         o1, med0, max0 = get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type)
+        
+        #Determines y limits      
+        if max0 > ref_ymax:
+            ref_ymax = max0
+        if med0 < ref_ymed:
+            ref_ymed = med0
+            
+        if (col == ncols - 1) or ((row == nrows - 1) and (rr == Spect_1D.shape[0] - 1)):
+            ref_ymax_list.append(ref_ymax)
+            ref_ymed_list.append(ref_ymed)
+            print(ref_ymax_list)
+            print(ref_ymed_list)
+            ref_ymax = 0
+            ref_ymed = -0.25
+        
         
         #Calculating Flux: Signal Line Fit
         if type(o1) != type(None):
@@ -229,21 +258,29 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
             SN_err[rr] =     error_prop_chuncodes(flux_s/ini_sig1,1)'''
 
         #Plotting
+            #t_ax.plot(wave, y_norm, 'k', linewidth = 0.6, label = 'Emission')
+            #t_ax.set_xlim([x1 + 45,x2 - 45])
+            #if rr % 2 == 0:
+            #col += 1
+            #if col >= ncols:
+            #col = 0
+            #row += 1
+            t_ax = ax_arr[row, col]
             t_ax.plot(wave, y_norm, 'k', linewidth = 0.6, label = 'Emission')
-        
             t_ax.set_xlim([x1 + 45,x2 - 45])
-
             t_ax.plot(x0, gauss0, 'b--', linewidth = 0.5, label = 'Gauss Fit')
             t_ax.plot(x0[x_sigsnip], resid, 'r', linestyle = 'dashed', linewidth = 0.2, label = 'Residuals')
-            #t_ax.legend(bbox_to_anchor = (0.25,0.1), borderaxespad = 0, ncol = 2, fontsize = 3)
+            #else:
+            #t_ax = ax_arr[row, col]
+            #t_ax.plot(x0, gauss0, color = 'orange', linestyle = 'dashed', linewidth = 0.5, label = 'Gauss Fit')
             
             
-            if line_type == 'Balmer' or line_type == 'Oxy2':
+            '''if line_type == 'Balmer' or line_type == 'Oxy2':
                 str1 = 'Amp:%.2f, Sigma:%.2f, Const:%.2f' % (o1[2], o1[1], o1[3])
                 str2 = 'Amp:%.2f, Sigma:%.2f' % (o1[5], o1[4])
                 str3 = 'S/N:%.2f' % (np.round_(SN_array[rr], decimals=2))
-                str4 = 'Flux_Obs:%.2f' % (flux_s_array[rr])
-                str5 = 'Flux_Gauss:%.2f' % (flux_g_array[rr])
+                str4 = 'Flux_Obs:%.2f' % (flux_s_array[rr]) 
+                str5 = 'Flux_Gauss:%.2f' % (flux_g_array[rr]) 
                 str6 = 'NofGal:%.2f' % (N[rr])
                 t_ax.annotate(str1, [0.95,0.98], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
                 t_ax.annotate(str2, [0.95,0.92], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
@@ -262,6 +299,7 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
                 t_ax.annotate(str3, [0.95, 0.86], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
                 t_ax.annotate(str4, [0.95, 0.80], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
                 t_ax.annotate(str5, [0.95, 0.74], xycoords = 'axes fraction', va = 'top', ha = 'right', fontsize = '8')
+            '''
             
             for x in lambda0:
                 t_ax.axvline(x = x, linewidth = 0.3, color = 'k')
@@ -272,12 +310,21 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
             for kk in range(row + 1, nrows):
                 for zz in range(ncols):
                     ax_arr[kk, zz].axis('on')
+
                 
         if (rr % (nrows * ncols) == nrows * ncols - 1) or rr == Spect_1D.shape[0] - 1: 
             subplots_adjust(left = 0.1, right = 0.98, bottom = 0.06, top = 0.97, hspace = 0.05)
+            row_count = 0
+            for ii in range(0, nrows):
+                for jj in range(0, ncols):
+                    ax_arr[ii, jj].set_ylim([ref_ymed_list[row_count], ref_ymax_list[row_count] * 1.1])
+                    if jj == ncols - 1:
+                        row_count += 1
             
             fig.set_size_inches(8, 8)
             fig.savefig(pdf_pages, format ='pdf')
+            
+
         
     '''
     #Error Propogation 
