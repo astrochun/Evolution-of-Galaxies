@@ -33,9 +33,16 @@ else:
 bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
 str_bin_pts_input = [str(val) for val in bin_pts_input]
 bin_pts_fname = "_".join(str_bin_pts_input)
-bin_pts_fname = 'revised_' + bin_pts_fname    
+bin_pts_fname = 'hbeta_revised_' + bin_pts_fname    
     
 N_in_bin = bin_pts_fname
+
+
+mark_nondet = True
+if mark_nondet:
+    updated = '_updated'
+else:
+    updated = ''
 
 
 #Constants
@@ -56,13 +63,7 @@ def temp_calculation(R):
     return T_e
 
 
-def metallicity_calculation(T_e, OIII_5007, OIII_4959, OIII_4363, HBETA, OII_3727):
-    #12 +log(O+/H) = log(OII/Hb) +5.961 +1.676/t_2 - 0.4logt_2 - 0.034t_2 + log(1+1.35x)
-    #12 +log(O++/H) = log(OIII/Hb)+6.200+1.251/t_3 - 0.55log(t_3) - 0.014(t_3)
-    #t_2 = 0.7*t_3 +0.17
-    '''t = 1e-4 * T_e
-    x = 1e-4 * 1e3 * t**(-0.5)'''
-    
+def metallicity_calculation(T_e, OIII_5007, OIII_4959, OIII_4363, HBETA, OII_3727):  
     two_beta = OII_3727 / HBETA
     three_beta = (OIII_5007 * (4/3)) / HBETA
     t_3 = T_e * 1e-4
@@ -81,8 +82,9 @@ def metallicity_calculation(T_e, OIII_5007, OIII_4959, OIII_4363, HBETA, OII_372
 
 
 def run_function():
-    em_table = asc.read(fitspath2 + N_in_bin + '_massbin_emission_lines.tbl')
-    r23_o32_table = asc.read(fitspath2 + 'flux_' + N_in_bin + '_bin_4089_Average_R23_O32_Values.tbl')
+    em_table = asc.read(fitspath2 + N_in_bin + updated + '_massbin_emission_lines.tbl')
+    r23_o32_table = asc.read(fitspath2 + 'flux_' + N_in_bin + '_bin_4089' + updated + 
+                             '_Average_R23_O32_Values.tbl')
 
     #Ascii Table Calls 
     OIII_5007 = em_table['OIII_5007_Flux_Observed'].data
@@ -91,8 +93,7 @@ def run_function():
     HBETA = em_table['HBETA_Flux_Observed'].data
     OII_3727 = em_table['OII_3727_Flux_Observed'].data
     N_Galaxy = em_table['Number of Galaxies'].data
-    avg_mass = em_table['mass_avg'].data
-    #detections = em_table['Detection'].data  
+    avg_mass = em_table['mass_avg'].data  
     R23_avg = r23_o32_table['R_23_Average'].data
     O32_avg = r23_o32_table['O_32_Average'].data
 
@@ -110,67 +111,80 @@ def run_function():
     O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, OIII_5007, OIII_4959, OIII_4363, HBETA, OII_3727)
 
     #Ascii Table
-    out_ascii = fitspath2 + N_in_bin + '_massbin_derived_properties_metallicity.tbl'
-    out_fits = fitspath2 + N_in_bin + '_massbin_derived_properties_metallicity.fits'
-    if not exists(out_ascii):
-        n = ('R23_Composite', 'O32_Composite', 'R_23_Average', 'O_32_Average', 'N_Galaxies',
-             'Observed_Flux_5007', 'S/N_5007', 'Observed_Flux_4959', 'S/N_4959',
-             'Observed_Flux_4363', 'S/N_4363', 'Observed_Flux_HBETA', 'S/N_HBETA',
-             'Observed_Flux_3727', 'S/N_3727', 'Temperature', 'O_s_ion', 'O_d_ion', 'com_O_log')
-        tab0 = Table([R23_composite, O32_composite, R23_avg, O32_avg, N_Galaxy, OIII_5007, SN_5007,
-                      OIII_4959, SN_4959, OIII_4363, SN_4363, HBETA, SN_HBETA, OII_3727, SN_3727,
-                      T_e, O_s_ion, O_d_ion, com_O_log], names = n)
-        asc.write(tab0, out_ascii, format = 'fixed_width_two_line', overwrite = True)
-        tab0.write(out_fits, format = 'fits', overwrite = True)
+    out_ascii = fitspath2 + N_in_bin + updated + '_massbin_derived_properties_metallicity.tbl'
+    out_fits = fitspath2 + N_in_bin + updated + '_massbin_derived_properties_metallicity.fits'
+    n = ('R23_Composite', 'O32_Composite', 'R_23_Average', 'O_32_Average', 'N_Galaxies',
+         'Observed_Flux_5007', 'S/N_5007', 'Observed_Flux_4959', 'S/N_4959',
+         'Observed_Flux_4363', 'S/N_4363', 'Observed_Flux_HBETA', 'S/N_HBETA',
+         'Observed_Flux_3727', 'S/N_3727', 'Temperature', 'O_s_ion', 'O_d_ion', 'com_O_log')
+    tab0 = Table([R23_composite, O32_composite, R23_avg, O32_avg, N_Galaxy, OIII_5007, SN_5007,
+                  OIII_4959, SN_4959, OIII_4363, SN_4363, HBETA, SN_HBETA, OII_3727, SN_3727,
+                  T_e, O_s_ion, O_d_ion, com_O_log], names = n)
+    asc.write(tab0, out_ascii, format = 'fixed_width_two_line', overwrite = True)
+    tab0.write(out_fits, format = 'fits', overwrite = True)
 
     #Plots
-    pdf_pages = PdfPages(fitspath2 + N_in_bin + '_massbin_derived_properties_metallicity.pdf')
+    pdf_pages = PdfPages(fitspath2 + N_in_bin + updated + '_massbin_derived_properties_metallicity.pdf')
     
-    #non_detection_mark = np.where(detections == 0)[0]
+    if mark_nondet:
+        detections = em_table['Detection'].data
+        non_detection_mark = np.where(detections == 0)[0]
+        detection_mark = np.where(detections == 1)[0]
+    else:
+        detection_mark = np.arange(len(T_e))
+
 
     fig1, ax1 = plt.subplots()
-    ax1.scatter(T_e, R23_composite, marker = '.')
-    #ax1.scatter(T_e[non_detection_mark], R23_composite[non_detection_mark], marker = '^')
+    ax1.scatter(np.log10(T_e[detection_mark]), R23_composite[detection_mark], marker = '.')
+    if mark_nondet:
+        ax1.scatter(np.log10(T_e[non_detection_mark]), R23_composite[non_detection_mark], marker = '^')
     ax1.set_xlabel('Temperature (K)')
     ax1.set_ylabel('R23')
     ax1.set_title('R23 vs. Temperatures')
     pdf_pages.savefig()
      
     fig2, ax2 = plt.subplots()
-    ax2.scatter(T_e, O32_composite, marker = '.')
-    #ax2.scatter(T_e[non_detection_mark], O32_composite[non_detection_mark], marker = '^')
+    ax2.scatter(np.log10(T_e[detection_mark]), O32_composite[detection_mark], marker = '.')
+    if mark_nondet:
+        ax2.scatter(np.log10(T_e[non_detection_mark]), O32_composite[non_detection_mark], marker = '^')
     ax2.set_xlabel('Temperature (K)')
     ax2.set_ylabel('O32')
     ax2.set_title('O32 vs. Temperatures')
     pdf_pages.savefig()
 
     fig3, ax3 = plt.subplots()
-    ax3.scatter(R23_composite, com_O_log, marker = '.')
-    #ax3.scatter(R23_composite[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
+    ax3.scatter(R23_composite[detection_mark], com_O_log[detection_mark], marker = '.')
+    if mark_nondet:
+        ax3.scatter(R23_composite[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
     ax3.set_xlabel('R23')
     ax3.set_ylabel('12+log(O/H) Te')
     ax3.set_title('Composite Metallicity vs. R23')
     pdf_pages.savefig()
 
     fig4, ax4 = plt.subplots()
-    ax4.scatter(O32_composite, com_O_log, marker = '.')
-    #ax4.scatter(O32_composite[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
+    ax4.scatter(O32_composite[detection_mark], com_O_log[detection_mark], marker = '.')
+    if mark_nondet:
+        ax4.scatter(O32_composite[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
     ax4.set_xlabel('O32')
     ax4.set_ylabel('12+log(O/H) Te')
     ax4.set_title('Composite Metallicity vs. O32')
     pdf_pages.savefig()
     
     fig5, ax5 = plt.subplots()
-    ax5.scatter(avg_mass, T_e, marker = '.')
-    #ax5.scatter(avg_mass[non_detection_mark], T_e[non_detection_mark], marker = '^')
+    ax5.scatter(avg_mass[detection_mark], np.log10(T_e[detection_mark]), marker = '.')
+    if mark_nondet:
+        ax5.scatter(avg_mass[non_detection_mark], np.log10(T_e[non_detection_mark]), marker = '^')
     ax5.set_xlabel('Avg Mass')
     ax5.set_ylabel('Temperature (K)')
     ax5.set_title('Temperatures vs. Avg Mass')
     pdf_pages.savefig()
     
     fig6, ax6 = plt.subplots()
-    ax6.scatter(avg_mass, com_O_log, marker = '.')
-    #ax6.scatter(avg_mass[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
+    ax6.scatter(avg_mass[detection_mark], com_O_log[detection_mark], marker = '.')
+    y = 8.798 - np.log10(1 + ((10**8.901)/(10**avg_mass))**0.640)
+    ax6.plot(avg_mass, y, color='g', linestyle = '-', marker = '*')
+    if mark_nondet:
+        ax6.scatter(avg_mass[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
     ax6.set_xlabel('Avg Mass')
     ax6.set_ylabel('12+log(O/H) Te')
     ax6.set_title('Composite Metallicity vs. Avg Mass')
@@ -193,7 +207,11 @@ def run_function():
     ax_3d.set_xlabel('R23')
     ax_3d.set_ylabel('O32')
     ax_3d.set_zlabel('Temperatures')
-    ax_3d.scatter(R23_composite, O32_composite, T_e, marker = '.', linewidths = None)
+    ax_3d.scatter(R23_composite[detection_mark], O32_composite[detection_mark], T_e[detection_mark],
+                  marker = '.', linewidths = None)
+    if mark_nondet:
+        ax_3d.scatter(R23_composite[non_detection_mark], O32_composite[non_detection_mark],
+                      T_e[non_detection_mark], marker = '^')
     plt.show()
     
 
