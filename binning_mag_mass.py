@@ -1,10 +1,6 @@
-from astropy.io import fits, ascii
-from astropy.table import Table, hstack, vstack
 from scipy.interpolate import interp1d
 import numpy as np
-import library as lib
 import matplotlib.pyplot as plt
-import glob, pdb
 
 from getpass import getuser
 if getuser() == 'carol':
