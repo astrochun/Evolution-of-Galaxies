@@ -1,7 +1,10 @@
 from astropy.io import ascii as asc
+from astropy.io import fits
 import numpy as np
 from astropy.table import Table, Column
 from getpass import getuser
+from astropy.cosmology import FlatLambdaCDM
+import astropy.units as u
 
 
 if getuser() == 'carol':
@@ -14,9 +17,28 @@ else:
 bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
 str_bin_pts_input = [str(val) for val in bin_pts_input]
 bin_pts_fname = "_".join(str_bin_pts_input)
-bin_pts_fname = 'revised_' + bin_pts_fname 
+bin_pts_fname = 'hbeta_revised_' + bin_pts_fname
 
 N_in_bin = bin_pts_fname
+
+mark_nondet = True
+if mark_nondet:
+    updated = '_updated'
+else:
+    updated = ''
+
+
+#revisit
+'''def set_luminosity():
+    #binning_file = np.load(path2 + 'mass_bin_' + bin_pts_fname + '.npz')
+    #lum = binning_file['lum']
+    em_table = asc.read(path2 + N_in_bin + '_massbin_emission_lines.tbl')
+    O_5007_rms = em_table['OIII_5007_RMS'].data
+    
+    invalid_lum_idx = np.where(lum == -1)[0]
+    updated_lum = lum
+    updated_lum[invalid_lum_idx] = 3 * O_5007_rms[invalid_lum_idx]'''
+    
 
 
 def invalid_limit():
@@ -33,7 +55,7 @@ def invalid_limit():
     detections[invalid_stacks_idx] = 0
     
     updated_O_4363_flux = O_4363_flux
-    updated_O_4363_flux[invalid_stacks_idx] = 2 * HGamma_rms[invalid_stacks_idx]
+    updated_O_4363_flux[invalid_stacks_idx] = 3 * HGamma_rms[invalid_stacks_idx]
     
     out_ascii = path2 + N_in_bin + '_updated_massbin_emission_lines.tbl'
     updated_em_table = Table(em_table)
@@ -62,7 +84,16 @@ def make_validation_table():
         valid_OIII_4363[5] = 0
         valid_OIII_4363[6] = 0   
         
-    #if N_in_bin == 'revised_75_112_113_300_600_1444_1444':
+    if N_in_bin == 'revised_75_112_113_300_600_1444_1444':
+        valid_OIII_4363[3] = 0
+        valid_OIII_4363[5] = 0
+        valid_OIII_4363[6] = 0
+        
+    if N_in_bin == 'hbeta_revised_75_112_113_300_600_1444_1444':
+        valid_OIII_4363[2] = 0
+        valid_OIII_4363[8] = 0
+        valid_OIII_4363[10] = 0
+        valid_OIII_4363[12] = 0       
         
     
     out_ascii = path2 + N_in_bin + '_massbin_validation.tbl'
