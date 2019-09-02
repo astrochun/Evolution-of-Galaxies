@@ -4,7 +4,6 @@ from astropy.io import fits
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from astropy.table import Table, hstack
-from os.path import exists
 from pylab import subplots_adjust
 from scipy.optimize import curve_fit 
 from astropy.convolution import Box1DKernel, convolve
@@ -17,6 +16,12 @@ if getuser() == 'carol':
 else:
     fitspath = "../DEEP2/" 
     fitspath2 = "../"
+    
+mark_nondet = False
+if mark_nondet:
+    updated = '_updated'
+else:
+    updated = ''
     
 hbeta_bin = True
 
@@ -152,15 +157,6 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
     norm_array = np.zeros(Spect_1D.shape[0])
     RMS_array = np.zeros(Spect_1D.shape[0])
     SN_array = np.zeros(Spect_1D.shape[0])
-
-    '''#Initialize Error Propogation
-    flux_g_err = np.zeros(Spect_1D.shape[0])
-    flux_s_err = np.zeros(Spect_1D.shape[0])
-    sigma_err = np.zeros(Spect_1D.shape[0])
-    median_err = np.zeros(Spect_1D.shape[0])
-    norm_err = np.zeros(Spect_1D.shape[0])
-    RMS_err = np.zeros(Spect_1D.shape[0])
-    SN_err = np.zeros(Spect_1D.shape[0])'''
     
     fig, ax_arr = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey='row', squeeze=False) 
     fig.text(0.5, 0.98, line_name)
@@ -240,15 +236,6 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
             
 
             resid = y_norm[x_sigsnip] - gauss0[x_sigsnip] + o1[3]  
-            
-            '''#Error Propogation 
-            flux_g_err[rr] = error_prop_chuncodes(flux_g,1)
-            flux_s_err[rr] = error_prop_chuncodes(flux_s,1)
-            sigma_err[rr] =  error_prop_chuncodes(o1[1],1)
-            median_err[rr] = error_prop_chuncodes(o1[3],1)
-            norm_err[rr] =   error_prop_chuncodes(max0,1)
-            RMS_err[rr] =    error_prop_chuncodes(ini_sig1,1)
-            SN_err[rr] =     error_prop_chuncodes(flux_s/ini_sig1,1)'''
 
         #Plotting
             t_ax = ax_arr[row, col]
@@ -322,17 +309,6 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
             
             fig.set_size_inches(8, 8)
             fig.savefig(pdf_pages, format ='pdf')
-
-        
-    '''
-    #Error Propogation 
-    flux_g_err = error_prop_chuncodes(flux_g_array,1)
-    flux_s_err = error_prop_chuncodes(flux_s_array,1)
-    sigma_err =  error_prop_chuncodes(sigma_array,1)
-    median_err = error_prop_chuncodes(median_array,1)
-    norm_err =   error_prop_chuncodes(norm_array,1)
-    RMS_err =    error_prop_chuncodes(RMS_array,1)
-    SN_err =     error_prop_chuncodes(SN_array,1)'''
      
     #Writing Ascii Tables and Fits Tables  
     n = ('Flux_Gaussian', 'Flux_Observed', 'Sigma', 'Median', 'Norm', 'RMS', 'S/N')
@@ -346,7 +322,7 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
 
 
 def calculate_r23_o32():
-    em_table = asc.read(fitspath2 + N_in_bin + '_massbin_emission_lines.tbl')
+    em_table = asc.read(fitspath2 + N_in_bin + updated + '_massbin_emission_lines.tbl')
     R_23_array = np.zeros(Spect_1D.shape[0])
     O_32_array = np.zeros(Spect_1D.shape[0])
     O_3727 = em_table['OII_3727_Flux_Observed'].data
@@ -383,19 +359,20 @@ def calculate_r23_o32():
             t_ax[tt].set_xlim(8.5,11.0)
     plt.subplots_adjust(left = 0.075, right = 0.97, bottom = 0.075, top = 0.99, wspace = 0.225, hspace = 0.05)
     
-    outpdf = fitspath2 + dataset + '_line_ratios.pdf'
+    outpdf = fitspath2 + dataset + updated + '_line_ratios.pdf'
     pdf_pages = PdfPages(outpdf)
     fig.savefig(pdf_pages, format ='pdf')
     pdf_pages.close()
 
-    out_ascii = fitspath2 + dataset + '_Average_R23_O32_Values.tbl'        
+    out_ascii = fitspath2 + dataset + updated + '_Average_R23_O32_Values.tbl'        
     n2 = ('R_23_Average', 'O_32_Average')
     tab = Table([R_23_array, O_32_array], names = n2)
-    asc.write(tab, out_ascii, format = 'fixed_width_two_line', overwrite = True)
+    asc.write(tab, out_ascii, format = 'fixed_width_two_line', overwrite = True)   
+    
     
 
-def zm_general():
-    outpdf = fitspath2 + 'mass_bin_' + N_in_bin +'_emission_lines.pdf'
+def zm_general():   
+    outpdf = fitspath2 + 'mass_bin_' + N_in_bin + '_emission_lines.pdf'
     pdf_pages = PdfPages(outpdf)
     table0 = asc.read(fitspath2 + N_in_bin + '_massbin.tbl', format = 'fixed_width_two_line') 
     out_ascii = fitspath2 + N_in_bin + '_massbin_emission_lines.tbl'
