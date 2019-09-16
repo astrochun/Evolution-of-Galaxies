@@ -54,18 +54,30 @@ def temp_calculation(R):
     return T_e
 
 
-def metallicity_calculation(T_e, two_beta, three_beta):   
-    t_3 = T_e * 1e-4
-    t_2 = 0.7 * t_3 + 0.17
-    x2 = 1e-4 * 1e3 * t_2**(-0.5)
+def metallicity_calculation(T_e, two_beta, three_beta): 
+    O_s_ion = np.zeros(len(T_e))
+    O_d_ion = np.zeros(len(T_e))
+    com_O = np.zeros(len(T_e))
+    com_O_log = np.zeros(len(T_e))
+    O_s_ion_log = np.zeros(len(T_e))
+    O_d_ion_log = np.zeros(len(T_e))
+    t_3 = np.zeros(len(T_e))
+    t_2 = np.zeros(len(T_e))
+    x2 = np.zeros(len(T_e))
+    
+    detect = np.where((two_beta != 0) & (three_beta != 0))[0]
+    
+    t_3[detect] = T_e[detect] * 1e-4
+    t_2[detect] = 0.7 * t_3[detect] + 0.17
+    x2[detect] = 1e-4 * 1e3 * t_2[detect]**(-0.5)
 
-    O_s_ion_log = np.log10(two_beta) + 5.961 + 1.676 / t_2 - 0.4 * np.log10(t_2) - 0.034 * t_2 + np.log10(1 + 1.35 * x2) - 12
-    O_d_ion_log = np.log10(three_beta) + 6.200 + 1.251 / t_3 - 0.55 * np.log10(t_3) - 0.014 * (t_3) - 12
+    O_s_ion_log[detect] = np.log10(two_beta[detect]) + 5.961 + 1.676 / t_2[detect] - 0.4 * np.log10(t_2[detect]) - 0.034 * t_2[detect] + np.log10(1 + 1.35 * x2[detect]) - 12
+    O_d_ion_log[detect] = np.log10(three_beta[detect]) + 6.200 + 1.251 / t_3[detect] - 0.55 * np.log10(t_3[detect]) - 0.014 * (t_3[detect]) - 12
 
-    O_s_ion = 10**(O_s_ion_log)
-    O_d_ion = 10**(O_d_ion_log)
-    com_O = O_s_ion + O_d_ion
-    com_O_log = np.log10(com_O) + 12
+    O_s_ion[detect] = 10**(O_s_ion_log[detect])
+    O_d_ion[detect] = 10**(O_d_ion_log[detect])
+    com_O[detect] = O_s_ion[detect] + O_d_ion[detect]
+    com_O_log[detect] = np.log10(com_O[detect]) + 12
 
     return O_s_ion, O_d_ion, com_O_log, O_s_ion_log, O_d_ion_log
 
@@ -78,11 +90,11 @@ def derived_properties_plots():
     log_mass = MT_ascii['Log10(Mass)'].data
     LHbeta = MT_ascii['HBeta_Luminosity'].data
     ind_metal = MT_ascii['com_O_log'].data
-    R23 = MT_ascii['R23 Composite'].data
-    O32 = MT_ascii['O32 Composite'].data
-    bin_detect = MT_ascii['Detections'].data
+    R23 = MT_ascii['R23'].data
+    O32 = MT_ascii['O32'].data
+    indiv_detect = MT_ascii['Individual Detections'].data
     
-    detection = np.where((bin_detect == 1.0) & (LHbeta > 0) & (np.isfinite(ind_metal) == True) & (ind_metal > 0))[0]
+    detection = np.where((indiv_detect == 1.0) & (LHbeta > 0))[0]
 
     pdf_pages = PdfPages(fitspath2 + 'individual_metal_plots.pdf')
 
@@ -178,24 +190,37 @@ def run_function():
         log_mass = line_table['Log10(Mass)'].data
         LHbeta = line_table['HBeta_Luminosity'].data
         T_e = line_table['Te'].data
-        detections = line_table['Bin Detections'].data        
+        bin_detect = line_table['Bin Detections'].data
+        indiv_detect = line_table['Individual Detections'].data 
         
-        two_beta = OII / HBETA
-        three_beta = (OIII5007 + OIII4959) / HBETA
+        detect = np.where((bin_detect == 1.0) & (np.isfinite(OIII5007) == True) & (OIII5007 >= 1e-18) &
+                          (OIII5007 <= 1e-15) & (np.isfinite(OIII4959) == True) & (OIII4959 >= 1e-18) & 
+                          (OIII4959 <= 1e-15) & (np.isfinite(OII) == True) & (OII >= 1e-18) & (OII <= 1e-15) &
+                          (np.isfinite(HBETA) == True) & (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
+        indiv_detect[detect] = 1.0
         
-        #Calculate R23 composite and O32 composite
-        R23_composite = np.log10((OII + ((4/3) * OIII5007)) / HBETA)
-        O32_composite = np.log10(((4/3) * OIII5007) / OII)
+        #create zero arrays all same length
+        two_beta = np.zeros(len(T_e))
+        three_beta = np.zeros(len(T_e))
+        R23 = np.zeros(len(T_e))
+        O32 = np.zeros(len(T_e))        
+        
+        two_beta[detect] = OII[detect] / HBETA[detect]
+        three_beta[detect] = (OIII5007[detect] + OIII4959[detect]) / HBETA[detect]
+        
+        #Calculate R23 and O32
+        R23[detect] = np.log10((OII[detect] + ((4/3) * OIII5007[detect])) / HBETA[detect])
+        O32[detect] = np.log10(((4/3) * OIII5007[detect]) / OII[detect])
         
         
         O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)
         
         
         n = ('Source_ID', 'Log10(Mass)', 'HBeta_Luminosity', 'Observed_Flux_5007', 'Observed_Flux_4959',
-             'Observed_Flux_HBeta', 'Temperature', 'Detections', 'R23 Composite', 'O32 Composite', 'O_s_ion',
-             'O_d_ion', 'com_O_log')
-        tab0 = Table([source_ID, log_mass, LHbeta, OIII5007, OIII4959, HBETA, T_e, detections, R23_composite,
-                      O32_composite, O_s_ion, O_d_ion, com_O_log], names = n)
+             'Observed_Flux_HBeta', 'Temperature', 'Bin Detections','Individual Detections', 'R23',
+             'O32', 'O_s_ion', 'O_d_ion', 'com_O_log')
+        tab0 = Table([source_ID, log_mass, LHbeta, OIII5007, OIII4959, HBETA, T_e, bin_detect, indiv_detect,
+                      R23, O32, O_s_ion, O_d_ion, com_O_log], names = n)
         
     else:
         #Case for stacked spectra
