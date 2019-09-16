@@ -42,6 +42,7 @@ def create_Te_lineratio_table():
     idx_array = np.array(valid_idx)
     
     EBV_array = np.zeros(len(idx_array))
+    indiv_detect_array = np.zeros(len(idx_array))
     mass_array = np.log10(mass[valid_idx])
     LHbeta_array = LHbeta[valid_idx]        
     
@@ -74,10 +75,10 @@ def create_Te_lineratio_table():
     out_ascii = path2 + 'indivgals_Te_lineRatios.tbl'
     n = ('OBJNO', 'Mass_Bin_ID', 'LHBeta_Bin_ID', 'Log10(Mass)', 'HBeta_Luminosity', 'Te', 'OII_Flux', 'OII_SN',
          'OIII4959_Flux', 'OIII4959_SN', 'OIII5007_Flux', 'OIII5007_SN', 'HBETA_Flux', 'HBETA_SN', 'Bin Detections',
-         'EBV')
+         'Individual Detections', 'EBV')
     Te_ratio_table = Table([objno, mass_bin_ID, LHbeta_bin_ID, mass_array, LHbeta_array, Te_array, OII_Flux, OII_SN,
                             OIII4959_Flux, OIII4959_SN, OIII5007_Flux, OIII5007_SN, HBETA_Flux, HBETA_SN, detect_array,
-                            EBV_array], names = n)
+                            indiv_detect_array, EBV_array], names = n)
     asc.write(Te_ratio_table, out_ascii, format = 'fixed_width_two_line', overwrite = True)
     
     
