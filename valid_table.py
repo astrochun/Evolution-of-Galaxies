@@ -1,10 +1,7 @@
 from astropy.io import ascii as asc
-from astropy.io import fits
 import numpy as np
 from astropy.table import Table, Column
 from getpass import getuser
-from astropy.cosmology import FlatLambdaCDM
-import astropy.units as u
 
 
 if getuser() == 'carol':
@@ -57,6 +54,12 @@ def invalid_limit():
     updated_O_4363_flux = O_4363_flux
     updated_O_4363_flux[invalid_stacks_idx] = 3 * HGamma_rms[invalid_stacks_idx]
     
+    out_ascii2 = path2 + N_in_bin + '_massbin_validation.tbl'
+    updated_valid_table = Table(valid_table)
+    valid_detect_col = Column(detections, name = 'Detection')
+    updated_valid_table.add_column(valid_detect_col)
+    asc.write(updated_valid_table, out_ascii2, format = 'fixed_width_two_line', overwrite = True)
+    
     out_ascii = path2 + N_in_bin + '_updated_massbin_emission_lines.tbl'
     updated_em_table = Table(em_table)
     updated_em_table['OIII_4363_Flux_Observed'] = updated_O_4363_flux
@@ -73,6 +76,7 @@ def make_validation_table():
     mass_max = massbin_table['mass_max'].data
     mass_avg = massbin_table['mass_avg'].data
     N = massbin_table['Number of Galaxies'].data
+    #one means detection, zero means non-detection
     valid_OIII_4363 = np.ones(len(ID))
     
     if N_in_bin == '800':
