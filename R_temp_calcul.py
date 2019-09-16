@@ -3,22 +3,9 @@
 #Currently running: Grid
 import numpy as np
 import matplotlib.pyplot as plt
-from astropy.io import fits
 from astropy.io import ascii as asc
-from astropy.table import vstack, hstack
 from matplotlib.backends.backend_pdf import PdfPages
 from astropy.table import Table
-from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
-from mpl_toolkits.axes_grid1.inset_locator import mark_inset
-from os.path import exists
-import numpy.ma as ma
-from matplotlib.gridspec import GridSpec
-from pylab import subplots_adjust
-from astropy.convolution import Box1DKernel, convolve
-from scipy.optimize import curve_fit
-import scipy.integrate as integ
-from mpl_toolkits.mplot3d import Axes3D
-import sys
 from getpass import getuser
     
 
@@ -33,12 +20,17 @@ else:
 bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
 str_bin_pts_input = [str(val) for val in bin_pts_input]
 bin_pts_fname = "_".join(str_bin_pts_input)
-bin_pts_fname = 'hbeta_revised_' + bin_pts_fname    
-    
-N_in_bin = bin_pts_fname
+bin_pts_fname = 'hbeta_revised_' + bin_pts_fname
+bin_pts_fname2 = 'individual'
+#two/three components to bin_pts_fname: bin type (individual or stacks --> if stacks then size of stacks) and
+#revised data or not
 
+#make a marker to determine which case the file is & update file naming convention
+ 
+#don't need --> just replace with bin_pts_fname   
+#N_in_bin = bin_pts_fname
 
-mark_nondet = True
+mark_nondet = False
 if mark_nondet:
     updated = '_updated'
 else:
@@ -49,23 +41,20 @@ else:
 a = 13205
 b = 0.92506
 c = 0.98062
-#x = S/N([O iii]4363)
  
     
 
-def R_calculation(OIII_4363, OIII_5007, OIII_4959):
-    R_value = OIII_4363 / (OIII_5007 * (4/3))
+def R_calculation(OIII4363, OIII5007):
+    R_value = OIII4363 / (OIII5007 * (4/3))
     return R_value
 
 
 def temp_calculation(R):
-    T_e = a*(-np.log10(R) - b)**(-1*c)      #np.zeros(len(OIII5007))
+    T_e = a*(-np.log10(R) - b)**(-1*c)      
     return T_e
 
 
-def metallicity_calculation(T_e, OIII_5007, OIII_4959, OIII_4363, HBETA, OII_3727):  
-    two_beta = OII_3727 / HBETA
-    three_beta = (OIII_5007 * (4/3)) / HBETA
+def metallicity_calculation(T_e, two_beta, three_beta):   
     t_3 = T_e * 1e-4
     t_2 = 0.7 * t_3 + 0.17
     x2 = 1e-4 * 1e3 * t_2**(-0.5)
@@ -78,61 +67,196 @@ def metallicity_calculation(T_e, OIII_5007, OIII_4959, OIII_4363, HBETA, OII_372
     com_O = O_s_ion + O_d_ion
     com_O_log = np.log10(com_O) + 12
 
-    return O_s_ion , O_d_ion, com_O_log, O_s_ion_log, O_d_ion_log
+    return O_s_ion, O_d_ion, com_O_log, O_s_ion_log, O_d_ion_log
+
+
+
+def derived_properties_plots():    
+    metal_Te_file = fitspath2 + 'individual_derived_properties_metallicity.tbl'
+    MT_ascii = asc.read(metal_Te_file)
+
+    log_mass = MT_ascii['Log10(Mass)'].data
+    LHbeta = MT_ascii['HBeta_Luminosity'].data
+    ind_metal = MT_ascii['com_O_log'].data
+    R23 = MT_ascii['R23 Composite'].data
+    O32 = MT_ascii['O32 Composite'].data
+    bin_detect = MT_ascii['Detections'].data
+    
+    detection = np.where((bin_detect == 1.0) & (LHbeta > 0) & (np.isfinite(ind_metal) == True) & (ind_metal > 0))[0]
+
+    pdf_pages = PdfPages(fitspath2 + 'individual_metal_plots.pdf')
+
+    fig1, ax1 = plt.subplots()
+    cm = plt.cm.get_cmap('BuPu_r')
+    plot1 = ax1.scatter(log_mass[detection], LHbeta[detection], 0.8, c=ind_metal[detection], marker='*')
+    cb = fig1.colorbar(plot1)
+    cb.set_label('Metallicity')
+    ax1.set_xlabel('Mass')
+    ax1.set_ylabel('LHBeta')
+    ax1.set_title('Mass vs. Luminosity Colormap=Metallicity')
+    fig1.set_size_inches(8, 8)
+    fig1.savefig(pdf_pages, format='pdf')
+    
+    fig2, ax2 = plt.subplots()
+    cm = plt.cm.get_cmap('BuPu_r')
+    plot2 = ax2.scatter(R23[detection], O32[detection], 0.8, c=ind_metal[detection], marker='*')
+    cb = fig2.colorbar(plot2)
+    cb.set_label('Metallicity')
+    ax2.set_xlabel('R23')
+    ax2.set_ylabel('O32')
+    ax2.set_title('O32 vs. R23 Colormap=Metallicity')
+    fig2.set_size_inches(8, 8)
+    fig2.savefig(pdf_pages, format='pdf')
+    
+    fig3, ax3 = plt.subplots()
+    ax3.scatter(R23[detection], ind_metal[detection], marker='*', label = 'R23')
+    ax3.scatter(O32[detection], ind_metal[detection], marker='*', label = 'O32')
+    ax3.legend(loc = 'best')
+    ax3.set_ylabel('Metallicity')
+    ax3.set_title('Metallicity vs. R23 and O32')
+    fig3.set_size_inches(8, 8)
+    fig3.savefig(pdf_pages, format='pdf')
+    
+    pdf_pages.close()
+
 
 
 def run_function():
-    em_table = asc.read(fitspath2 + N_in_bin + updated + '_massbin_emission_lines.tbl')
-    r23_o32_table = asc.read(fitspath2 + 'flux_' + N_in_bin + '_bin_4089' + updated + 
-                             '_Average_R23_O32_Values.tbl')
+       
+    line_file = fitspath2 + 'indivgals_Te_lineRatios.tbl'
+    #line_file = fitspath2 + 'hbeta_revised_75_112_113_300_600_1444_1444_updated_massbin_emission_lines.tbl'
 
-    #Ascii Table Calls 
-    OIII_5007 = em_table['OIII_5007_Flux_Observed'].data
-    OIII_4959 = em_table['OIII_4958_Flux_Observed'].data
-    OIII_4363 = em_table['OIII_4363_Flux_Observed'].data
-    HBETA = em_table['HBETA_Flux_Observed'].data
-    OII_3727 = em_table['OII_3727_Flux_Observed'].data
-    N_Galaxy = em_table['Number of Galaxies'].data
-    avg_mass = em_table['mass_avg'].data  
-    R23_avg = r23_o32_table['R_23_Average'].data
-    O32_avg = r23_o32_table['O_32_Average'].data
+    line_table = asc.read(line_file)
+    
+    if 'two_beta' in line_table.keys():
+        #Case for individual spectra 
+        
+        out_ascii = fitspath2 + bin_pts_fname2 + '_derived_properties_metallicity.tbl'
+        out_fits = fitspath2 + bin_pts_fname2 + '_derived_properties_metallicity.fits'
+        
+        OIII4959 = line_table['OIII4959'].data
+        OIII5007 = line_table['OIII5007'].data
+        HBETA = line_table['HBeta'].data
+        HGAMMA = line_table['HGamma'].data
+        SNR_HG = line_table['SNR_HG'].data
+        raw_OIII4363 = line_table['OIII4363'].data
+        SNR_4363 = line_table['SNR_4363'].data
+        R23_individual = line_table['Individual_R23'].data
+        O32_individual = line_table['Individual_O32'].data
+        detections = line_table['Detection'].data
+        
+        two_beta = line_table['two_beta'].data
+        three_beta = line_table['three_beta'].data
+        T_e = line_table['Temperature'].data
+        source_ID = line_table['Source_ID'].data
+        
+        
+        O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)
+        
+        n = ('Source_ID', 'R23', 'O32', 'Observed_Flux_5007', 'Observed_Flux_4959',
+             'Observed_Flux_HBeta', 'Temperature', 'Detections', 'O_s_ion', 'O_d_ion', 'com_O_log')
+        tab0 = Table([source_ID, R23_individual, O32_individual, OIII5007, OIII4959, HBETA, T_e, detections,
+                      O_s_ion, O_d_ion, com_O_log], names = n)
+    
+    
+    elif 'Log10(Mass)' in line_table.keys():
+        #Case for individual spectra
+    
+        out_ascii = fitspath2 + bin_pts_fname2 + '_derived_properties_metallicity.tbl'
+        out_fits = fitspath2 + bin_pts_fname2 + '_derived_properties_metallicity.fits'
+        
+        OII = line_table['OII_Flux'].data
+        SN_OII = line_table['OII_SN'].data
+        OIII4959 = line_table['OIII4959_Flux'].data
+        SN_4959 = line_table['OIII4959_SN'].data
+        OIII5007 = line_table['OIII5007_Flux'].data
+        SN_5007 = line_table['OIII5007_SN'].data
+        HBETA = line_table['HBETA_Flux'].data
+        SN_HBETA = line_table['HBETA_SN'].data
+        
+        source_ID = line_table['OBJNO'].data
+        log_mass = line_table['Log10(Mass)'].data
+        LHbeta = line_table['HBeta_Luminosity'].data
+        T_e = line_table['Te'].data
+        detections = line_table['Bin Detections'].data        
+        
+        two_beta = OII / HBETA
+        three_beta = (OIII5007 + OIII4959) / HBETA
+        
+        #Calculate R23 composite and O32 composite
+        R23_composite = np.log10((OII + ((4/3) * OIII5007)) / HBETA)
+        O32_composite = np.log10(((4/3) * OIII5007) / OII)
+        
+        
+        O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)
+        
+        
+        n = ('Source_ID', 'Log10(Mass)', 'HBeta_Luminosity', 'Observed_Flux_5007', 'Observed_Flux_4959',
+             'Observed_Flux_HBeta', 'Temperature', 'Detections', 'R23 Composite', 'O32 Composite', 'O_s_ion',
+             'O_d_ion', 'com_O_log')
+        tab0 = Table([source_ID, log_mass, LHbeta, OIII5007, OIII4959, HBETA, T_e, detections, R23_composite,
+                      O32_composite, O_s_ion, O_d_ion, com_O_log], names = n)
+        
+    else:
+        #Case for stacked spectra
+        
+        out_ascii = fitspath2 + bin_pts_fname + updated + '_derived_properties_metallicity.tbl'
+        out_fits = fitspath2 + bin_pts_fname + updated + '_derived_properties_metallicity.fits'
+        
+        OII = line_table['OII_3727_Flux_Observed'].data
+        SN_OII = line_table['OII_3727_S/N'].data
+        OIII4363 = line_table['OIII_4363_Flux_Observed'].data
+        SN_4363 = line_table['OIII_4363_S/N'].data
+        OIII4959 = line_table['OIII_4958_Flux_Observed'].data
+        SN_4959 = line_table['OIII_4958_S/N'].data
+        OIII5007 = line_table['OIII_5007_Flux_Observed'].data
+        SN_5007 = line_table['OIII_5007_S/N'].data
+        HBETA = line_table['HBETA_Flux_Observed'].data
+        SN_HBETA = line_table['HBETA_S/N'].data
+        
+        N_Galaxy = line_table['Number of Galaxies'].data
+        avg_mass = line_table['mass_avg'].data 
+        log_mass = avg_mass
+        
+        two_beta = OII / HBETA
+        three_beta = (OIII5007 + OIII4959) / HBETA
+        
+        #Calculate R23 composite and O32 composite
+        R23_composite = np.log10((OII + ((4/3) * OIII5007)) / HBETA)
+        O32_composite = np.log10(((4/3) * OIII5007) / OII)
+        
+        #R, Te, and metallicity calculations
+        R_value = R_calculation(OIII4363, OIII5007)
+        T_e = temp_calculation(R_value)
+        O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)
+        
+        
+        n = ('R23_Composite', 'O32_Composite', 'N_Galaxies', 'Observed_Flux_5007', 'S/N_5007', 'Observed_Flux_4959',
+             'S/N_4959', 'Observed_Flux_4363', 'S/N_4363', 'Observed_Flux_HBETA', 'S/N_HBETA', 'Observed_Flux_3727',
+             'S/N_3727', 'Temperature', 'O_s_ion', 'O_d_ion', 'com_O_log')
+        tab0 = Table([R23_composite, O32_composite, N_Galaxy, OIII5007, SN_5007, OIII4959, SN_4959,
+                      OIII4363, SN_4363, HBETA, SN_HBETA, OII, SN_OII, T_e, O_s_ion, O_d_ion, com_O_log], names = n)
 
-    SN_5007 = em_table['OIII_5007_S/N'].data
-    SN_4959 = em_table['OIII_4958_S/N'].data
-    SN_4363 = em_table['OIII_4363_S/N'].data
-    SN_HBETA = em_table['HBETA_S/N'].data
-    SN_3727 = em_table['OII_3727_S/N'].data
+        
+    
 
-    R23_composite = np.log10((OII_3727 + ((4/3) * OIII_5007)) / HBETA)
-    O32_composite = np.log10(((4/3) * OIII_5007) / OII_3727)
-
-    R_value = R_calculation(OIII_4363, OIII_5007, OIII_4959)
-    T_e = temp_calculation(R_value)
-    O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, OIII_5007, OIII_4959, OIII_4363, HBETA, OII_3727)
-
-    #Ascii Table
-    out_ascii = fitspath2 + N_in_bin + updated + '_massbin_derived_properties_metallicity.tbl'
-    out_fits = fitspath2 + N_in_bin + updated + '_massbin_derived_properties_metallicity.fits'
-    n = ('R23_Composite', 'O32_Composite', 'R_23_Average', 'O_32_Average', 'N_Galaxies',
-         'Observed_Flux_5007', 'S/N_5007', 'Observed_Flux_4959', 'S/N_4959',
-         'Observed_Flux_4363', 'S/N_4363', 'Observed_Flux_HBETA', 'S/N_HBETA',
-         'Observed_Flux_3727', 'S/N_3727', 'Temperature', 'O_s_ion', 'O_d_ion', 'com_O_log')
-    tab0 = Table([R23_composite, O32_composite, R23_avg, O32_avg, N_Galaxy, OIII_5007, SN_5007,
-                  OIII_4959, SN_4959, OIII_4363, SN_4363, HBETA, SN_HBETA, OII_3727, SN_3727,
-                  T_e, O_s_ion, O_d_ion, com_O_log], names = n)
+    
     asc.write(tab0, out_ascii, format = 'fixed_width_two_line', overwrite = True)
     tab0.write(out_fits, format = 'fits', overwrite = True)
-
-    #Plots
-    pdf_pages = PdfPages(fitspath2 + N_in_bin + updated + '_massbin_derived_properties_metallicity.pdf')
     
+    
+    '''   
+    #Plots
+    #pdf_pages = PdfPages(fitspath2 + bin_pts_fname + updated + '_massbin_derived_properties_metallicity.pdf')
+    pdf_pages = PdfPages(fitspath2 + bin_pts_fname2 + '_derived_properties_metallicity.pdf')
+
     if mark_nondet:
-        detections = em_table['Detection'].data
+        #detections = valid_table['Valid_OIII_4363'].data
         non_detection_mark = np.where(detections == 0)[0]
         detection_mark = np.where(detections == 1)[0]
     else:
         detection_mark = np.arange(len(T_e))
-
+    
 
     fig1, ax1 = plt.subplots()
     ax1.scatter(np.log10(T_e[detection_mark]), R23_composite[detection_mark], marker = '.')
@@ -192,15 +316,6 @@ def run_function():
     
     pdf_pages.close()    
 
-    '''#Histogram
-    name = 'Temperature_histogram.pdf'
-    pdf_pages = PdfPages(fitspath2+name)
-    plt.hist(valid_T_e, bins =8)
-    plt.xlabel('Temperature (K)')
-    #plt.set_ylabel('Spectra')
-    plt.title('Preliminary Temperatures')
-    pdf_pages.savefig()'''
-
     #3D plots
     fig_3d = plt.figure(figsize = (10,8))
     ax_3d = plt.axes(projection = '3d')
@@ -212,15 +327,5 @@ def run_function():
     if mark_nondet:
         ax_3d.scatter(R23_composite[non_detection_mark], O32_composite[non_detection_mark],
                       T_e[non_detection_mark], marker = '^')
-    plt.show()
-    
-
-#log(O/H)
-#error propagation
-'''we have a flux and an sigma flux = flux/signa to noise
-propagation distrubution function... monticarlo'''
-
-#3D plots
-
-
-#Plot O/H values and try the linear plots on the voronoi 14 values 
+    plt.show() 
+    '''
