@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from astropy.table import Table
+from scipy.optimize import curve_fit 
 from getpass import getuser
     
 
@@ -22,10 +23,6 @@ str_bin_pts_input = [str(val) for val in bin_pts_input]
 bin_pts_fname = "_".join(str_bin_pts_input)
 bin_pts_fname = 'hbeta_revised_' + bin_pts_fname
 bin_pts_fname2 = 'individual'
-#two/three components to bin_pts_fname: bin type (individual or stacks --> if stacks then size of stacks) and
-#revised data or not
-
-#make a marker to determine which case the file is & update file naming convention
  
 #don't need --> just replace with bin_pts_fname   
 #N_in_bin = bin_pts_fname
@@ -83,56 +80,6 @@ def metallicity_calculation(T_e, two_beta, three_beta):
 
 
 
-def derived_properties_plots():    
-    metal_Te_file = fitspath2 + 'individual_derived_properties_metallicity.tbl'
-    MT_ascii = asc.read(metal_Te_file)
-
-    log_mass = MT_ascii['Log10(Mass)'].data
-    LHbeta = MT_ascii['HBeta_Luminosity'].data
-    ind_metal = MT_ascii['com_O_log'].data
-    R23 = MT_ascii['R23'].data
-    O32 = MT_ascii['O32'].data
-    indiv_detect = MT_ascii['Individual Detections'].data
-    
-    detection = np.where((indiv_detect == 1.0) & (LHbeta > 0))[0]
-
-    pdf_pages = PdfPages(fitspath2 + 'individual_metal_plots.pdf')
-
-    fig1, ax1 = plt.subplots()
-    cm = plt.cm.get_cmap('BuPu_r')
-    plot1 = ax1.scatter(log_mass[detection], LHbeta[detection], 0.8, c=ind_metal[detection], marker='*')
-    cb = fig1.colorbar(plot1)
-    cb.set_label('Metallicity')
-    ax1.set_xlabel('Mass')
-    ax1.set_ylabel('LHBeta')
-    ax1.set_title('Mass vs. Luminosity Colormap=Metallicity')
-    fig1.set_size_inches(8, 8)
-    fig1.savefig(pdf_pages, format='pdf')
-    
-    fig2, ax2 = plt.subplots()
-    cm = plt.cm.get_cmap('BuPu_r')
-    plot2 = ax2.scatter(R23[detection], O32[detection], 0.8, c=ind_metal[detection], marker='*')
-    cb = fig2.colorbar(plot2)
-    cb.set_label('Metallicity')
-    ax2.set_xlabel('R23')
-    ax2.set_ylabel('O32')
-    ax2.set_title('O32 vs. R23 Colormap=Metallicity')
-    fig2.set_size_inches(8, 8)
-    fig2.savefig(pdf_pages, format='pdf')
-    
-    fig3, ax3 = plt.subplots()
-    ax3.scatter(R23[detection], ind_metal[detection], marker='*', label = 'R23')
-    ax3.scatter(O32[detection], ind_metal[detection], marker='*', label = 'O32')
-    ax3.legend(loc = 'best')
-    ax3.set_ylabel('Metallicity')
-    ax3.set_title('Metallicity vs. R23 and O32')
-    fig3.set_size_inches(8, 8)
-    fig3.savefig(pdf_pages, format='pdf')
-    
-    pdf_pages.close()
-
-
-
 def run_function():
        
     line_file = fitspath2 + 'indivgals_Te_lineRatios.tbl'
@@ -187,40 +134,59 @@ def run_function():
         SN_HBETA = line_table['HBETA_SN'].data
         
         source_ID = line_table['OBJNO'].data
+        mass_bin_ID = line_table['Mass_Bin_ID'].data
+        HB_bin_ID = line_table['LHBeta_Bin_ID'].data
         log_mass = line_table['Log10(Mass)'].data
         LHbeta = line_table['HBeta_Luminosity'].data
-        T_e = line_table['Te'].data
-        bin_detect = line_table['Bin Detections'].data
+        mass_T_e = line_table['Mass Bin Te'].data
+        HB_T_e = line_table['LHBeta Bin Te'].data
+        HB_bin_detect = line_table['LHBeta Bin Detections'].data
+        mass_bin_detect = line_table['Mass Bin Detections'].data
         indiv_detect = line_table['Individual Detections'].data 
+        ebv = line_table['EBV'].data
         
-        detect = np.where((bin_detect == 1.0) & (np.isfinite(OIII5007) == True) & (OIII5007 >= 1e-18) &
-                          (OIII5007 <= 1e-15) & (np.isfinite(OIII4959) == True) & (OIII4959 >= 1e-18) & 
-                          (OIII4959 <= 1e-15) & (np.isfinite(OII) == True) & (OII >= 1e-18) & (OII <= 1e-15) &
-                          (np.isfinite(HBETA) == True) & (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
-        indiv_detect[detect] = 1.0
+        
+        mass_detect = np.where((mass_bin_detect == 1.0) & (np.isfinite(OIII5007) == True) & (OIII5007 >= 1e-18) & 
+                               (OIII5007 <= 1e-15) & (np.isfinite(OIII4959) == True) & (OIII4959 >= 1e-18) & 
+                               (OIII4959 <= 1e-15) & (np.isfinite(OII) == True) & (OII >= 1e-18) & (OII <= 1e-15) &
+                               (np.isfinite(HBETA) == True) & (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
+        HB_detect = np.where((HB_bin_detect == 1.0) & (np.isfinite(OIII5007) == True) & (OIII5007 >= 1e-18) & 
+                             (OIII5007 <= 1e-15) & (np.isfinite(OIII4959) == True) & (OIII4959 >= 1e-18) & 
+                             (OIII4959 <= 1e-15) & (np.isfinite(OII) == True) & (OII >= 1e-18) & (OII <= 1e-15) &
+                             (np.isfinite(HBETA) == True) & (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
+        indiv_detect[mass_detect] = 1.0
+        indiv_detect[HB_detect] = 1.0
         
         #create zero arrays all same length
-        two_beta = np.zeros(len(T_e))
-        three_beta = np.zeros(len(T_e))
-        R23 = np.zeros(len(T_e))
-        O32 = np.zeros(len(T_e))        
+        two_beta = np.zeros(len(source_ID))
+        three_beta = np.zeros(len(source_ID))
+        R23 = np.zeros(len(source_ID))
+        O32 = np.zeros(len(source_ID))  
         
-        two_beta[detect] = OII[detect] / HBETA[detect]
-        three_beta[detect] = (OIII5007[detect] + OIII4959[detect]) / HBETA[detect]
+        two_beta[mass_detect] = OII[mass_detect] / HBETA[mass_detect]
+        two_beta[HB_detect] = OII[HB_detect] / HBETA[HB_detect]
+        three_beta[mass_detect] = (OIII5007[mass_detect] + OIII4959[mass_detect]) / HBETA[mass_detect]
+        three_beta[HB_detect] = (OIII5007[HB_detect] + OIII4959[HB_detect]) / HBETA[HB_detect]
         
         #Calculate R23 and O32
-        R23[detect] = np.log10((OII[detect] + ((4/3) * OIII5007[detect])) / HBETA[detect])
-        O32[detect] = np.log10(((4/3) * OIII5007[detect]) / OII[detect])
+        R23[mass_detect] = np.log10((OII[mass_detect] + ((4/3) * OIII5007[mass_detect])) / HBETA[mass_detect])
+        R23[HB_detect] = np.log10((OII[HB_detect] + ((4/3) * OIII5007[HB_detect])) / HBETA[HB_detect])
+        O32[mass_detect] = np.log10(((4/3) * OIII5007[mass_detect]) / OII[mass_detect])
+        O32[HB_detect] = np.log10(((4/3) * OIII5007[HB_detect]) / OII[HB_detect])
         
         
-        O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)
+        mass_O_s_ion, mass_O_d_ion, mass_com_O_log, mass_log_O_s, mass_log_O_d = metallicity_calculation(mass_T_e, two_beta, three_beta)
+        HB_O_s_ion, HB_O_d_ion, HB_com_O_log, HB_log_O_s, HB_log_O_d = metallicity_calculation(HB_T_e, two_beta, three_beta)
         
         
-        n = ('Source_ID', 'Log10(Mass)', 'HBeta_Luminosity', 'Observed_Flux_5007', 'Observed_Flux_4959',
-             'Observed_Flux_HBeta', 'Temperature', 'Bin Detections','Individual Detections', 'R23',
-             'O32', 'O_s_ion', 'O_d_ion', 'com_O_log')
-        tab0 = Table([source_ID, log_mass, LHbeta, OIII5007, OIII4959, HBETA, T_e, bin_detect, indiv_detect,
-                      R23, O32, O_s_ion, O_d_ion, com_O_log], names = n)
+        n = ('Source_ID', 'Mass Bin ID', 'LHBeta Bin ID', 'Mass Bin Detections', 'LHBeta Bin Detections',
+             'Individual Detections', 'Log10(Mass)', 'HBeta_Luminosity', 'Observed_Flux_5007',
+             'Observed_Flux_4959', 'Observed_Flux_3727', 'Observed_Flux_HBeta', 'Mass Bin Te', 'LHBeta Bin Te',
+             'R23', 'O32', 'Mass Bin O_s_ion', 'Mass Bin O_d_ion', 'Mass Bin com_O_log', 'LHBeta Bin O_s_ion',
+             'LHBeta Bin O_d_ion', 'LHBeta Bin com_O_log', 'EBV')
+        tab0 = Table([source_ID, mass_bin_ID, HB_bin_ID, mass_bin_detect, HB_bin_detect, indiv_detect, log_mass,
+                      LHbeta, OIII5007, OIII4959, OII, HBETA, mass_T_e, HB_T_e, R23, O32, mass_O_s_ion,
+                      mass_O_d_ion, mass_com_O_log, HB_O_s_ion, HB_O_d_ion, HB_com_O_log, ebv], names = n)
         
     else:
         #Case for stacked spectra
@@ -263,94 +229,8 @@ def run_function():
                       OIII4363, SN_4363, HBETA, SN_HBETA, OII, SN_OII, T_e, O_s_ion, O_d_ion, com_O_log], names = n)
 
         
-    
 
     
     asc.write(tab0, out_ascii, format = 'fixed_width_two_line', overwrite = True)
     tab0.write(out_fits, format = 'fits', overwrite = True)
     
-    
-    '''   
-    #Plots
-    #pdf_pages = PdfPages(fitspath2 + bin_pts_fname + updated + '_massbin_derived_properties_metallicity.pdf')
-    pdf_pages = PdfPages(fitspath2 + bin_pts_fname2 + '_derived_properties_metallicity.pdf')
-
-    if mark_nondet:
-        #detections = valid_table['Valid_OIII_4363'].data
-        non_detection_mark = np.where(detections == 0)[0]
-        detection_mark = np.where(detections == 1)[0]
-    else:
-        detection_mark = np.arange(len(T_e))
-    
-
-    fig1, ax1 = plt.subplots()
-    ax1.scatter(np.log10(T_e[detection_mark]), R23_composite[detection_mark], marker = '.')
-    if mark_nondet:
-        ax1.scatter(np.log10(T_e[non_detection_mark]), R23_composite[non_detection_mark], marker = '^')
-    ax1.set_xlabel('Temperature (K)')
-    ax1.set_ylabel('R23')
-    ax1.set_title('R23 vs. Temperatures')
-    pdf_pages.savefig()
-     
-    fig2, ax2 = plt.subplots()
-    ax2.scatter(np.log10(T_e[detection_mark]), O32_composite[detection_mark], marker = '.')
-    if mark_nondet:
-        ax2.scatter(np.log10(T_e[non_detection_mark]), O32_composite[non_detection_mark], marker = '^')
-    ax2.set_xlabel('Temperature (K)')
-    ax2.set_ylabel('O32')
-    ax2.set_title('O32 vs. Temperatures')
-    pdf_pages.savefig()
-
-    fig3, ax3 = plt.subplots()
-    ax3.scatter(R23_composite[detection_mark], com_O_log[detection_mark], marker = '.')
-    if mark_nondet:
-        ax3.scatter(R23_composite[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
-    ax3.set_xlabel('R23')
-    ax3.set_ylabel('12+log(O/H) Te')
-    ax3.set_title('Composite Metallicity vs. R23')
-    pdf_pages.savefig()
-
-    fig4, ax4 = plt.subplots()
-    ax4.scatter(O32_composite[detection_mark], com_O_log[detection_mark], marker = '.')
-    if mark_nondet:
-        ax4.scatter(O32_composite[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
-    ax4.set_xlabel('O32')
-    ax4.set_ylabel('12+log(O/H) Te')
-    ax4.set_title('Composite Metallicity vs. O32')
-    pdf_pages.savefig()
-    
-    fig5, ax5 = plt.subplots()
-    ax5.scatter(avg_mass[detection_mark], np.log10(T_e[detection_mark]), marker = '.')
-    if mark_nondet:
-        ax5.scatter(avg_mass[non_detection_mark], np.log10(T_e[non_detection_mark]), marker = '^')
-    ax5.set_xlabel('Avg Mass')
-    ax5.set_ylabel('Temperature (K)')
-    ax5.set_title('Temperatures vs. Avg Mass')
-    pdf_pages.savefig()
-    
-    fig6, ax6 = plt.subplots()
-    ax6.scatter(avg_mass[detection_mark], com_O_log[detection_mark], marker = '.')
-    y = 8.798 - np.log10(1 + ((10**8.901)/(10**avg_mass))**0.640)
-    ax6.plot(avg_mass, y, color='g', linestyle = '-', marker = '*')
-    if mark_nondet:
-        ax6.scatter(avg_mass[non_detection_mark], com_O_log[non_detection_mark], marker = '^')
-    ax6.set_xlabel('Avg Mass')
-    ax6.set_ylabel('12+log(O/H) Te')
-    ax6.set_title('Composite Metallicity vs. Avg Mass')
-    pdf_pages.savefig()
-    
-    pdf_pages.close()    
-
-    #3D plots
-    fig_3d = plt.figure(figsize = (10,8))
-    ax_3d = plt.axes(projection = '3d')
-    ax_3d.set_xlabel('R23')
-    ax_3d.set_ylabel('O32')
-    ax_3d.set_zlabel('Temperatures')
-    ax_3d.scatter(R23_composite[detection_mark], O32_composite[detection_mark], T_e[detection_mark],
-                  marker = '.', linewidths = None)
-    if mark_nondet:
-        ax_3d.scatter(R23_composite[non_detection_mark], O32_composite[non_detection_mark],
-                      T_e[non_detection_mark], marker = '^')
-    plt.show() 
-    '''
