@@ -1,37 +1,42 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from astropy.io import fits
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from astropy.table import Table, hstack
 from pylab import subplots_adjust
 from scipy.optimize import curve_fit 
 from astropy.convolution import Box1DKernel, convolve
-from getpass import getuser
 
-
+'''
 if getuser() == 'carol':
     fitspath = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
     fitspath2 = fitspath + "massbin\\"
 else:
     fitspath = "../DEEP2/" 
     fitspath2 = "../"
-    
+ 
+
 mark_nondet = False
 if mark_nondet:
     updated = '_updated'
 else:
     updated = ''
     
-hbeta_bin = True
+hbeta_bin = False
+
 
 bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
 str_bin_pts_input = [str(val) for val in bin_pts_input]
 bin_pts_fname = "_".join(str_bin_pts_input)
 bin_pts_fname = 'hbeta_revised_' + bin_pts_fname
 
+bin_pts_input = [50, 137, 113, 300, 600, 1444, 1444]
+str_bin_pts_input = [str(val) for val in bin_pts_input]
+bin_pts_fname = "_".join(str_bin_pts_input)
+bin_pts_fname = 'revised_' + bin_pts_fname
+
 N_in_bin = bin_pts_fname
-dataset = 'flux_' + N_in_bin + '_bin_4089'
+dataset = N_in_bin + '_flux'
 
 flux = fitspath2 + dataset + '.fits'   
 Spect_1D, header = fits.getdata(flux, header=True)
@@ -52,6 +57,7 @@ a2 = 1.8
 lambda0 = [3726.18, 4101.73, 4340.46, 4363.21, 4861.32, 4958.91, 5006.84]
 line_type = ['Oxy2', 'Balmer', 'Balmer', 'Single', 'Balmer', 'Single', 'Single']
 line_name = ['OII_3727', 'HDELTA', 'HGAMMA', 'OIII_4363', 'HBETA', 'OIII_4958', 'OIII_5007'] 
+'''
 
 
 def movingaverage_box1D(values, width, boundary = 'fill', fill_value = 0.0):
@@ -73,7 +79,7 @@ def oxy2_gauss(x, xbar, s1, a1, c, s2, a2):
     return a1 * np.exp(-(x - xbar)**2 / (2 * s1**2)) + c + a2 * np.exp(-(x - (xbar * con1))**2 / (2 * s2**2)) 
 
 
-def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type):
+def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type, s2):
     med0 = np.median(y_norm[x_idx_mask])
     max0 = np.max(y_norm[x_idx]) - med0
 
@@ -128,7 +134,8 @@ def rms_func(wave, dispersion, lambda_in, y0, sigma_array, scalefact, mask_flag)
 #for each individual stack
 #electron temperature and the R23 and O32 values 
 #Plotting Zoomed 
-def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf = '', line_name = ''):
+def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, working_wave, line_type = '',
+                    outpdf = '', line_name = '', hbeta_bin = False):
     if hbeta_bin == True:
         nrows = 4
         ncols = 4
@@ -179,7 +186,7 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
 
         y_smooth = movingaverage_box1D(Spect_1D[rr] / scalefact, 2, boundary = 'extend')
 
-        o1, med0, max0 = get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type)
+        o1, med0, max0 = get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type, s2)
         
         #Determines y limits 
         if med0 + max0 > ref_ymax:
@@ -321,8 +328,8 @@ def zoom_gauss_plot(dataset, working_wave, pdf_pages, N, line_type = '', outpdf 
 
 
 
-def calculate_r23_o32():
-    em_table = asc.read(fitspath2 + N_in_bin + updated + '_massbin_emission_lines.tbl')
+def calculate_r23_o32(fitspath, bin_pts_fname, Spect_1D):
+    em_table = asc.read(fitspath + bin_pts_fname + '_emission_lines.tbl')
     R_23_array = np.zeros(Spect_1D.shape[0])
     O_32_array = np.zeros(Spect_1D.shape[0])
     O_3727 = em_table['OII_3727_Flux_Observed'].data
@@ -359,34 +366,44 @@ def calculate_r23_o32():
             t_ax[tt].set_xlim(8.5,11.0)
     plt.subplots_adjust(left = 0.075, right = 0.97, bottom = 0.075, top = 0.99, wspace = 0.225, hspace = 0.05)
     
-    outpdf = fitspath2 + dataset + updated + '_line_ratios.pdf'
+    outpdf = fitspath + bin_pts_fname + '_line_ratios.pdf'
     pdf_pages = PdfPages(outpdf)
     fig.savefig(pdf_pages, format ='pdf')
     pdf_pages.close()
 
-    out_ascii = fitspath2 + dataset + updated + '_Average_R23_O32_Values.tbl'        
+    out_ascii = fitspath + bin_pts_fname + '_Average_R23_O32.tbl'        
     n2 = ('R_23_Average', 'O_32_Average')
     tab = Table([R_23_array, O_32_array], names = n2)
     asc.write(tab, out_ascii, format = 'fixed_width_two_line', overwrite = True)   
     
     
 
-def zm_general():   
+def zm_general(fitspath, bin_pts_fname, Spect_1D, header, dispersion, wave, lambda0, line_type, line_name, s, a,
+               c, s1, a1, s2, a2, hbeta_bin = False):  
+    outpdf = fitspath + bin_pts_fname + '_emission_lines.pdf'
+    pdf_pages = PdfPages(outpdf)
+    table0 = asc.read(fitspath + bin_pts_fname + '_binning.tbl', format = 'fixed_width_two_line') 
+    out_ascii = fitspath + bin_pts_fname + '_emission_lines.tbl'
+    N = table0['Number of Galaxies'].data
+    
+    '''
     outpdf = fitspath2 + 'mass_bin_' + N_in_bin + '_emission_lines.pdf'
     pdf_pages = PdfPages(outpdf)
     table0 = asc.read(fitspath2 + N_in_bin + '_massbin.tbl', format = 'fixed_width_two_line') 
     out_ascii = fitspath2 + N_in_bin + '_massbin_emission_lines.tbl'
     N = table0['Number of Galaxies'].data
+    '''
     
     for ii in range(len(lambda0)):
-        em_table = zoom_gauss_plot(dataset, lambda0[ii], pdf_pages, N, line_type = line_type[ii], line_name = line_name[ii])
+        em_table = zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, lambda0[ii],
+                                   line_type = line_type[ii], line_name = line_name[ii], hbeta_bin = hbeta_bin)
         if ii == 0:
             table_stack = hstack([table0, em_table])
         else:
             table_stack = hstack([table_stack, em_table])
     asc.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
     
-    calculate_r23_o32()
+    calculate_r23_o32(fitspath, bin_pts_fname, Spect_1D)
     
     pdf_pages.close()
 
