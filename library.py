@@ -1,9 +1,8 @@
 from astropy.io import fits, ascii
-from astropy.table import Table, hstack
 from collections import Counter
 import numpy as np
+from astropy.table import Table
 import matplotlib.pyplot as plt
-import glob, pdb, string
 from getpass import getuser
 from os.path import exists
 import os
@@ -30,9 +29,6 @@ def exclude_outliers(objno):
 
 def stack_spectra(fname, mname='', plot = False, indices = 'placeholder'):
     hdu = fits.open(fname)
-    #temp1 = fname.split('/')
-    #temp2 = temp1[1].split('.')
-    #field = temp2[0]
     image = hdu[0].data
     header = hdu[0].header
     wavelen = header["CRVAL1"] + np.array(header["CDELT1"])*range(header['NAXIS1'])
@@ -70,11 +66,15 @@ def interpolate_data(interp_file):
     
 
 
-def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = '', bin_array_file = '',
+def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = '', fitspath0 = '',
             spectra_plot = False, filename = False, adaptive = False, hbeta_bin = False, lum = []):
     """
-    temp_x = quantity to be divided into bins [must NOT be sorted]
-    bin_pts_input = Number of points in each bin
+    temp_x = quantity to be divided into bins --> unsorted
+    bin_pts_input = number of points in each bin
+    x_sort = masses sorted by mass value
+    ind_sort = indices corresponding to sorted mass values in same order as x_sort
+    logx_sort = log of masses sorted by mass value
+    bin_start = lowest mass value for each bin 
     """
     
     interp_mass, no_mass_idx = interpolate_data(interp_file)    
@@ -93,15 +93,16 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     logx = np.log10(temp_x)
     logx_sort = np.log10(x_sort)
     y = range(len(logx_sort))
-            
-    out_file = bin_array_file + bin_pts_fname + '.npz'
     
+            
+    out_file = fitspath0 + bin_pts_fname + '.npz'
+        
     if exists(out_file):
         print('File exists')
         rinput = input('Do you want to delete file? Yes or no ')
         if rinput.lower() == 'yes':
             os.remove(out_file)
-            print(bin_array_file + bin_pts_fname + '.npz deleted.')
+            print(fitspath0 + bin_pts_fname + '.npz deleted.')
         else:
             idx_file = np.load(out_file) 
             bin_ind = idx_file['bin_ind'] 
@@ -114,7 +115,8 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
             bin_ID = idx_file['bin_ID']
             count = len(bin_ID)
             N = idx_file['N']
-        
+            idx_file.close()
+            
     if not exists(out_file):
         bin_ind = []
         start = 0
@@ -130,20 +132,20 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         highest_hbeta = []
         count = 0
         count2 = 0
-        
+            
         while (bin_start < logx_sort[-1]):
             if adaptive == True:
                 bin_pts = bin_pts_input[count]
             else:
                 bin_pts = bin_pts_input
-                
+                    
             stop = start + bin_pts
             if ((stop + bin_pts) > len(logx_sort)):
                 stop = len(logx_sort) - 1
             count += 1
             bin_stop = logx_sort[stop]
             bin_edge.append(bin_start)
-            
+                
             if hbeta_bin == False:
                 bin_ind.append(ind_sort[start:stop])
                 if filename != False:
@@ -163,17 +165,17 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
                 temp_upper = np.where(lum > median0)[0]
                 lower_idx = np.array(list(set(valid_ind[ind_sort][start:stop]) & set(temp_lower)))
                 upper_idx = np.array(list(set(valid_ind[ind_sort][start:stop]) & set(temp_upper)))
-                
+                    
                 non_neg = np.where(lum[lower_idx] != -1)[0]
                 non_neg = lower_idx[non_neg]
                 lowest_hbeta.append(np.min(lum[non_neg]))
                 highest_hbeta.append(np.max(lum[non_neg]))
                 lowest_hbeta.append(np.min(lum[upper_idx]))
                 highest_hbeta.append(np.max(lum[upper_idx]))
-                
+                    
                 bin_redge.append(logx_sort[start + len(lower_idx) - 1])
                 bin_edge.append(logx_sort[start + len(lower_idx)])
-                
+                    
                 bin_ind.append(lower_idx)
                 bin_ind.append(upper_idx)
                 if filename != False:
@@ -181,37 +183,51 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
                     _, upper_flx, upper_wave = stack_spectra(filename, mname, indices = upper_idx)
                     flux += [lower_flx] + [upper_flx]
                     wavelength += [lower_wave] + [upper_wave]
-                N += [len(lower_idx), len(upper_idx)]
+                    N += [len(lower_idx), len(upper_idx)]
                 mass_avg += [np.mean(logx[lower_idx])] + [np.mean(logx[upper_idx])]
                 bin_ID.append(count2)
                 count2 += 1
                 bin_ID.append(count2)
                 count2 += 1
-                
+                    
             start, bin_start = stop, bin_stop
             bin_redge.append(bin_stop)
-    
-    
-        np.savez(out_file, bin_ind = bin_ind, bin_start = bin_start, bin_edge = bin_edge, 
+            
+        '''
+        The mass array saved here contains the 4140 masses (not the log(mass)) with the no mass indices replaced
+        with interpolated values; it does NOT exclude sources excluded for binning (indices relative to
+        original table). 
+        The luminosity array saved here contains the 4140 luminosities (log(lum)) with the >44 and nans replaced
+        to -1.
+        '''
+        np.savez(out_file, mass = temp_x, lum = lum, bin_ind = bin_ind, bin_start = bin_start, bin_edge = bin_edge, 
                  bin_redge = bin_redge, flux = flux, wavelength = wavelength, mass_avg = mass_avg,
                  bin_ID = bin_ID, N = N, lowest_hbeta = lowest_hbeta, highest_hbeta = highest_hbeta)
-    
+        
         if adaptive == False:
-            out_ascii = path2 + str(bin_pts_input) + '_massbin.tbl' 
+            out_ascii = fitspath0 + str(bin_pts_input) + '_binning.tbl' 
         else:
-            out_ascii = path2 + bin_pts_fname + '_massbin.tbl'
+            out_ascii = fitspath0 + bin_pts_fname + '_binning.tbl'
+        if hbeta_bin == False:
+            lowest_hbeta = np.zeros(len(bin_pts_input))
+            highest_hbeta = np.zeros(len(bin_pts_input))
         n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies', 'Lowest Hbeta', 'Highest Hbeta')
         table_stack = Table([bin_ID, bin_edge, bin_redge, mass_avg, N, lowest_hbeta, highest_hbeta], names = n)
         ascii.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
+        
     
     xlim = [4250,4450]
     if (spectra_plot == True):
         for i in range(count):
             plt.subplot(np.ceil(count/2.0), 2, i+1)
-            plt.plot(wavelength[i*2], flux[i*2], color = 'b', linestyle = 'solid')
-            wavelen_idx = np.where((wavelength[i*2] > xlim[0]) & (wavelength[i*2] < xlim[1]))[0]
-            max0 = np.max(flux[i*2][wavelen_idx])
-            if hbeta_bin == True:
+            if hbeta_bin == False:
+                plt.plot(wavelength[i], flux[i], color = 'b', linestyle = 'solid')
+                wavelen_idx = np.where((wavelength[i] > xlim[0]) & (wavelength[i] < xlim[1]))[0]
+                max0 = np.max(flux[i][wavelen_idx])   
+            else:
+                plt.plot(wavelength[i*2], flux[i*2], color = 'b', linestyle = 'solid')
+                wavelen_idx = np.where((wavelength[i*2] > xlim[0]) & (wavelength[i*2] < xlim[1]))[0]
+                max0 = np.max(flux[i*2][wavelen_idx])
                 plt.plot(wavelength[i*2+1], flux[i*2+1], color = 'orange', linestyle = 'solid')
                 max0 = np.max(flux[i*2+1][wavelen_idx])
             plt.ylim(-0.05e-17, max0*1.1)
@@ -223,10 +239,11 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
                 an_text = 'N = '+str(N[i])
             else:
                 an_text = 'N = [%i,%i]' %(N[i*2], N[i*2+1]) 
-            plt.annotate(an_text, [0.05,0.95], xycoords='axes fraction',
-                         ha='left', va='top')
+            plt.annotate(an_text, [0.05,0.95], xycoords='axes fraction', ha='left', va='top')
     else:
         plt.bar(bin_edge, N, align = 'edge', width = bin_redge)
+        
+    
                 
     
     return bin_edge, flux
