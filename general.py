@@ -10,12 +10,15 @@ from astropy.io import ascii as asc
 from astropy.io import fits
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-from Evolution_of_Galaxies import library, emission_line_fit #, R_temp_calcul, valid_table, plots, indiv_gals
+from astropy.cosmology import FlatLambdaCDM
+import astropy.units as u
+from Evolution_of_Galaxies import library, emission_line_fit, R_temp_calcul, valid_table #, plots, indiv_gals
+from Zcalbase_gal import error_prop
 
 
 if getuser() == 'carol':
-    path_init = 'C:\\Users\\carol\\Google Drive\\MZEvolve\\'                   
+    path_init = 'C:\\Users\\carol\\Google Drive\\MZEvolve\\'  
+    path_init2 = 'C:\\Users\\carol\\Google Drive\\Zcalbase_gal\\'                 
 else:
     path_init = ''
 
@@ -23,7 +26,7 @@ else:
 
 def get_time(org_name):
     today = date.today()
-    fitspath = path_init + org_name + '\\' + "%02i%02i" % (today.month, today.day) + '\\'
+    fitspath = path_init + org_name + '\\' + "%02i%02i%02i" % (today.month, today.day, today.year) + '\\'
     if not exists(fitspath):
         os.mkdir(fitspath)
     else:
@@ -33,8 +36,36 @@ def get_time(org_name):
     return fitspath
 
 
-def run_mass_bin_analysis():
-    fitspath = get_time('massbin')
+def get_HB_luminosity():
+    hdul = fits.open(path_init2 + 'DEEP2_Field_combined.fits')
+    fits_table = hdul[1].data
+    
+    cosmo = FlatLambdaCDM(H0 = 70 * u.km / u.s / u.Mpc, Om0 = 0.3)
+    lum_dist = np.log10(cosmo.luminosity_distance(fits_table['ZSPEC']).to_value(u.cm))
+    lum = np.log10(4 * np.pi) + np.log10(fits_table['HB_FLUX_DATA']) + (2*lum_dist)
+    
+    hdul.close()
+    
+    return lum
+
+
+
+def run_bin_analysis():
+    bin_type = input('Which binning type? mass or massLHbeta')
+    if bin_type.lower() == 'mass':
+        bin_type_str = 'massbin'
+        HB_lum = []
+        bool_hbeta_bin = False
+        fitspath = get_time('massbin')
+    elif bin_type.lower() == 'masslhbeta':
+        bin_type_str = 'massLHbetabin'
+        HB_lum = get_HB_luminosity()
+        bool_hbeta_bin = True
+        fitspath = get_time('massLHbetabin')
+    else:
+        print('Invalid binning type')
+        exit(0)
+    
     
     #Run binning --> in the case of adaptive binning
     master_grid = path_init + 'Master_Grid.fits'
@@ -44,15 +75,15 @@ def run_mass_bin_analysis():
     
     mass_revised = result_revised['best.stellar.m_star'].data
     
-    bin_pts_input = [31, 124, 146, 299, 600, 1444, 1444]
+    bin_pts_input = [31, 124, 146, 299, 600, 1444, 1444]  # --> change to be a parameter
     str_bin_pts_input = [str(val) for val in bin_pts_input]
     bin_pts_fname = "_".join(str_bin_pts_input)
-    bin_pts_fname = 'massbin_revised_' + bin_pts_fname
+    bin_pts_fname = bin_type_str + '_revised_' + bin_pts_fname
 
     plt.figure(figsize=(14,8))
     edge, flux = library.binning(mass_revised, result_revised['id'], bin_pts_input, interp_file, bin_pts_fname,
                                  filename = master_grid, mname = master_mask_array, fitspath0 = fitspath,
-                                 spectra_plot = True, adaptive = True)    
+                                 spectra_plot = True, adaptive = True, hbeta_bin = bool_hbeta_bin, lum = HB_lum)
     plt.tight_layout()
     plt.savefig(fitspath + bin_pts_fname + '_composite_spectra_OHmasked_interp.pdf', bbox_inches = 'tight', pad_inches = 0)
     
@@ -67,6 +98,10 @@ def run_mass_bin_analysis():
     dispersion = header['CDELT1']
     wave = header['CRVAL1'] + dispersion*np.arange(header['NAXIS1'])
     
+    lambda0 = [3726.18, 4101.73, 4340.46, 4363.21, 4861.32, 4958.91, 5006.84]
+    line_type = ['Oxy2', 'Balmer', 'Balmer', 'Single', 'Balmer', 'Single', 'Single']
+    line_name = ['OII_3727', 'HDELTA', 'HGAMMA', 'OIII_4363', 'HBETA', 'OIII_4958', 'OIII_5007']
+    
     s = 1.0
     a = 1.0
     c = 2.0
@@ -75,15 +110,37 @@ def run_mass_bin_analysis():
     s2 = 5
     a2 = 1.8
     
-    lambda0 = [3726.18, 4101.73, 4340.46, 4363.21, 4861.32, 4958.91, 5006.84]
-    line_type = ['Oxy2', 'Balmer', 'Balmer', 'Single', 'Balmer', 'Single', 'Single']
-    line_name = ['OII_3727', 'HDELTA', 'HGAMMA', 'OIII_4363', 'HBETA', 'OIII_4958', 'OIII_5007']
-    
     emission_line_fit.zm_general(fitspath, bin_pts_fname, Spect_1D, header, dispersion, wave, lambda0, line_type,
-                                 line_name, s, a, c, s1, a1, s2, a2, hbeta_bin = False)
+                                 line_name, s, a, c, s1, a1, s2, a2, hbeta_bin = bool_hbeta_bin)
     
     
     
+    #Run validation table
+    valid_table.make_validation_table(fitspath, bin_pts_fname)
+    
+    '''
+    #Run error propagation
+    em_file = fitspath + bin_pts_fname + '_updated_emission_lines.tbl'
+    error_prop.error_prop_chuncodes(fitspath, em_file)
+    error_prop.plotting_errors()
+    
+    
+    
+    #Run R, Te, and Metallicity calculations    
+    a = 13205
+    b = 0.92506
+    c = 0.98062
+    
+    outfile = fitspath + bin_pts_fname + '_updated_derived_properties_metallicity'
+    R_temp_calcul.run_function(em_file, outfile, a, b, c)
+    
+    
+    
+    #Run plots
+    '''
+    
+    
+
     
     
 '''
