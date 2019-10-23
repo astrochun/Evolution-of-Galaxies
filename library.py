@@ -68,35 +68,48 @@ def interpolate_data(interp_file):
 
 def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = '', fitspath0 = '',
             spectra_plot = False, filename = False, adaptive = False, hbeta_bin = False, lum = []):
-    """
-    temp_x = quantity to be divided into bins --> unsorted
+    """    
+    temp_x = array of stellar masses to be divided into bins --> unsorted
+    objno = array of ID numbers --> unsorted
     bin_pts_input = number of points in each bin
-    x_sort = masses sorted by mass value
-    ind_sort = indices corresponding to sorted mass values in same order as x_sort
-    logx_sort = log of masses sorted by mass value
-    bin_start = lowest mass value for each bin 
+    lum = array of HBeta luminosities
+    
+    interp_mass = array of interpolated mass values
+    no_mass_idx = indices in temp_x that have negative or nan masses
+    temp_flag = array of 0's and 1's that is the size of objno where 0 = valid object and 1 = invalid object
+    
+    valid_ind = indices relative to temp_x of valid masses
+    x_sort = only valid masses sorted by mass value
+    ind_sort = indices in temp_x corresponding to sorted mass values put in same order as x_sort
+    logx = log of entire mass array
+    logx_sort = log of only valid masses sorted by mass value
+    y = number of valid masses
     """
     
+    #Replace indices of no mass with interpolated mass
     interp_mass, no_mass_idx = interpolate_data(interp_file)    
     interp_mass = 10**(interp_mass)
     temp_x[no_mass_idx] = interp_mass
     
     temp_flag = exclude_outliers(objno)
     
-    #Remove bad data and initially excluded data
+    #Remove invalid data and initially excluded data
     valid_ind = np.where((np.isfinite(temp_x)==True) & (temp_x>0) & (temp_x < 1e13) & (temp_flag == 0))[0]
     
+    #sort valid masses by mass and ID array by sorted mass
     x_sort = np.sort(temp_x[valid_ind])
     ind_sort = np.argsort(temp_x[valid_ind])
-    objno = objno[valid_ind][ind_sort]
+    objno = objno[valid_ind][ind_sort]            #IDs of valid masses in order of sorted valid masses
    
+    #take log of all masses and of valid masses
     logx = np.log10(temp_x)
     logx_sort = np.log10(x_sort)
     y = range(len(logx_sort))
     
-            
+           
     out_file = fitspath0 + bin_pts_fname + '.npz'
-        
+    
+    #Check if binning npz file already exists    
     if exists(out_file):
         print('File exists')
         rinput = input('Do you want to delete file? Yes or no ')
@@ -116,7 +129,31 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
             count = len(bin_ID)
             N = idx_file['N']
             idx_file.close()
-            
+    
+    '''
+    bin_ind = list of lists where each inner list contains the indices relative to temp_x that are in each bin
+    start = number that starts each bin --> i.e. if bin_pts = 75, 112, 113, 300, 600, 1444, 1444 then
+                                            start = 0, 75, 112, 113, 300, 600, 1444
+    stop = number that ends each bin (exclusive) --> i.e. if bin_pts = 75, 112, 113, 300, 600, 1444, 1444 then
+                                                     stop = 75, 112, 113, 300, 600, 1444, 1444
+    bin_start = first mass value for each bin
+    bin_stop = last mass value in each bin
+    
+    flux = 2D list of flux values from the stack_spectra function where each inner list is one bin
+    wavelength = 2D list of wavelength values from the stack_spectra function where each inner list is one bin
+    
+    bin_edge = list of mass values that appear first (left edge) in each bin
+    bin_redge = list of mass values that appear last (right edge) in each bin
+    lowest_hbeta = list of Hbeta luminosity values that appear first (left edge) in each mass-LHbeta bin 
+    highest_hbeta = list of Hbeta luminosity values that appear last (right edge) in each mass-LHbeta bin
+    mass_avg = list of average masses from each bin
+    bin_ID = list of bin numbers --> goes from 1 to number of bins
+    N = list of number of values in each bin (i.e. same numbers as passed in bin_pts)
+    count = number of mass bins
+    count2 = number of mass-LHbeta bins 
+    '''
+    
+    #If binning npz file doesn't exist, do binning           
     if not exists(out_file):
         bin_ind = []
         start = 0
@@ -145,17 +182,36 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
             count += 1
             bin_stop = logx_sort[stop]
             bin_edge.append(bin_start)
-                
+            
+            #for mass bins
             if hbeta_bin == False:
                 bin_ind.append(ind_sort[start:stop])
+                
+                #stack spectra
                 if filename != False:
                     _, flx, wave = stack_spectra(filename, mname, indices = ind_sort[start:stop])
                     flux.append(flx)
                     wavelength.append(wave)
                 N.append(len(ind_sort[start:stop]))
                 mass_avg.append(np.mean(logx_sort[start:stop]))
-                bin_ID.append(count)
+                bin_ID.append(count)    
+                    
+            #for mass-LHbeta bins
             else:
+                '''
+                lum_sort = Hbeta luminosity values of the valid masses in mass-sorted order
+                valid_hbeta = valid Hbeta luminosity indices that also have valid masses for one bin
+                              --> sorted by valid mass
+                median0 = median Hbeta luminosity value of the mass bin
+                invalid_hbeta = invalid Hbeta luminosity indices
+                temp_lower = indices of Hbeta luminosity values less than or equal to the bin median value
+                temp_upper = indices of Hbeta luminosity values greater than the bin median value
+                lower_idx = indices of samples with valid mass values and Hbeta luminosity values less than
+                            or equal to the bin median for a given bin
+                upper_idx = indices of samples with valid mass values and Hbeta luminosity values greater than
+                            the bin median for a given bin
+                '''
+                
                 lum_sort = lum[valid_ind][ind_sort]
                 valid_hbeta = np.where(lum_sort[start:stop] < 44)[0]
                 median0 = np.median(lum_sort[start:stop][valid_hbeta])
@@ -172,12 +228,12 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
                 highest_hbeta.append(np.max(lum[non_neg]))
                 lowest_hbeta.append(np.min(lum[upper_idx]))
                 highest_hbeta.append(np.max(lum[upper_idx]))
-                    
                 bin_redge.append(logx_sort[start + len(lower_idx) - 1])
                 bin_edge.append(logx_sort[start + len(lower_idx)])
-                    
                 bin_ind.append(lower_idx)
                 bin_ind.append(upper_idx)
+                
+                #stack spectra
                 if filename != False:
                     _, lower_flx, lower_wave = stack_spectra(filename, mname, indices = lower_idx)
                     _, upper_flx, upper_wave = stack_spectra(filename, mname, indices = upper_idx)
