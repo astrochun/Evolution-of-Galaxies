@@ -80,6 +80,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     
     valid_ind = indices relative to temp_x of valid masses
     x_sort = only valid masses sorted by mass value
+    argsort_valid_x = indices relative to array containing only the valid masses (< 4140) 
     ind_sort = indices in temp_x corresponding to sorted mass values put in same order as x_sort
     logx = log of entire mass array
     logx_sort = log of only valid masses sorted by mass value
@@ -91,16 +92,17 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     interp_mass = 10**(interp_mass)
     temp_x[no_mass_idx] = interp_mass
     
-    temp_flag = exclude_outliers(objno)
+    temp_flag = exclude_outliers(objno)    
     
     #Remove invalid data and initially excluded data
-    valid_ind = np.where((np.isfinite(temp_x)==True) & (temp_x>0) & (temp_x < 1e13) & (temp_flag == 0))[0]
+    valid_ind = np.where((np.isfinite(temp_x)==True) & (temp_x > 0) & (temp_x < 1e13) & (temp_flag == 0))[0]
     
     #sort valid masses by mass and ID array by sorted mass
     x_sort = np.sort(temp_x[valid_ind])
-    ind_sort = np.argsort(temp_x[valid_ind])
-    objno = objno[valid_ind][ind_sort]            #IDs of valid masses in order of sorted valid masses
-   
+    argsort_valid_x = np.argsort(temp_x[valid_ind])
+    ind_sort = valid_ind[argsort_valid_x]             #used to be --> ind_sort = np.argsort(temp_x[valid_ind])
+    objno = objno[ind_sort]                           #IDs of valid masses in order of sorted valid masses
+    
     #take log of all masses and of valid masses
     logx = np.log10(temp_x)
     logx_sort = np.log10(x_sort)
