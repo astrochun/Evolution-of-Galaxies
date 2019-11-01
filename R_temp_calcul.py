@@ -9,7 +9,7 @@ from astropy.table import Table
 from scipy.optimize import curve_fit 
 from getpass import getuser
     
-
+'''
 #For generalizing for several users
 if getuser() == 'carol':
     fitspath = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
@@ -17,12 +17,18 @@ if getuser() == 'carol':
 else:
     fitspath = "../DEEP2/" 
     fitspath2 = "../"
-    
+ 
+
 bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
 str_bin_pts_input = [str(val) for val in bin_pts_input]
 bin_pts_fname = "_".join(str_bin_pts_input)
 bin_pts_fname = 'hbeta_revised_' + bin_pts_fname
 bin_pts_fname2 = 'individual'
+
+bin_pts_input = [50, 137, 113, 300, 600, 1444, 1444]
+str_bin_pts_input = [str(val) for val in bin_pts_input]
+bin_pts_fname = "_".join(str_bin_pts_input)
+bin_pts_fname = 'revised_' + bin_pts_fname
  
 #don't need --> just replace with bin_pts_fname   
 #N_in_bin = bin_pts_fname
@@ -38,7 +44,7 @@ else:
 a = 13205
 b = 0.92506
 c = 0.98062
- 
+''' 
     
 
 def R_calculation(OIII4363, OIII5007):
@@ -46,7 +52,7 @@ def R_calculation(OIII4363, OIII5007):
     return R_value
 
 
-def temp_calculation(R):
+def temp_calculation(R, a, b, c):
     T_e = a*(-np.log10(R) - b)**(-1*c)      
     return T_e
 
@@ -80,18 +86,14 @@ def metallicity_calculation(T_e, two_beta, three_beta):
 
 
 
-def run_function():
-       
-    line_file = fitspath2 + 'indivgals_Te_lineRatios.tbl'
-    #line_file = fitspath2 + 'hbeta_revised_75_112_113_300_600_1444_1444_updated_massbin_emission_lines.tbl'
-
+def run_function(line_file, outfile, a, b, c):
     line_table = asc.read(line_file)
     
     if 'two_beta' in line_table.keys():
         #Case for individual spectra 
         
-        out_ascii = fitspath2 + bin_pts_fname2 + '_derived_properties_metallicity.tbl'
-        out_fits = fitspath2 + bin_pts_fname2 + '_derived_properties_metallicity.fits'
+        out_ascii = outfile + '.tbl'
+        out_fits = outfile + '.fits'
         
         OIII4959 = line_table['OIII4959'].data
         OIII5007 = line_table['OIII5007'].data
@@ -121,8 +123,8 @@ def run_function():
     elif 'Log10(Mass)' in line_table.keys():
         #Case for individual spectra
     
-        out_ascii = fitspath2 + bin_pts_fname2 + '_derived_properties_metallicity.tbl'
-        out_fits = fitspath2 + bin_pts_fname2 + '_derived_properties_metallicity.fits'
+        out_ascii = outfile + '.tbl'
+        out_fits = outfile + '.fits'
         
         OII = line_table['OII_Flux'].data
         SN_OII = line_table['OII_SN'].data
@@ -191,8 +193,8 @@ def run_function():
     else:
         #Case for stacked spectra
         
-        out_ascii = fitspath2 + bin_pts_fname + updated + '_derived_properties_metallicity.tbl'
-        out_fits = fitspath2 + bin_pts_fname + updated + '_derived_properties_metallicity.fits'
+        out_ascii = outfile + '.tbl'
+        out_fits = outfile + '.fits'
         
         OII = line_table['OII_3727_Flux_Observed'].data
         SN_OII = line_table['OII_3727_S/N'].data
@@ -218,7 +220,7 @@ def run_function():
         
         #R, Te, and metallicity calculations
         R_value = R_calculation(OIII4363, OIII5007)
-        T_e = temp_calculation(R_value)
+        T_e = temp_calculation(R_value, a, b, c)
         O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)
         
         
