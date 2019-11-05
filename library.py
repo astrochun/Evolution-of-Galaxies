@@ -81,10 +81,9 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     valid_ind = indices relative to temp_x of valid masses
     x_sort = only valid masses sorted by mass value
     argsort_valid_x = indices relative to array containing only the valid masses (< 4140) 
-    ind_sort = indices in temp_x corresponding to sorted mass values put in same order as x_sort
+    valid_ind_sort = indices in temp_x corresponding to sorted mass values put in same order as x_sort
     logx = log of entire mass array
     logx_sort = log of only valid masses sorted by mass value
-    y = number of valid masses
     """
     
     #Replace indices of no mass with interpolated mass
@@ -100,13 +99,12 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     #sort valid masses by mass and ID array by sorted mass
     x_sort = np.sort(temp_x[valid_ind])
     argsort_valid_x = np.argsort(temp_x[valid_ind])
-    ind_sort = valid_ind[argsort_valid_x]             #used to be --> ind_sort = np.argsort(temp_x[valid_ind])
-    objno = objno[ind_sort]                           #IDs of valid masses in order of sorted valid masses
+    valid_ind_sort = valid_ind[argsort_valid_x]      #values in valid_ind_sort are indices relative to full 4140
+    #objno = objno[valid_ind_sort]                    #IDs of valid masses in order of sorted valid masses
     
     #take log of all masses and of valid masses
     logx = np.log10(temp_x)
     logx_sort = np.log10(x_sort)
-    y = range(len(logx_sort))
     
            
     out_file = fitspath0 + bin_pts_fname + '.npz'
@@ -187,14 +185,14 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
             
             #for mass bins
             if hbeta_bin == False:
-                bin_ind.append(ind_sort[start:stop])
+                bin_ind.append(valid_ind_sort[start:stop])
                 
                 #stack spectra
                 if filename != False:
-                    _, flx, wave = stack_spectra(filename, mname, indices = ind_sort[start:stop])
+                    _, flx, wave = stack_spectra(filename, mname, indices = valid_ind_sort[start:stop])
                     flux.append(flx)
                     wavelength.append(wave)
-                N.append(len(ind_sort[start:stop]))
+                N.append(len(valid_ind_sort[start:stop]))
                 mass_avg.append(np.mean(logx_sort[start:stop]))
                 bin_ID.append(count)    
                     
@@ -214,15 +212,15 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
                             the bin median for a given bin
                 '''
                 
-                lum_sort = lum[valid_ind][ind_sort]
+                lum_sort = lum[valid_ind][valid_ind_sort]
                 valid_hbeta = np.where(lum_sort[start:stop] < 44)[0]
                 median0 = np.median(lum_sort[start:stop][valid_hbeta])
                 invalid_hbeta = np.where((lum_sort[start:stop] > 44) | (np.isfinite(lum_sort[start:stop]) == False))[0]
-                lum[valid_ind[ind_sort[start:stop][invalid_hbeta]]] = -1
+                lum[valid_ind[valid_ind_sort[start:stop][invalid_hbeta]]] = -1
                 temp_lower = np.where(lum <= median0)[0]
                 temp_upper = np.where(lum > median0)[0]
-                lower_idx = np.array(list(set(valid_ind[ind_sort][start:stop]) & set(temp_lower)))
-                upper_idx = np.array(list(set(valid_ind[ind_sort][start:stop]) & set(temp_upper)))
+                lower_idx = np.array(list(set(valid_ind[valid_ind_sort][start:stop]) & set(temp_lower)))
+                upper_idx = np.array(list(set(valid_ind[valid_ind_sort][start:stop]) & set(temp_upper)))
                     
                 non_neg = np.where(lum[lower_idx] != -1)[0]
                 non_neg = lower_idx[non_neg]
