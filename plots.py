@@ -2,11 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
-from astropy.table import Table
 from scipy.optimize import curve_fit 
-from getpass import getuser
     
-
+'''
 #For generalizing for several users
 if getuser() == 'carol':
     fitspath = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
@@ -20,17 +18,149 @@ str_bin_pts_input = [str(val) for val in bin_pts_input]
 bin_pts_fname = "_".join(str_bin_pts_input)
 bin_pts_fname = 'hbeta_revised_' + bin_pts_fname
 bin_pts_fname2 = 'individual'
+'''
+
+'''
+def temp_plots(fitspath, bin_pts_fname, updated = False):
+    #metal_table = asc.read('C:\\Users\\carol\\Google Drive\\MZEvolve\\massbin\\10252019\\TESTrevised_75_112_113_300_600_1444_1444\\massbin_revised_75_112_113_300_600_1444_1444_updated_derived_properties_metallicity.tbl')
+    #em_table = asc.read('C:\\Users\\carol\\Google Drive\\MZEvolve\\massbin\\10252019\\TESTrevised_75_112_113_300_600_1444_1444\\massbin_revised_75_112_113_300_600_1444_1444_updated_emission_lines.tbl')
+    #pdf_pages = PdfPages('C:\\Users\\carol\\Google Drive\\MZEvolve\\massbin\\10252019\\TESTrevised_75_112_113_300_600_1444_1444\\updated_metallicity_plot.pdf')
+    metal_table = asc.read(fitspath + bin_pts_fname + '_derived_properties_metallicity.tbl')
+    em_table = asc.read(fitspath + bin_pts_fname + '_emission_lines.tbl')
+    pdf_pages = PdfPages(fitspath + bin_pts_fname + '_metallicity_plot.pdf')
+    
+    metallicity = metal_table['com_O_log'].data
+    mass_avg = em_table['mass_avg'].data
+    
+    fig, ax = plt.subplots()
+    if updated == True:
+        detections = em_table['Detection'].data
+        non_detections = np.where(detections != 1)[0]
+        detections = np.where(detections == 1)[0]
+        
+        ax.scatter(mass_avg[detections], metallicity[detections])
+        ax.scatter(mass_avg[non_detections], metallicity[non_detections], color = 'orange', marker = '^')
+    else:
+        ax.scatter(mass_avg, metallicity)
+    
+    fig.savefig(pdf_pages, format='pdf')
+    pdf_pages.close()
+'''    
+    
+
+def bin_derived_props_plots(fitspath, bin_pts_fname):
+    metal_table = asc.read(fitspath + bin_pts_fname + '_derived_properties_metallicity.tbl')
+    em_table = asc.read(fitspath + bin_pts_fname + '_emission_lines.tbl')
+    pdf_pages = PdfPages(fitspath + bin_pts_fname + '_derived_properties_metallicity.pdf')
+    
+    com_O_log = metal_table['com_O_log'].data
+    T_e = metal_table['Temperature'].data
+    R23_composite = metal_table['R23_Composite'].data
+    O32_composite = metal_table['O32_Composite'].data
+    
+    avg_mass = em_table['mass_avg'].data
+    detection = em_table['Detection'].data
+    OII = em_table['OII_3727_Flux_Observed'].data
+    OIII4363 = em_table['Updated_OIII_4363_Flux_Observed'].data
+    OIII5007 = em_table['OIII_5007_Flux_Observed'].data
+    HBeta = em_table['HBETA_Flux_Observed'].data
+    
+    non_detect = np.where(detection != 1)[0]
+    detect = np.where(detection == 1)[0]
+        
+    #Line ratios        
+    OII_HBeta = OII / HBeta
+    OIII_HBeta = (OIII5007 * (4/3)) / HBeta            
+    OIII_ratio = OIII4363 / (OIII5007 * (4/3))            
+    
+    #Line Ratios vs Mass
+    fig1, ax1 = plt.subplots(2, 2)
+    ax1[0, 0].scatter(avg_mass, R23_composite, label = 'R_23')
+    ax1[0, 0].scatter(avg_mass, O32_composite, label = 'O_32')
+    ax1[0, 0].legend(loc = 'best')
+    ax1[0, 0].set_xticklabels([])
+    ax1[0, 1].scatter(avg_mass, np.log10(OII_HBeta), label = 'OII/HBeta')
+    ax1[0, 1].legend(loc = 'best')
+    ax1[0, 1].set_xticklabels([])
+    ax1[1, 0].scatter(avg_mass, np.log10(OIII_HBeta), label = 'OIII/HBeta')
+    ax1[1, 0].legend(loc = 'best')
+    ax1[1, 0].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
+    ax1[1, 1].scatter(avg_mass, np.log10(OIII_ratio), label = '4363/(5007 * (4/3))')
+    ax1[1, 1].legend(loc = 'best')
+    ax1[1, 1].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
+    for t_ax in ax1:
+        for tt in range(len(t_ax)):
+            t_ax[tt].set_xlim(8.5,11.0)
+    plt.subplots_adjust(left = 0.075, right = 0.97, bottom = 0.075, top = 0.99, wspace = 0.225, hspace = 0.05)
+    pdf_pages.savefig()    
+    
+    #R23 vs Temperature
+    fig2, ax2 = plt.subplots()
+    ax2.scatter(np.log10(T_e[detect]), R23_composite[detect], marker = '.')
+    ax2.scatter(np.log10(T_e[non_detect]), R23_composite[non_detect], marker = '^')
+    ax2.set_xlabel('$T_e$ (K)')
+    ax2.set_ylabel('$R_{23}$')
+    ax2.set_title('$R_{23}$ vs. Temperatures')
+    pdf_pages.savefig()
+     
+    #O32 vs Temperature
+    fig3, ax3 = plt.subplots()
+    ax3.scatter(np.log10(T_e[detect]), O32_composite[detect], marker = '.')
+    ax3.scatter(np.log10(T_e[non_detect]), O32_composite[non_detect], marker = '^')
+    ax3.set_xlabel('$T_e$ (K)')
+    ax3.set_ylabel('$O_{32}$')
+    ax3.set_title('$O_{32}$ vs. Temperatures')
+    pdf_pages.savefig()
+    
+    #Metallicity vs R23
+    fig4, ax4 = plt.subplots()
+    ax4.scatter(R23_composite[detect], com_O_log[detect], marker = '.')
+    ax4.scatter(R23_composite[non_detect], com_O_log[non_detect], marker = '^')
+    ax4.set_xlabel('$R_{23}$')
+    ax4.set_ylabel('12+log(O/H) $T_e$')
+    ax4.set_title('Composite Metallicity vs. $R_{23}$')
+    pdf_pages.savefig()
+    
+    #Metallicity vs O32
+    fig5, ax5 = plt.subplots()
+    ax5.scatter(O32_composite[detect], com_O_log[detect], marker = '.')
+    ax5.scatter(O32_composite[non_detect], com_O_log[non_detect], marker = '^')
+    ax5.set_xlabel('$O_{32}$')
+    ax5.set_ylabel('12+log(O/H) $T_e$')
+    ax5.set_title('Composite Metallicity vs. O32')
+    pdf_pages.savefig()
+    
+    #Temperature vs Mass
+    fig6, ax6 = plt.subplots()
+    ax6.scatter(avg_mass[detect], np.log10(T_e[detect]), marker = '.')
+    ax6.scatter(avg_mass[non_detect], np.log10(T_e[non_detect]), marker = '^')
+    ax6.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
+    ax6.set_ylabel('$T_e$ (K)')
+    ax6.set_title('Temperatures vs. Avg Mass')
+    pdf_pages.savefig()
+    
+    #Metallicity vs Mass
+    fig7, ax7 = plt.subplots()
+    ax7.scatter(avg_mass[detect], com_O_log[detect], marker = '.')
+    #y = 8.798 - np.log10(1 + ((10**8.901)/(10**avg_mass))**0.640)
+    #ax7.plot(avg_mass, y, color='g', linestyle = '-', marker = '*')
+    ax7.scatter(avg_mass[non_detect], com_O_log[non_detect], marker = '^')
+    ax7.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
+    ax7.set_ylabel('12+log(O/H) $T_e$')
+    ax7.set_title('Composite Metallicity vs. Avg Mass')
+    pdf_pages.savefig()
+    
+    pdf_pages.close()
+    
 
 
 
-
-
-def derived_properties_plots():    
-    metal_Te_file = fitspath2 + 'individual_derived_properties_metallicity.tbl'
-    HB_valid_file = fitspath2 + 'hbeta_revised_75_112_113_300_600_1444_1444_massbin_validation.tbl'
-    mass_valid_file = fitspath2 + 'revised_75_112_113_300_600_1444_1444_massbin_validation.tbl'
-    HB_bin_metal_file = fitspath2 + 'hbeta_revised_75_112_113_300_600_1444_1444_updated_massbin_derived_properties_metallicity.tbl'
-    mass_bin_metal_file = fitspath2 + 'revised_75_112_113_300_600_1444_1444_updated_massbin_derived_properties_metallicity.tbl'
+def derived_properties_plots(fitspath):    
+    metal_Te_file = fitspath + 'individual_derived_properties_metallicity.tbl'
+    HB_valid_file = fitspath + 'hbeta_revised_75_112_113_300_600_1444_1444_massbin_validation.tbl'
+    mass_valid_file = fitspath + 'revised_75_112_113_300_600_1444_1444_massbin_validation.tbl'
+    HB_bin_metal_file = fitspath + 'hbeta_revised_75_112_113_300_600_1444_1444_updated_massbin_derived_properties_metallicity.tbl'
+    mass_bin_metal_file = fitspath + 'revised_75_112_113_300_600_1444_1444_updated_massbin_derived_properties_metallicity.tbl'
     
     MT_ascii = asc.read(metal_Te_file)
     HB_valid_table = asc.read(HB_valid_file)
@@ -62,7 +192,7 @@ def derived_properties_plots():
     mass_detect = np.where(mass_bin_detect_valid == 1.0)[0]
     mass_non_detect = np.where(mass_bin_detect_valid == 0.0)[0]
 
-    pdf_pages = PdfPages(fitspath2 + 'individual_metal_plots.pdf')
+    pdf_pages = PdfPages(fitspath + 'individual_metal_plots.pdf')
     
     
     
@@ -75,7 +205,7 @@ def derived_properties_plots():
     cb.set_label('Metallicity')
     ax1.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax1.set_ylabel('log(H$\\beta$ Luminosity)')
-    ax1.set_title('H$\\beta$ Luminosity Bins: H$\\beta$ Luminosity vs. Mass Colormap=Metallicity')
+    ax1.set_title('$M_\star$-LH$\\beta$ Bins: H$\\beta$ Luminosity vs. Mass Colormap=Metallicity')
     fig1.set_size_inches(8, 8)
     fig1.savefig(pdf_pages, format='pdf')
     
@@ -86,7 +216,7 @@ def derived_properties_plots():
     cb.set_label('Metallicity')
     ax2.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax2.set_ylabel('log(H$\\beta$ Luminosity)')
-    ax2.set_title('Mass Bins: H$\\beta$ Luminosity vs. Mass Colormap=Metallicity')
+    ax2.set_title('$M_\star$ Bins: H$\\beta$ Luminosity vs. Mass Colormap=Metallicity')
     fig2.set_size_inches(8, 8)
     fig2.savefig(pdf_pages, format='pdf')
     
@@ -101,7 +231,7 @@ def derived_properties_plots():
     cb.set_label('Metallicity')
     ax3.set_xlabel('$R_{23}$')
     ax3.set_ylabel('$O_{32}$')
-    ax3.set_title('H$\\beta$ Luminosity Bins: $O_{32}$ vs. $R_{23}$ Colormap=Metallicity')
+    ax3.set_title('$M_\star$-LH$\\beta$ Bins: $O_{32}$ vs. $R_{23}$ Colormap=Metallicity')
     fig3.set_size_inches(8, 8)
     fig3.savefig(pdf_pages, format='pdf')
     
@@ -112,7 +242,7 @@ def derived_properties_plots():
     cb.set_label('Metallicity')
     ax4.set_xlabel('$R_{23}$')
     ax4.set_ylabel('$O_{32}$')
-    ax4.set_title('Mass Bins: $O_{32}$ vs. $R_{23}$ Colormap=Metallicity')
+    ax4.set_title('$M_\star$ Bins: $O_{32}$ vs. $R_{23}$ Colormap=Metallicity')
     fig4.set_size_inches(8, 8)
     fig4.savefig(pdf_pages, format='pdf')
     
@@ -125,7 +255,7 @@ def derived_properties_plots():
     ax5.scatter(O32[HB_detection], HB_ind_metal[HB_detection], facecolors = 'None', edgecolors = 'red', label = '$O_{32}$')
     ax5.legend(loc = 'best')
     ax5.set_ylabel('Metallicity')
-    ax5.set_title('H$\\beta$ Luminosity Bins: Metallicity vs. $R_{23}$ and $O_{32}$')
+    ax5.set_title('$M_\star$-LH$\\beta$ Bins: Metallicity vs. $R_{23}$ and $O_{32}$')
     fig5.set_size_inches(8, 8)
     fig5.savefig(pdf_pages, format='pdf')
     
@@ -134,7 +264,7 @@ def derived_properties_plots():
     ax6.scatter(O32[mass_detection], mass_ind_metal[mass_detection], facecolors = 'None', edgecolors = 'red', label = '$O_{32}$')
     ax6.legend(loc = 'best')
     ax6.set_ylabel('Metallicity')
-    ax6.set_title('Mass Bins: Metallicity vs. $R_{23}$ and $O_{32}$')
+    ax6.set_title('$M_\star$ Bins: Metallicity vs. $R_{23}$ and $O_{32}$')
     fig6.set_size_inches(8, 8)
     fig6.savefig(pdf_pages, format='pdf')
     
@@ -172,7 +302,7 @@ def derived_properties_plots():
     fail = False
     #p0 = [8.798, 8.901, 0.640]
     p0 = [8.798, 0.640]
-    #para_bounds = ((8.0, 0.0, 0.0), (9.0, 1.0, 1.0))
+    #para_bounds = ((8.0, 8.0, 0.0), (9.0, 9.5, 1.0))
     para_bounds = ((8.0, 0.0), (9.0, 1.0))
     try:
         o11, o21 = curve_fit(mass_metal_fit2, HB_bin_avg_mass[HB_detect], HB_bin_metal[HB_detect], p0 = p0, bounds = para_bounds)
@@ -191,8 +321,8 @@ def derived_properties_plots():
         ax7[0].plot(mass, mass_metal_fit2(mass, *o11), alpha = 0.5, label = 'Our Fit')
         ax7[1].plot(mass, mass_metal_fit2(mass, *o12), alpha = 0.5, label = 'Our Fit')
           
-    ax7[0].legend(title = 'H$\\beta$ Lum Bins', fontsize = 5, loc = 'upper left')
-    ax7[1].legend(title = 'Mass Bins', fontsize = 5, loc = 'upper left')
+    ax7[0].legend(title = '$M_\star$-LH$\\beta$ Bins', fontsize = 5, loc = 'upper left')
+    ax7[1].legend(title = '$M_\star$ Bins', fontsize = 5, loc = 'upper left')
     ax7[0].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax7[0].set_ylabel('12+log(O/H) $T_e$')
     ax7[1].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
@@ -224,8 +354,8 @@ def mass_metal_fit2(mass, a, g):
 
 
 
-def find_outlier():
-    metal_Te_file = fitspath2 + 'individual_derived_properties_metallicity.tbl'
+def find_outlier(fitspath):
+    metal_Te_file = fitspath + 'individual_derived_properties_metallicity.tbl'
     
     MT_ascii = asc.read(metal_Te_file)
     
