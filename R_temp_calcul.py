@@ -9,42 +9,6 @@ from astropy.table import Table
 from scipy.optimize import curve_fit 
 from getpass import getuser
     
-'''
-#For generalizing for several users
-if getuser() == 'carol':
-    fitspath = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
-    fitspath2 = fitspath + "massbin\\"
-else:
-    fitspath = "../DEEP2/" 
-    fitspath2 = "../"
- 
-
-bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
-str_bin_pts_input = [str(val) for val in bin_pts_input]
-bin_pts_fname = "_".join(str_bin_pts_input)
-bin_pts_fname = 'hbeta_revised_' + bin_pts_fname
-bin_pts_fname2 = 'individual'
-
-bin_pts_input = [50, 137, 113, 300, 600, 1444, 1444]
-str_bin_pts_input = [str(val) for val in bin_pts_input]
-bin_pts_fname = "_".join(str_bin_pts_input)
-bin_pts_fname = 'revised_' + bin_pts_fname
- 
-#don't need --> just replace with bin_pts_fname   
-#N_in_bin = bin_pts_fname
-
-mark_nondet = False
-if mark_nondet:
-    updated = '_updated'
-else:
-    updated = ''
-
-
-#Constants
-a = 13205
-b = 0.92506
-c = 0.98062
-''' 
     
 
 def R_calculation(OIII4363, OIII5007):
@@ -167,8 +131,8 @@ def run_function(line_file, outfile, a, b, c):
         
         two_beta[mass_detect] = OII[mass_detect] / HBETA[mass_detect]
         two_beta[HB_detect] = OII[HB_detect] / HBETA[HB_detect]
-        three_beta[mass_detect] = (OIII5007[mass_detect] + OIII4959[mass_detect]) / HBETA[mass_detect]
-        three_beta[HB_detect] = (OIII5007[HB_detect] + OIII4959[HB_detect]) / HBETA[HB_detect]
+        three_beta[mass_detect] = (OIII5007[mass_detect] * (4/3)) / HBETA[mass_detect]
+        three_beta[HB_detect] = (OIII5007[HB_detect] * (4/3)) / HBETA[HB_detect]
         
         #Calculate R23 and O32
         R23[mass_detect] = np.log10((OII[mass_detect] + ((4/3) * OIII5007[mass_detect])) / HBETA[mass_detect])
@@ -212,7 +176,7 @@ def run_function(line_file, outfile, a, b, c):
         log_mass = avg_mass
         
         two_beta = OII / HBETA
-        three_beta = (OIII5007 + OIII4959) / HBETA
+        three_beta = (OIII5007 * (4/3)) / HBETA
         
         #Calculate R23 composite and O32 composite
         R23_composite = np.log10((OII + ((4/3) * OIII5007)) / HBETA)
