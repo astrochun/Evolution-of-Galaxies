@@ -2,6 +2,7 @@
 This is the general code that runs all codes.
 '''
 
+import sys
 import os
 from getpass import getuser
 from os.path import exists
@@ -12,8 +13,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
-from Evolution_of_Galaxies import library, emission_line_fit, R_temp_calcul, valid_table #, plots, indiv_gals
-from Zcalbase_gal import error_prop
+from Evolution_of_Galaxies import library, emission_line_fit, R_temp_calcul, valid_table, plots #, indiv_gals
+#from Zcalbase_gal import error_prop
 
 
 if getuser() == 'carol':
@@ -27,9 +28,9 @@ else:
 def get_time(org_name):
     today = date.today()
     fitspath = path_init + org_name + '\\' + "%02i%02i%02i" % (today.month, today.day, today.year) + '\\'
-    if not exists(fitspath):
+    try:
         os.mkdir(fitspath)
-    else:
+    except FileExistsError:
         print("Path already exists")
     print(fitspath)
     
@@ -51,7 +52,7 @@ def get_HB_luminosity():
 
 
 def run_bin_analysis():
-    bin_type = input('Which binning type? mass or massLHbeta')
+    bin_type = input('Which binning type? mass or massLHbeta: ')
     if bin_type.lower() == 'mass':
         bin_type_str = 'massbin'
         HB_lum = []
@@ -61,13 +62,14 @@ def run_bin_analysis():
         bin_type_str = 'massLHbetabin'
         HB_lum = get_HB_luminosity()
         bool_hbeta_bin = True
-        fitspath = get_time('massLHbetabin')
+        fitspath = get_time('mass_LHbeta_bin')
     else:
         print('Invalid binning type')
-        exit(0)
+        sys.exit(0)
     
     
-    #Run binning --> in the case of adaptive binning
+    
+    #Run binning (in the case of adaptive binning)
     master_grid = path_init + 'Master_Grid.fits'
     master_mask_array = path_init + 'MastermaskArray.fits'
     result_revised = asc.read(path_init + 'results_deeps_revised.tbl')
@@ -75,11 +77,12 @@ def run_bin_analysis():
     
     mass_revised = result_revised['best.stellar.m_star'].data
     
-    bin_pts_input = [31, 124, 146, 299, 600, 1444, 1444]  # --> change to be a parameter
+    bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
     str_bin_pts_input = [str(val) for val in bin_pts_input]
     bin_pts_fname = "_".join(str_bin_pts_input)
     bin_pts_fname = bin_type_str + '_revised_' + bin_pts_fname
 
+    
     plt.figure(figsize=(14,8))
     edge, flux = library.binning(mass_revised, result_revised['id'], bin_pts_input, interp_file, bin_pts_fname,
                                  filename = master_grid, mname = master_mask_array, fitspath0 = fitspath,
@@ -93,7 +96,7 @@ def run_bin_analysis():
     
     
     
-    #Run emission line fits and line ratio plots      
+    #Run emission line fits     
     Spect_1D, header = fits.getdata(flux_fits_file, header = True)
     dispersion = header['CDELT1']
     wave = header['CRVAL1'] + dispersion*np.arange(header['NAXIS1'])
@@ -118,12 +121,6 @@ def run_bin_analysis():
     #Run validation table
     valid_table.make_validation_table(fitspath, bin_pts_fname)
     
-    '''
-    #Run error propagation
-    em_file = fitspath + bin_pts_fname + '_updated_emission_lines.tbl'
-    error_prop.error_prop_chuncodes(fitspath, em_file)
-    error_prop.plotting_errors()
-    
     
     
     #Run R, Te, and Metallicity calculations    
@@ -131,14 +128,22 @@ def run_bin_analysis():
     b = 0.92506
     c = 0.98062
     
-    outfile = fitspath + bin_pts_fname + '_updated_derived_properties_metallicity'
+    em_file = fitspath + bin_pts_fname + '_emission_lines.tbl'
+    outfile = fitspath + bin_pts_fname + '_derived_properties_metallicity'
     R_temp_calcul.run_function(em_file, outfile, a, b, c)
     
     
     
     #Run plots
-    '''
+    plots.bin_derived_props_plots(fitspath, bin_pts_fname)
     
+    
+    '''
+    #Run error propagation
+    em_file = fitspath + bin_pts_fname + '_updated_emission_lines.tbl'
+    error_prop.error_prop_chuncodes(fitspath, em_file)
+    error_prop.plotting_errors()
+    '''
     
 
     
