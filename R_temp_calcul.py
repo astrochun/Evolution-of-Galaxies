@@ -173,6 +173,7 @@ def run_function(line_file, outfile, a, b, c):
         
         N_Galaxy = line_table['Number of Galaxies'].data
         avg_mass = line_table['mass_avg'].data 
+        detection = line_table['Detection'].data
         log_mass = avg_mass
         
         two_beta = OII / HBETA
@@ -188,10 +189,10 @@ def run_function(line_file, outfile, a, b, c):
         O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)
         
         
-        n = ('R23_Composite', 'O32_Composite', 'N_Galaxies', 'Observed_Flux_5007', 'S/N_5007', 'Observed_Flux_4959',
+        n = ('Detection', 'R23_Composite', 'O32_Composite', 'N_Galaxies', 'Observed_Flux_5007', 'S/N_5007', 'Observed_Flux_4959',
              'S/N_4959', 'Observed_Flux_4363', 'S/N_4363', 'Observed_Flux_HBETA', 'S/N_HBETA', 'Observed_Flux_3727',
              'S/N_3727', 'Temperature', 'O_s_ion', 'O_d_ion', 'com_O_log')
-        tab0 = Table([R23_composite, O32_composite, N_Galaxy, OIII5007, SN_5007, OIII4959, SN_4959,
+        tab0 = Table([detection, R23_composite, O32_composite, N_Galaxy, OIII5007, SN_5007, OIII4959, SN_4959,
                       OIII4363, SN_4363, HBETA, SN_HBETA, OII, SN_OII, T_e, O_s_ion, O_d_ion, com_O_log], names = n)
 
         
