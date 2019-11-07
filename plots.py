@@ -70,8 +70,8 @@ def bin_derived_props_plots(fitspath, bin_pts_fname):
         
     #Line ratios        
     OII_HBeta = OII / HBeta
-    OIII_HBeta = (OIII5007 * (4/3)) / HBeta            
-    OIII_ratio = OIII4363 / (OIII5007 * (4/3))            
+    OIII_HBeta = (OIII5007 * (1 + 1/3.1)) / HBeta            
+    OIII_ratio = OIII4363 / (OIII5007 * (1 + 1/3.1))            
     
     #Line Ratios vs Mass
     fig1, ax1 = plt.subplots(2, 2)
@@ -85,7 +85,7 @@ def bin_derived_props_plots(fitspath, bin_pts_fname):
     ax1[1, 0].scatter(avg_mass, np.log10(OIII_HBeta), label = 'OIII/HBeta')
     ax1[1, 0].legend(loc = 'best')
     ax1[1, 0].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
-    ax1[1, 1].scatter(avg_mass, np.log10(OIII_ratio), label = '4363/(5007 * (4/3))')
+    ax1[1, 1].scatter(avg_mass, np.log10(OIII_ratio), label = '4363/(5007 * (1 + 1/3.1))')
     ax1[1, 1].legend(loc = 'best')
     ax1[1, 1].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     for t_ax in ax1:
