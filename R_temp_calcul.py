@@ -1,22 +1,16 @@
 #Calculates the R value, electron temperature, and metallicity from the flux table
-#produced by the zoom_and_gauss_general functions
-#Currently running: Grid
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
-from matplotlib.backends.backend_pdf import PdfPages
 from astropy.table import Table
-from scipy.optimize import curve_fit 
-from getpass import getuser
     
     
 
-def R_calculation(OIII4363, OIII5007):
-    R_value = OIII4363 / (OIII5007 * (4/3))
+def R_calculation(OIII4363, OIII5007, EBV, k_4363, k_5007):
+    R_value = (OIII4363 / (OIII5007 * (1 + 1/3.1))) * 10**(0.4*EBV*(k_4363 - k_5007))
     return R_value
 
 
-def temp_calculation(R, a, b, c):
+def temp_calculation(R, a = 13205, b = 0.92506, c = 0.98062):
     T_e = a*(-np.log10(R) - b)**(-1*c)      
     return T_e
 
@@ -50,7 +44,7 @@ def metallicity_calculation(T_e, two_beta, three_beta):
 
 
 
-def run_function(line_file, outfile, a, b, c):
+def run_function(line_file, outfile, EBV, k_4363, k_5007):
     line_table = asc.read(line_file)
     
     if 'two_beta' in line_table.keys():
@@ -84,6 +78,7 @@ def run_function(line_file, outfile, a, b, c):
                       O_s_ion, O_d_ion, com_O_log], names = n)
     
     
+    #need to adapt for EBV parameters
     elif 'Log10(Mass)' in line_table.keys():
         #Case for individual spectra
     
@@ -131,14 +126,14 @@ def run_function(line_file, outfile, a, b, c):
         
         two_beta[mass_detect] = OII[mass_detect] / HBETA[mass_detect]
         two_beta[HB_detect] = OII[HB_detect] / HBETA[HB_detect]
-        three_beta[mass_detect] = (OIII5007[mass_detect] * (4/3)) / HBETA[mass_detect]
-        three_beta[HB_detect] = (OIII5007[HB_detect] * (4/3)) / HBETA[HB_detect]
+        three_beta[mass_detect] = (OIII5007[mass_detect] * (1 + 1/3.1)) / HBETA[mass_detect]
+        three_beta[HB_detect] = (OIII5007[HB_detect] * (1 + 1/3.1)) / HBETA[HB_detect]
         
         #Calculate R23 and O32
-        R23[mass_detect] = np.log10((OII[mass_detect] + ((4/3) * OIII5007[mass_detect])) / HBETA[mass_detect])
-        R23[HB_detect] = np.log10((OII[HB_detect] + ((4/3) * OIII5007[HB_detect])) / HBETA[HB_detect])
-        O32[mass_detect] = np.log10(((4/3) * OIII5007[mass_detect]) / OII[mass_detect])
-        O32[HB_detect] = np.log10(((4/3) * OIII5007[HB_detect]) / OII[HB_detect])
+        R23[mass_detect] = np.log10((OII[mass_detect] + ((1 + 1/3.1) * OIII5007[mass_detect])) / HBETA[mass_detect])
+        R23[HB_detect] = np.log10((OII[HB_detect] + ((1 + 1/3.1) * OIII5007[HB_detect])) / HBETA[HB_detect])
+        O32[mass_detect] = np.log10(((1 + 1/3.1) * OIII5007[mass_detect]) / OII[mass_detect])
+        O32[HB_detect] = np.log10(((1 + 1/3.1) * OIII5007[HB_detect]) / OII[HB_detect])
         
         
         mass_O_s_ion, mass_O_d_ion, mass_com_O_log, mass_log_O_s, mass_log_O_d = metallicity_calculation(mass_T_e, two_beta, three_beta)
@@ -177,15 +172,15 @@ def run_function(line_file, outfile, a, b, c):
         log_mass = avg_mass
         
         two_beta = OII / HBETA
-        three_beta = (OIII5007 * (4/3)) / HBETA
+        three_beta = (OIII5007 * (1 + 1/3.1)) / HBETA
         
         #Calculate R23 composite and O32 composite
-        R23_composite = np.log10((OII + ((4/3) * OIII5007)) / HBETA)
-        O32_composite = np.log10(((4/3) * OIII5007) / OII)
+        R23_composite = np.log10((OII + ((1 + 1/3.1) * OIII5007)) / HBETA)
+        O32_composite = np.log10(((1 + 1/3.1) * OIII5007) / OII)
         
         #R, Te, and metallicity calculations
-        R_value = R_calculation(OIII4363, OIII5007)
-        T_e = temp_calculation(R_value, a, b, c)
+        R_value = R_calculation(OIII4363, OIII5007, EBV, k_4363, k_5007)
+        T_e = temp_calculation(R_value)
         O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)
         
         
