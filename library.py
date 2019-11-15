@@ -100,7 +100,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     x_sort = np.sort(temp_x[valid_ind])
     argsort_valid_x = np.argsort(temp_x[valid_ind])
     valid_ind_sort = valid_ind[argsort_valid_x]      #values in valid_ind_sort are indices relative to full 4140
-    #objno = objno[valid_ind_sort]                    #IDs of valid masses in order of sorted valid masses
+    #objno = objno[valid_ind_sort]                   #IDs of valid masses in order of sorted valid masses
     
     #take log of all masses and of valid masses
     logx = np.log10(temp_x)
@@ -212,15 +212,15 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
                             the bin median for a given bin
                 '''
                 
-                lum_sort = lum[valid_ind][valid_ind_sort]
+                lum_sort = lum[valid_ind_sort]
                 valid_hbeta = np.where(lum_sort[start:stop] < 44)[0]
                 median0 = np.median(lum_sort[start:stop][valid_hbeta])
                 invalid_hbeta = np.where((lum_sort[start:stop] > 44) | (np.isfinite(lum_sort[start:stop]) == False))[0]
-                lum[valid_ind[valid_ind_sort[start:stop][invalid_hbeta]]] = -1
+                lum[valid_ind_sort[start:stop][invalid_hbeta]] = -1
                 temp_lower = np.where(lum <= median0)[0]
                 temp_upper = np.where(lum > median0)[0]
-                lower_idx = np.array(list(set(valid_ind[valid_ind_sort][start:stop]) & set(temp_lower)))
-                upper_idx = np.array(list(set(valid_ind[valid_ind_sort][start:stop]) & set(temp_upper)))
+                lower_idx = np.array(list(set(valid_ind_sort[start:stop]) & set(temp_lower)))
+                upper_idx = np.array(list(set(valid_ind_sort[start:stop]) & set(temp_upper)))
                     
                 non_neg = np.where(lum[lower_idx] != -1)[0]
                 non_neg = lower_idx[non_neg]
@@ -241,10 +241,10 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
                     wavelength += [lower_wave] + [upper_wave]
                     N += [len(lower_idx), len(upper_idx)]
                 mass_avg += [np.mean(logx[lower_idx])] + [np.mean(logx[upper_idx])]
-                bin_ID.append(count2)
                 count2 += 1
                 bin_ID.append(count2)
                 count2 += 1
+                bin_ID.append(count2)
                     
             start, bin_start = stop, bin_stop
             bin_redge.append(bin_stop)
