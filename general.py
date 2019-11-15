@@ -15,7 +15,8 @@ from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
 from chun_codes.cardelli import *
 from Evolution_of_Galaxies import library, emission_line_fit, R_temp_calcul, valid_table, plots #, indiv_gals
-#from Zcalbase_gal import error_prop
+from Zcalbase_gal.Analysis.DEEP2_R23_O32 import error_prop
+from Zcalbase_gal import histogram_plots
 
 
 if getuser() == 'carol':
@@ -81,6 +82,7 @@ def run_bin_analysis():
     bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
     str_bin_pts_input = [str(val) for val in bin_pts_input]
     bin_pts_fname = "_".join(str_bin_pts_input)
+    #fitspath += bin_pts_fname + '\\'
     bin_pts_fname = bin_type_str + '_revised_' + bin_pts_fname
 
     
@@ -125,43 +127,50 @@ def run_bin_analysis():
     
     #Run dust attenuation
     #change later once function is implemented and get actual values
-    EBV = np.zeros(len(line_name))
-    k_4363 = np.zeros(len(line_name))
-    k_5007 = np.zeros(len(line_name))
+    EBV = np.zeros(len(edge))
+    k_4363 = np.zeros(len(edge))
+    k_5007 = np.zeros(len(edge))
+    '''
+    em_file = fitspath + bin_pts_fname + '_emission_lines.tbl'
+    dust_attenuation(fitspath, bin_pts_fname, em_file)
+    '''
     
     
     #Run R, Te, and Metallicity calculations        
     em_file = fitspath + bin_pts_fname + '_emission_lines.tbl'
-    outfile = fitspath + bin_pts_fname + '_derived_properties_metallicity'
-    R_temp_calcul.run_function(em_file, outfile, EBV, k_4363, k_5007)
+    metal_file = fitspath + bin_pts_fname + '_derived_properties_metallicity'
+    R_temp_calcul.run_function(em_file, metal_file, EBV, k_4363, k_5007)
     
     
     #Run plots
     plots.bin_derived_props_plots(fitspath, bin_pts_fname)
     
     
-    '''
+    
     #Run error propagation
-    error_prop.error_prop_chuncodes(fitspath + bin_pts_fname, em_file, outfile + '.tbl')
-    '''
+    error_prop.error_prop_chuncodes(fitspath, em_file, metal_file + '.tbl')
+    
+    dict_list = [fitspath + 'Te_propdist_dict.npz', fitspath + 'Te_xpeaks.npz', fitspath + 'metal_errors.npz',
+                 fitspath + 'metal_xpeaks.npz', fitspath + 'metallicity_pdf.npz']
+    histogram_plots.run_histogram_TM(fitspath, metal_file + '.tbl', dict_list)
     
 
     
     
-'''    
+   
 #combine_ascii is emission_line.tbl for me
 def dust_attenuation(fitspath, bin_pts_fname, combine_ascii):
-    line_name = ['OII_3727', 'HDELTA', 'HGAMMA', 'OIII_4363', 'HBETA', 'OIII_4958','OIII_5007']
+    #line_name = ['OII_3727', 'HDELTA', 'HGAMMA', 'OIII_4363', 'HBETA', 'OIII_4958','OIII_5007']
     
-    combine_asc = asc.read(combine_ascii)
+    combine_asc = asc.read(fitspath + bin_pts_fname + combine_ascii)
     ini_con = 0.468
     ID = combine_asc['ID']
-    HBeta = combine_asc['HBETA_Flux_Observed'].data
-    HGamma = combine_asc['HGAMMA_Flux_Observed'].data
+    HBETA = combine_asc['HBETA_Flux_Observed'].data
+    HGAMMA = combine_asc['HGAMMA_Flux_Observed'].data
     
     lam0_OII = combine_asc['OII_3727_X_bar'].data
     lam0_HDELTA = combine_asc['HDELTA_X_bar'].data
-    lam0_Hgamma = combine_asc['HGAMMA_X_bar'].data
+    lam0_HGAMMA = combine_asc['HGAMMA_X_bar'].data
     lam0_HBETA = combine_asc['HBETA_X_bar'].data
     lam0_4363 = combine_asc['OIII_4363_X_bar'].data
     lam0_4958 = combine_asc['OIII_4958_X_bar'].data
@@ -169,7 +178,7 @@ def dust_attenuation(fitspath, bin_pts_fname, combine_ascii):
 
     k_3727 = call_cardelli(lam0_OII)
     k_HDELTA = call_cardelli(lam0_HDELTA)
-    k_Hgamma = call_cardelli(lam0_Hgamma)
+    k_HGAMMA = call_cardelli(lam0_HGAMMA)
     k_HBETA = call_cardelli(lam0_HBETA)
     k_4363 = call_cardelli(lam0_4363)
     k_4958 = call_cardelli(lam0_4958)
@@ -177,25 +186,26 @@ def dust_attenuation(fitspath, bin_pts_fname, combine_ascii):
 
     
     
-    EBV= np.log10((HBeta/HGamma)*(ini_con))*2.5*(1/(k_Hgamma-k_HBETA))
-    for nn in range(len(HGamma)):
-        if EBV[nn] <= 0: EBV[nn] = 0
+    EBV = np.log10((HBETA/HGAMMA)*(ini_con))*2.5*(1/(k_HGAMMA-k_HBETA))
+    for nn in range(len(HGAMMA)):
+        if EBV[nn] <= 0: 
+            EBV[nn] = 0
     
-    #print EBV
     A_3727 = EBV*k_3727
     A_HDELTA = EBV*k_HDELTA
-    A_Hgamma = EBV*k_Hgamma
+    A_HGAMMA = EBV*k_HGAMMA
     A_HBETA = EBV*k_HBETA
     A_4363 = EBV*k_4363
     A_4958 = EBV*k_4958
     A_5007 = EBV*k_5007
-    #print "A_3727:", A_3727
 
-    out_ascii = fitspath+'/dust_attentuation_values.tbl'
-    #if not exists(out_ascii_single):
-    n2= ('ID','k_3727', 'k_HDELTA', 'k_Hgamma', 'k_HBETA', 'k_4363', 'k_4958', 'k_5007', 'E(B-V)')
-    tab1 = Table([ID,k_3727, k_HDELTA, k_Hgamma, k_HBETA , k_4363, k_4958, k_5007, EBV], names=n2)
+    out_ascii = fitspath + 'dust_attentuation_values.tbl'
+    n2 = ('ID','k_3727', 'k_HDELTA', 'k_HGAMMA', 'k_HBETA', 'k_4363', 'k_4958', 'k_5007', 'E(B-V)')
+    tab1 = Table([ID,k_3727, k_HDELTA, k_HGAMMA, k_HBETA , k_4363, k_4958, k_5007, EBV], names=n2)
     asc.write(tab1, out_ascii, format='fixed_width_two_line')
+   
+    
+    
     
     
 def call_cardelli(lam0): #, extrapolate=False):
@@ -204,5 +214,5 @@ def call_cardelli(lam0): #, extrapolate=False):
     lambda0 = lam0*u.angstrom
     k_values= cardelli(lambda0,R=3.1)
     return k_values
-'''    
+   
     
