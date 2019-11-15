@@ -123,7 +123,7 @@ def make_validation_table(fitspath, bin_pts_fname):
     detections = np.zeros(len(ID))            #one --> detection, zero --> non-detection
     valid_stacks_idx = np.where((O_4363_SN >= 3) & (O_5007_SN > 100))[0] 
     detections[valid_stacks_idx] = 1
-    invalid_stacks_idx = np.where(detections != 1)[0]
+    #invalid_stacks_idx = np.where(detections != 1)[0]
     #updated_O_4363_flux = O_4363_flux
     updated_O_4363_flux = np.zeros(len(O_4363_flux))
     for i in range(len(O_4363_flux)):
