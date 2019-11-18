@@ -82,7 +82,6 @@ def run_bin_analysis():
     bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
     str_bin_pts_input = [str(val) for val in bin_pts_input]
     bin_pts_fname = "_".join(str_bin_pts_input)
-    #fitspath += bin_pts_fname + '\\'
     bin_pts_fname = bin_type_str + '_revised_' + bin_pts_fname
 
     
@@ -143,76 +142,45 @@ def run_bin_analysis():
     
     
     #Run plots
-    plots.bin_derived_props_plots(fitspath, bin_pts_fname)
-    
+    out_fname = fitspath + bin_pts_fname + '_derived_properties_metallicity.pdf'
+    plots.bin_derived_props_plots(metal_file + '.tbl', em_file, out_fname)
     
     
     #Run error propagation
     error_prop.error_prop_chuncodes(fitspath, em_file, metal_file + '.tbl')
-    
     dict_list = [fitspath + 'Te_propdist_dict.npz', fitspath + 'Te_xpeaks.npz', fitspath + 'metal_errors.npz',
-                 fitspath + 'metal_xpeaks.npz', fitspath + 'metallicity_pdf.npz']
-    histogram_plots.run_histogram_TM(fitspath, metal_file + '.tbl', dict_list)
+                 fitspath + 'metal_xpeaks.npz', fitspath + 'metallicity_pdf.npz', fitspath + 'flux_propdist.npz',
+                 fitspath + 'flux_errors.npz', fitspath + 'Te_errors.npz']
+    histogram_plots.run_histogram(fitspath, metal_file + '.tbl', dict_list)
+ 
     
-
-    
-    
-   
-#combine_ascii is emission_line.tbl for me
-def dust_attenuation(fitspath, bin_pts_fname, combine_ascii):
-    #line_name = ['OII_3727', 'HDELTA', 'HGAMMA', 'OIII_4363', 'HBETA', 'OIII_4958','OIII_5007']
-    
-    combine_asc = asc.read(fitspath + bin_pts_fname + combine_ascii)
-    ini_con = 0.468
-    ID = combine_asc['ID']
-    HBETA = combine_asc['HBETA_Flux_Observed'].data
-    HGAMMA = combine_asc['HGAMMA_Flux_Observed'].data
-    
-    lam0_OII = combine_asc['OII_3727_X_bar'].data
-    lam0_HDELTA = combine_asc['HDELTA_X_bar'].data
-    lam0_HGAMMA = combine_asc['HGAMMA_X_bar'].data
-    lam0_HBETA = combine_asc['HBETA_X_bar'].data
-    lam0_4363 = combine_asc['OIII_4363_X_bar'].data
-    lam0_4958 = combine_asc['OIII_4958_X_bar'].data
-    lam0_5007 = combine_asc['OIII_5007_X_bar'].data
-
-    k_3727 = call_cardelli(lam0_OII)
-    k_HDELTA = call_cardelli(lam0_HDELTA)
-    k_HGAMMA = call_cardelli(lam0_HGAMMA)
-    k_HBETA = call_cardelli(lam0_HBETA)
-    k_4363 = call_cardelli(lam0_4363)
-    k_4958 = call_cardelli(lam0_4958)
-    k_5007 = call_cardelli(lam0_5007)
-
-    
-    
-    EBV = np.log10((HBETA/HGAMMA)*(ini_con))*2.5*(1/(k_HGAMMA-k_HBETA))
-    for nn in range(len(HGAMMA)):
-        if EBV[nn] <= 0: 
-            EBV[nn] = 0
-    
-    A_3727 = EBV*k_3727
-    A_HDELTA = EBV*k_HDELTA
-    A_HGAMMA = EBV*k_HGAMMA
-    A_HBETA = EBV*k_HBETA
-    A_4363 = EBV*k_4363
-    A_4958 = EBV*k_4958
-    A_5007 = EBV*k_5007
-
-    out_ascii = fitspath + 'dust_attentuation_values.tbl'
-    n2 = ('ID','k_3727', 'k_HDELTA', 'k_HGAMMA', 'k_HBETA', 'k_4363', 'k_4958', 'k_5007', 'E(B-V)')
-    tab1 = Table([ID,k_3727, k_HDELTA, k_HGAMMA, k_HBETA , k_4363, k_4958, k_5007, EBV], names=n2)
-    asc.write(tab1, out_ascii, format='fixed_width_two_line')
    
     
     
     
     
-def call_cardelli(lam0): #, extrapolate=False):
-    #lambda0 =[3726.16, 3868.74, 3888.65, 3967.51, 4101.73, 4340.46, 4363.21, 4861.32, 4958.91, 5006.84]* u.angstrom
-    line_name = ['OII_3727','NeIII','HeI','3967', 'HDELTA', 'Hgamma', 'OIII_4363', 'HBETA', 'OIII_4958','OIII_5007']
-    lambda0 = lam0*u.angstrom
-    k_values= cardelli(lambda0,R=3.1)
-    return k_values
-   
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
