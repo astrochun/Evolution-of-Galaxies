@@ -275,57 +275,6 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
     print('Done!')
     return tab0
 
-
-
-'''
-def calculate_r23_o32(fitspath, bin_pts_fname, Spect_1D):
-    em_table = asc.read(fitspath + bin_pts_fname + '_emission_lines.tbl')
-    R_23_array = np.zeros(Spect_1D.shape[0])
-    O_32_array = np.zeros(Spect_1D.shape[0])
-    O_3727 = em_table['OII_3727_Flux_Observed'].data
-    O_4958 = em_table['OIII_4958_Flux_Observed'].data
-    O_5007 = em_table['OIII_5007_Flux_Observed'].data
-    O_4363 = em_table['OIII_4363_Flux_Observed'].data
-    H_Beta = em_table['HBETA_Flux_Observed'].data
-    avg_mass = em_table['mass_avg'].data
-    
-    #Line ratios
-    R_23_array = (O_3727 + (O_5007 * (4/3))) / H_Beta   
-    O_32_array = (O_5007 * (4/3)) / O_3727            
-    OII_HBeta = O_3727 / H_Beta
-    OIII_HBeta = (O_5007 * (4/3)) / H_Beta            
-    OIII_ratio = O_4363 / (O_5007 * (4/3))            
-    
-    fig, ax = plt.subplots(2, 2)
-    ax[0, 0].scatter(avg_mass, np.log10(R_23_array), label = 'R_23')
-    ax[0, 0].scatter(avg_mass, np.log10(O_32_array), label = 'O_32')
-    ax[0, 0].legend(loc = 'best')
-    ax[0, 0].set_xticklabels([])
-    ax[0, 1].scatter(avg_mass, np.log10(OII_HBeta), label = 'OII/HBeta')
-    ax[0, 1].legend(loc = 'best')
-    ax[0, 1].set_xticklabels([])
-    ax[1, 0].scatter(avg_mass, np.log10(OIII_HBeta), label = 'OIII/HBeta')
-    ax[1, 0].legend(loc = 'best')
-    ax[1, 0].set_xlabel('Avg Mass')
-    ax[1, 1].scatter(avg_mass, np.log10(OIII_ratio), label = '4363/(5007 * (4/3))')
-    ax[1, 1].legend(loc = 'best')
-    ax[1, 1].set_xlabel('Avg Mass')
-    
-    for t_ax in ax:
-        for tt in range(len(t_ax)):
-            t_ax[tt].set_xlim(8.5,11.0)
-    plt.subplots_adjust(left = 0.075, right = 0.97, bottom = 0.075, top = 0.99, wspace = 0.225, hspace = 0.05)
-    
-    outpdf = fitspath + bin_pts_fname + '_line_ratios.pdf'
-    pdf_pages = PdfPages(outpdf)
-    fig.savefig(pdf_pages, format ='pdf')
-    pdf_pages.close()
-
-    out_ascii = fitspath + bin_pts_fname + '_Average_R23_O32.tbl'        
-    n2 = ('R_23_Average', 'O_32_Average')
-    tab = Table([R_23_array, O_32_array], names = n2)
-    asc.write(tab, out_ascii, format = 'fixed_width_two_line', overwrite = True)   
- '''
    
     
 
@@ -345,8 +294,7 @@ def zm_general(fitspath, bin_pts_fname, Spect_1D, header, dispersion, wave, lamb
         else:
             table_stack = hstack([table_stack, em_table])
     asc.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
-    
-    #calculate_r23_o32(fitspath, bin_pts_fname, Spect_1D)
+
     
     pdf_pages.close()
 
