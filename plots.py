@@ -3,55 +3,13 @@ import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.optimize import curve_fit 
-    
-'''
-#For generalizing for several users
-if getuser() == 'carol':
-    fitspath = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
-    fitspath2 = fitspath + "massbin\\"
-else:
-    fitspath = "../DEEP2/" 
-    fitspath2 = "../"
-    
-bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
-str_bin_pts_input = [str(val) for val in bin_pts_input]
-bin_pts_fname = "_".join(str_bin_pts_input)
-bin_pts_fname = 'hbeta_revised_' + bin_pts_fname
-bin_pts_fname2 = 'individual'
-'''
-
-'''
-def temp_plots(fitspath, bin_pts_fname, updated = False):
-    #metal_table = asc.read('C:\\Users\\carol\\Google Drive\\MZEvolve\\massbin\\10252019\\TESTrevised_75_112_113_300_600_1444_1444\\massbin_revised_75_112_113_300_600_1444_1444_updated_derived_properties_metallicity.tbl')
-    #em_table = asc.read('C:\\Users\\carol\\Google Drive\\MZEvolve\\massbin\\10252019\\TESTrevised_75_112_113_300_600_1444_1444\\massbin_revised_75_112_113_300_600_1444_1444_updated_emission_lines.tbl')
-    #pdf_pages = PdfPages('C:\\Users\\carol\\Google Drive\\MZEvolve\\massbin\\10252019\\TESTrevised_75_112_113_300_600_1444_1444\\updated_metallicity_plot.pdf')
-    metal_table = asc.read(fitspath + bin_pts_fname + '_derived_properties_metallicity.tbl')
-    em_table = asc.read(fitspath + bin_pts_fname + '_emission_lines.tbl')
-    pdf_pages = PdfPages(fitspath + bin_pts_fname + '_metallicity_plot.pdf')
-    
-    metallicity = metal_table['com_O_log'].data
-    mass_avg = em_table['mass_avg'].data
-    
-    fig, ax = plt.subplots()
-    if updated == True:
-        detections = em_table['Detection'].data
-        non_detections = np.where(detections != 1)[0]
-        detections = np.where(detections == 1)[0]
-        
-        ax.scatter(mass_avg[detections], metallicity[detections])
-        ax.scatter(mass_avg[non_detections], metallicity[non_detections], color = 'orange', marker = '^')
-    else:
-        ax.scatter(mass_avg, metallicity)
-    
-    fig.savefig(pdf_pages, format='pdf')
-    pdf_pages.close()
-'''    
+      
     
 
-def bin_derived_props_plots(fitspath, bin_pts_fname):
-    metal_table = asc.read(fitspath + bin_pts_fname + '_derived_properties_metallicity.tbl')
-    em_table = asc.read(fitspath + bin_pts_fname + '_emission_lines.tbl')
-    pdf_pages = PdfPages(fitspath + bin_pts_fname + '_derived_properties_metallicity.pdf')
+def bin_derived_props_plots(metal_file, em_file, out_file):
+    metal_table = asc.read(metal_file)
+    em_table = asc.read(em_file)
+    pdf_pages = PdfPages(out_file)
     
     com_O_log = metal_table['com_O_log'].data
     T_e = metal_table['Temperature'].data
@@ -62,11 +20,15 @@ def bin_derived_props_plots(fitspath, bin_pts_fname):
     detection = em_table['Detection'].data
     OII = em_table['OII_3727_Flux_Observed'].data
     OIII4363 = em_table['Updated_OIII_4363_Flux_Observed'].data
+    OIII4363_SN = em_table['OIII_4363_S/N'].data
     OIII5007 = em_table['OIII_5007_Flux_Observed'].data
+    OIII5007_SN = em_table['OIII_5007_S/N'].data 
     HBeta = em_table['HBETA_Flux_Observed'].data
     
-    non_detect = np.where(detection != 1)[0]
-    detect = np.where(detection == 1)[0]
+    #non_detect = np.where(detection != 1)[0]
+    #detect = np.where(detection == 1)[0]
+    detect = np.where((detection == 1) & (OIII4363_SN >= 3) & (OIII5007_SN > 100))[0]
+    non_detect = np.where((detection == 0) & (OIII4363_SN < 3) & (OIII5007_SN > 100))[0]   #non-detection but may be reliable
         
     #Line ratios        
     OII_HBeta = OII / HBeta
@@ -371,8 +333,73 @@ def find_outlier(fitspath):
 
 
 
+def lum_vs_mass(fitspath, binning_file):
+    binning = np.load(fitspath + binning_file)
+    lum = binning['lum']
+    mass = binning['mass']
+    bin_idx = binning['bin_ind']
+    bin_low = binning['lowest_hbeta']
+    bin_high = binning['highest_hbeta']
+    mass_max = binning['bin_redge']
+    mass_min = binning['bin_edge']
+    
+    pdf_pages = PdfPages(fitspath + 'lum_vs_mass.pdf')
+    
+    
+    idx = []
+    #odd-numbered bins are 
+    low_bins_high_lum = []           #odd numbered bins
+    low_bins_low_lum = []
+    high_bins_high_lum = []          #even numbered bins
+    high_bins_low_lum = []
+    low_bins_high_mass = []           #odd numbered bins
+    low_bins_low_mass = []
+    high_bins_high_mass = []          #even numbered bins
+    high_bins_low_mass = []
+    for ii in range(len(bin_idx)):
+        for jj in range(len(bin_idx[ii])):
+            idx.append(bin_idx[ii][jj])
+        if (ii + 1) % 2 == 0:
+            high_bins_high_lum.append(bin_high[ii])
+            high_bins_low_lum.append(bin_low[ii])
+            high_bins_high_mass.append(mass_max[ii])
+            high_bins_low_mass.append(mass_min[ii])
+        else:
+            low_bins_high_lum.append(bin_high[ii])
+            low_bins_low_lum.append(bin_low[ii])
+            low_bins_high_mass.append(mass_max[ii])
+            low_bins_low_mass.append(mass_min[ii])
 
 
+    fig1, ax1 = plt.subplots()
+    ax1.scatter(np.log10(mass[idx]), lum[idx], color = 'orange', s = 0.5, marker='.')
+    ax1.scatter(low_bins_low_mass, low_bins_low_lum, color = 'black', s = 15, marker='.',
+                label = 'Lowest HBeta Luminosity (Lower Bins)')
+    ax1.scatter(low_bins_high_mass, low_bins_high_lum, color = 'green', s = 15, marker='.',
+                label = 'Median HBeta Luminosity')
+    #ax1.scatter(high_bins_low_mass, high_bins_low_lum, color = 'green', s = 15, marker='.')
+    ax1.scatter(high_bins_high_mass, high_bins_high_lum, color = 'blue', s = 15, marker='.',
+                label = 'Highest HBeta Luminosity (Upper Bins)')
+    
+    for ii in range(len(low_bins_low_mass)):
+        ax1.axvline(x=low_bins_low_mass[ii], linestyle='--', color = 'black', linewidth = 0.5)
+        ax1.axvline(x=high_bins_high_mass[ii], linestyle='--', color = 'black', linewidth = 0.5)
+    
+        if ii == (len(low_bins_low_mass) - 1): 
+            ax1.hlines(y=low_bins_high_lum[ii], xmin = low_bins_low_mass[ii], xmax = high_bins_high_mass[ii],
+                       linestyle='--', color = 'black', linewidth = 0.5)
+        else:
+            ax1.hlines(y=low_bins_high_lum[ii], xmin = low_bins_low_mass[ii], xmax = low_bins_low_mass[ii+1],
+                       linestyle='--', color = 'black', linewidth = 0.5)
+    ax1.set_ylim(36,43)
+    ax1.set_xlim(6,12.5)
+    ax1.set_xlabel("log($\\frac{M_\star}{M_{\odot}}$)")
+    ax1.set_ylabel("log(H$\\beta$ Luminosity)")
+    ax1.legend(loc = 'lower left', fontsize = 'xx-small')
+    
+    pdf_pages.savefig()
+    
+    pdf_pages.close()
 
 
 
