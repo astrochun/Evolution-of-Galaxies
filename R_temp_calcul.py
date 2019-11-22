@@ -78,7 +78,6 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
                       O_s_ion, O_d_ion, com_O_log], names = n)
     
     
-    #need to adapt for EBV parameters
     elif 'Log10(Mass)' in line_table.keys():
         #Case for individual spectra
     
@@ -96,25 +95,27 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         
         source_ID = line_table['OBJNO'].data
         mass_bin_ID = line_table['Mass_Bin_ID'].data
-        HB_bin_ID = line_table['LHBeta_Bin_ID'].data
+        HB_bin_ID = line_table['Mass_LHBeta_Bin_ID'].data
         log_mass = line_table['Log10(Mass)'].data
         LHbeta = line_table['HBeta_Luminosity'].data
-        mass_T_e = line_table['Mass Bin Te'].data
-        HB_T_e = line_table['LHBeta Bin Te'].data
-        HB_bin_detect = line_table['LHBeta Bin Detections'].data
-        mass_bin_detect = line_table['Mass Bin Detections'].data
-        indiv_detect = line_table['Individual Detections'].data 
-        ebv = line_table['EBV'].data
+        mass_T_e = line_table['Mass_Bin_Te'].data
+        HB_T_e = line_table['Mass_LHBeta_Bin_Te'].data
+        HB_bin_detect = line_table['Mass_LHBeta_Bin_Detections'].data
+        mass_bin_detect = line_table['Mass_Bin_Detections'].data
+        indiv_detect = line_table['Individual_Detections'].data 
+        ebv = line_table['E(B-V)'].data
         
         
-        mass_detect = np.where((mass_bin_detect == 1.0) & (np.isfinite(OIII5007) == True) & (OIII5007 >= 1e-18) & 
-                               (OIII5007 <= 1e-15) & (np.isfinite(OIII4959) == True) & (OIII4959 >= 1e-18) & 
-                               (OIII4959 <= 1e-15) & (np.isfinite(OII) == True) & (OII >= 1e-18) & (OII <= 1e-15) &
-                               (np.isfinite(HBETA) == True) & (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
-        HB_detect = np.where((HB_bin_detect == 1.0) & (np.isfinite(OIII5007) == True) & (OIII5007 >= 1e-18) & 
-                             (OIII5007 <= 1e-15) & (np.isfinite(OIII4959) == True) & (OIII4959 >= 1e-18) & 
-                             (OIII4959 <= 1e-15) & (np.isfinite(OII) == True) & (OII >= 1e-18) & (OII <= 1e-15) &
-                             (np.isfinite(HBETA) == True) & (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
+        mass_detect = np.where((mass_bin_detect == 1.0) & (np.isfinite(OIII5007) == True) &
+                               (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OIII4959) == True) & 
+                               (OIII4959 >= 1e-18) & (OIII4959 <= 1e-15) & (np.isfinite(OII) == True) &
+                               (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
+                               (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
+        HB_detect = np.where((HB_bin_detect == 1.0) & (np.isfinite(OIII5007) == True) & 
+                             (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OIII4959) == True) & 
+                             (OIII4959 >= 1e-18) & (OIII4959 <= 1e-15) & (np.isfinite(OII) == True) & 
+                             (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
+                             (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
         indiv_detect[mass_detect] = 1.0
         indiv_detect[HB_detect] = 1.0
         
@@ -140,14 +141,15 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         HB_O_s_ion, HB_O_d_ion, HB_com_O_log, HB_log_O_s, HB_log_O_d = metallicity_calculation(HB_T_e, two_beta, three_beta)
         
         
-        n = ('Source_ID', 'Mass Bin ID', 'LHBeta Bin ID', 'Mass Bin Detections', 'LHBeta Bin Detections',
-             'Individual Detections', 'Log10(Mass)', 'HBeta_Luminosity', 'Observed_Flux_5007',
-             'Observed_Flux_4959', 'Observed_Flux_3727', 'Observed_Flux_HBeta', 'Mass Bin Te', 'LHBeta Bin Te',
-             'R23', 'O32', 'Mass Bin O_s_ion', 'Mass Bin O_d_ion', 'Mass Bin com_O_log', 'LHBeta Bin O_s_ion',
-             'LHBeta Bin O_d_ion', 'LHBeta Bin com_O_log', 'EBV')
-        tab0 = Table([source_ID, mass_bin_ID, HB_bin_ID, mass_bin_detect, HB_bin_detect, indiv_detect, log_mass,
-                      LHbeta, OIII5007, OIII4959, OII, HBETA, mass_T_e, HB_T_e, R23, O32, mass_O_s_ion,
-                      mass_O_d_ion, mass_com_O_log, HB_O_s_ion, HB_O_d_ion, HB_com_O_log, ebv], names = n)
+        n = ('Source_ID', 'Mass_Bin_ID', 'Mass_LHBeta_Bin_ID', 'Mass_Bin_Detections', 'Mass_LHBeta_Bin_Detections',
+             'Individual_Detections', 'Log10(Mass)', 'HBeta_Luminosity', 'Observed_Flux_5007', 
+             'Observed_Flux_4959', 'Observed_Flux_3727', 'Observed_Flux_HBeta', 'Mass_Bin_Te',
+             'Mass_LHBeta_Bin_Te', 'R23', 'O32', 'Mass_Bin_O_s_ion', 'Mass_Bin_O_d_ion', 'Mass_Bin_com_O_log',
+             'Mass_LHBeta_Bin_O_s_ion', 'Mass_LHBeta_Bin_O_d_ion', 'Mass_LHBeta_Bin_com_O_log', 'E(B-V)')
+        tab0 = Table([source_ID, mass_bin_ID, HB_bin_ID, mass_bin_detect, HB_bin_detect,
+                      indiv_detect, log_mass, LHbeta, OIII5007, OIII4959, OII, HBETA,
+                      mass_T_e, HB_T_e, R23, O32, mass_O_s_ion, mass_O_d_ion, mass_com_O_log, HB_O_s_ion,
+                      HB_O_d_ion, HB_com_O_log, ebv], names = n)
         
     else:
         #Case for stacked spectra
