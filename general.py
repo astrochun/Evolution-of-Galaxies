@@ -156,8 +156,8 @@ def run_bin_analysis():
     
  
     
-   
-def run_indiv_analysis():
+#date is a string of the date in MMDDYYYY format   
+def run_indiv_analysis(date):
     fitspath = get_time('individual')
     
     bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
@@ -165,15 +165,14 @@ def run_indiv_analysis():
     bin_pts_fname = "_".join(str_bin_pts_input)
     bin_pts_fname = 'revised_' + bin_pts_fname
     
-    #fitspath += bin_pts_fname + '\\' + bin_type_str
     
     line_file = path_init2 + 'dataset\\DEEP2_all_line_fit.fits'
-    mass_bin_npz = path_init + 'massbin\\11212019\\massbin_revised_75_112_113_300_600_1444_1444.npz'
-    mass_bin_file = path_init + 'massbin\\11212019\\massbin_revised_75_112_113_300_600_1444_1444_binning.tbl'
-    mass_Te_file = path_init + 'massbin\\11212019\\massbin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
-    HB_bin_npz = path_init + 'mass_LHbeta_bin\\11212019\\massLHbetabin_revised_75_112_113_300_600_1444_1444.npz'
-    HB_bin_file = path_init + 'mass_LHbeta_bin\\11212019\\massLHbetabin_revised_75_112_113_300_600_1444_1444_binning.tbl'
-    HB_Te_file = path_init + 'mass_LHbeta_bin\\11212019\\massLHbetabin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
+    mass_bin_npz = path_init + 'massbin\\' + date + '\\massbin_revised_75_112_113_300_600_1444_1444.npz'
+    mass_bin_file = path_init + 'massbin\\' + date + '\\massbin_revised_75_112_113_300_600_1444_1444_binning.tbl'
+    mass_Te_file = path_init + 'massbin\\' + date + '\\massbin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
+    HB_bin_npz = path_init + 'mass_LHbeta_bin\\' + date + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444.npz'
+    HB_bin_file = path_init + 'mass_LHbeta_bin\\' + date + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444_binning.tbl'
+    HB_Te_file = path_init + 'mass_LHbeta_bin\\' + date + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
     
     #Create individual Te and lines table
     indiv_gals.create_Te_lineratio_table(fitspath, line_file, mass_bin_npz, HB_bin_npz, mass_Te_file, HB_Te_file)
