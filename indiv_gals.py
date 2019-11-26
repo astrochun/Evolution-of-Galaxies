@@ -52,11 +52,7 @@ def create_Te_lineratio_table(fitspath, line_file, mass_bin_file, HB_bin_file, m
     mass = mass_bin_npz['mass']
     LHbeta = HB_bin_npz['lum']
     mass_detect = mass_Te_tbl['Detection'].data       #Mass bin detections
-    HB_detect = HB_Te_tbl['Detection'].data           #HBeta bin detections
-    mass_4363_SN = mass_Te_tbl['S/N_4363'].data
-    HB_4363_SN = HB_Te_tbl['S/N_4363'].data
-    mass_5007_SN = mass_Te_tbl['S/N_5007'].data
-    HB_5007_SN = HB_Te_tbl['S/N_5007'].data             
+    HB_detect = HB_Te_tbl['Detection'].data           #HBeta bin detections            
     
     
     #Get all mass bin valid indices in 1D array
