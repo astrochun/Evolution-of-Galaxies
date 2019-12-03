@@ -7,6 +7,30 @@ from scipy.optimize import curve_fit
     
 
 def bin_derived_props_plots(metal_file, em_file, out_file):
+    '''
+    Purpose: 
+        This function creates plots for the stacked spectra (bins): OII/HBeta vs Stellar Mass,
+        OIII/HBeta vs Stellar Mass, OIII4363/OIII5007 vs Stellar Mass, R23 vs Temperature, O32 vs Temperature,
+        Metallicity vs R23, Metallicity vs O32, Temperature vs Stellar Mass, and Metallicity vs Stellar Mass.
+        
+    Usage:
+        plots.bin_derived_props_plots(metal_file, em_file, out_file)
+        
+    Params:
+        metal_file --> file containing bin metallicities, electron temperatures, R23, and O32 values.
+        em_file --> file containing each bin's average stellar mass, detection marking, OII observed flux,
+            OIII4363 observed flux, OIII5007 observed flux, and HBeta observed flux values.
+        
+    Returns:
+        None
+        
+    Outputs:
+        out_file --> a pdf containing plots for the stacked spectra: R23 vs Mass, O32 vs Mass,
+            OII/HBeta vs Mass, OIII/HBeta vs Mass, OIII4363/OIII5007 vs Mass, R23 vs Temperature,
+            O32 vs Temperature, Metallicity vs R23, Metallicity vs O32, Temperature vs Mass, 
+            and Metallicity vs Mass.
+    '''
+    
     metal_table = asc.read(metal_file)
     em_table = asc.read(em_file)
     pdf_pages = PdfPages(out_file)
@@ -118,7 +142,40 @@ def bin_derived_props_plots(metal_file, em_file, out_file):
 
 
 def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_file, mass_metal_file,
-                              HB_metal_file, MTO, restrict_MTO = False):     
+                              HB_metal_file, MTO, restrict_MTO = False):    
+    '''
+    Purpose:
+        This function creates plots for the individual measurements within each bin: HBeta Luminosity vs
+        Stellar Mass (color Metallicity), O32 vs R23 (color Metallicity), Metallicity vs R23 and O32,
+        Metallicity vs Stellar Mass. (Each plot type has two plots - one for Mass Bins and one for Mass-LHBeta Bins)
+         
+        
+    Usage:
+        plots.indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_file, mass_metal_file,
+                                        HB_metal_file, MTO, restrict_MTO)
+        
+    Params:
+        fitspath --> a string of the file path where the input file is and where the output file will be placed.
+        metal_Te_file --> table containing the calculations for individual metallicities, R23, O32, and 
+            detection markings.
+        mass_bin_file --> table containing the average mass for each mass bin.
+        HB_bin_file --> table containing the average mass for each mass-LHbeta bin. 
+        mass_metal_file --> table containing the detection markings and bin metallicities for each mass bin.
+        HB_metal_file --> table containing the detection markings and bin metallicities for each mass-LHbeta bin.
+        MTO --> a string that indicates in the pdf name whether or not the MTO parameter is held constant when
+            a curve fit is applied to the Metallicity vs Mass plots.
+        restrict_MTO (OPTIONAL) --> if you want to hold the MTO parameter constant for the curve fit of
+            Metallicity vs Mass, then restrict_MTO = True. Its default value is False.
+        
+    Returns:
+        None
+        
+    Outputs:
+        fitspath + 'individual_metal_plots' + MTO + '.pdf' --> a pdf containing plots for the individual 
+            measurements: HBeta Luminosity vs Stellar Mass (color Metallicity), O32 vs R23 (color Metallicity),
+            Metallicity vs R23 and O32, Metallicity vs Stellar Mass.
+    '''
+    
     MT_ascii = asc.read(metal_Te_file)
     mass_bin_tbl = asc.read(mass_bin_file)
     HB_bin_tbl = asc.read(HB_bin_file)
@@ -170,9 +227,9 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     ##HBeta Luminosity vs Mass ColorMap=Metallicity##
     fig1, ax1 = plt.subplots()
     cm = plt.cm.get_cmap('BuPu_r')
-    plot1 = ax1.scatter(log_mass[mass_ind_detect], LHbeta[mass_ind_detect], 1.0,
+    plot1 = ax1.scatter(log_mass[mass_ind_detect], LHbeta[mass_ind_detect], 5.0,
                         c=mass_ind_metal[mass_ind_detect], marker='*')
-    plot1 = ax1.scatter(log_mass[mass_ind_nondetect], LHbeta[mass_ind_nondetect], 1.0,
+    plot1 = ax1.scatter(log_mass[mass_ind_nondetect], LHbeta[mass_ind_nondetect], 5.0, facecolors = 'None',
                         c=mass_ind_metal[mass_ind_nondetect], marker='^')
     cb = fig1.colorbar(plot1)
     cb.set_label('Metallicity')
@@ -184,9 +241,9 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     
     fig2, ax2 = plt.subplots()
     cm = plt.cm.get_cmap('BuPu_r')
-    plot2 = ax2.scatter(log_mass[HB_ind_detect], LHbeta[HB_ind_detect], 1.0, c=HB_ind_metal[HB_ind_detect],
+    plot2 = ax2.scatter(log_mass[HB_ind_detect], LHbeta[HB_ind_detect], 5.0, c=HB_ind_metal[HB_ind_detect],
                         marker='*')
-    plot2 = ax2.scatter(log_mass[HB_ind_nondetect], LHbeta[HB_ind_nondetect], 1.0,
+    plot2 = ax2.scatter(log_mass[HB_ind_nondetect], LHbeta[HB_ind_nondetect], 5.0, facecolors = 'None',
                         c=HB_ind_metal[HB_ind_nondetect], marker='^')
     cb = fig2.colorbar(plot2)
     cb.set_label('Metallicity')
@@ -202,9 +259,9 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     ##O32 vs R23 ColorMap=Metallicity##
     fig3, ax3 = plt.subplots()
     cm = plt.cm.get_cmap('BuPu_r')
-    plot3 = ax3.scatter(R23[mass_ind_detect], O32[mass_ind_detect], 1.0, c=mass_ind_metal[mass_ind_detect],
+    plot3 = ax3.scatter(R23[mass_ind_detect], O32[mass_ind_detect], 5.0, c=mass_ind_metal[mass_ind_detect],
                         marker='*')
-    plot3 = ax3.scatter(R23[mass_ind_nondetect], O32[mass_ind_nondetect], 1.0,
+    plot3 = ax3.scatter(R23[mass_ind_nondetect], O32[mass_ind_nondetect], 5.0, facecolors = 'None',
                         c=mass_ind_metal[mass_ind_nondetect], marker='^')
     cb = fig3.colorbar(plot3)
     cb.set_label('Metallicity')
@@ -216,8 +273,9 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     
     fig4, ax4 = plt.subplots()
     cm = plt.cm.get_cmap('BuPu_r')
-    plot4 = ax4.scatter(R23[HB_ind_detect], O32[HB_ind_detect], 1.0, c=HB_ind_metal[HB_ind_detect], marker='*')
-    plot4 = ax4.scatter(R23[HB_ind_nondetect], O32[HB_ind_nondetect], 1.0, c=HB_ind_metal[HB_ind_nondetect], marker='^')
+    plot4 = ax4.scatter(R23[HB_ind_detect], O32[HB_ind_detect], 5.0, c=HB_ind_metal[HB_ind_detect], marker='*')
+    plot4 = ax4.scatter(R23[HB_ind_nondetect], O32[HB_ind_nondetect], 5.0, facecolors = 'None', 
+                        c=HB_ind_metal[HB_ind_nondetect], marker='^')
     cb = fig4.colorbar(plot4)
     cb.set_label('Metallicity')
     ax4.set_xlabel('$R_{23}$')
@@ -230,33 +288,39 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     
     
     ##Metallicity vs R23 and O32##
-    fig5, ax5 = plt.subplots()
-    ax5.scatter(R23[mass_ind_detect], mass_ind_metal[mass_ind_detect], facecolors = 'None', edgecolors = 'blue',
-                label = '$R_{23}$')
-    ax5.scatter(O32[mass_ind_detect], mass_ind_metal[mass_ind_detect], facecolors = 'None', edgecolors = 'red',
-                label = '$O_{32}$')
-    ax5.scatter(R23[mass_ind_nondetect], mass_ind_metal[mass_ind_nondetect], marker='^', facecolors = 'None', edgecolors = 'blue',
-                label = '$R_{23}$')
-    ax5.scatter(O32[mass_ind_nondetect], mass_ind_metal[mass_ind_nondetect], marker='^', facecolors = 'None', edgecolors = 'red',
-                label = '$O_{32}$')
-    ax5.legend(loc = 'best')
-    ax5.set_ylabel('Metallicity')
-    ax5.set_title('$M_\star$ Bins: Metallicity vs. $R_{23}$ and $O_{32}$')
+    fig5, ax5 = plt.subplots(nrows = 1, ncols = 2, sharey = True)
+    plt.subplots_adjust(left = 0.12, right = 0.98, bottom = 0.12, top = 0.95, wspace = 0.0)
+    ax5[0].scatter(R23[mass_ind_detect], mass_ind_metal[mass_ind_detect], facecolors = 'None', edgecolors = 'blue',
+                   label = '$R_{23}$')
+    ax5[1].scatter(O32[mass_ind_detect], mass_ind_metal[mass_ind_detect], facecolors = 'None', edgecolors = 'red',
+                   label = '$O_{32}$')
+    ax5[0].scatter(R23[mass_ind_nondetect], mass_ind_metal[mass_ind_nondetect], marker='^', facecolors = 'None', edgecolors = 'blue',
+                   label = '$R_{23}$', alpha = 0.5)
+    ax5[1].scatter(O32[mass_ind_nondetect], mass_ind_metal[mass_ind_nondetect], marker='^', facecolors = 'None', edgecolors = 'red',
+                   label = '$O_{32}$', alpha = 0.5)
+    ax5[0].legend(loc = 'best')
+    ax5[1].legend(loc = 'best')
+    ax5[0].set_ylabel('Metallicity')
+    ax5[0].set_title('$M_\star$ Bins: Metallicity vs. $R_{23}$')
+    ax5[1].set_title('$M_\star$ Bins: Metallicity vs. $O_{32}$')
     fig5.set_size_inches(8, 8)
     fig5.savefig(pdf_pages, format='pdf')
     
-    fig6, ax6 = plt.subplots()
-    ax6.scatter(R23[HB_ind_detect], HB_ind_metal[HB_ind_detect], facecolors = 'None', edgecolors = 'blue',
+    fig6, ax6 = plt.subplots(nrows = 1, ncols = 2, sharey = True)
+    plt.subplots_adjust(left = 0.12, right = 0.98, bottom = 0.12, top = 0.95, wspace = 0.0)
+    ax6[0].scatter(R23[HB_ind_detect], HB_ind_metal[HB_ind_detect], facecolors = 'None', edgecolors = 'blue',
                 label = '$R_{23}$')
-    ax6.scatter(O32[HB_ind_detect], HB_ind_metal[HB_ind_detect], facecolors = 'None', edgecolors = 'red',
+    ax6[1].scatter(O32[HB_ind_detect], HB_ind_metal[HB_ind_detect], facecolors = 'None', edgecolors = 'red',
                 label = '$O_{32}$')
-    ax6.scatter(R23[HB_ind_nondetect], HB_ind_metal[HB_ind_nondetect], marker='^', facecolors = 'None', edgecolors = 'blue',
-                label = '$R_{23}$')
-    ax6.scatter(O32[HB_ind_nondetect], HB_ind_metal[HB_ind_nondetect], marker='^', facecolors = 'None', edgecolors = 'red',
-                label = '$O_{32}$')
-    ax6.legend(loc = 'best')
-    ax6.set_ylabel('Metallicity')
-    ax6.set_title('$M_\star$-LH$\\beta$ Bins: Metallicity vs. $R_{23}$ and $O_{32}$')
+    ax6[0].scatter(R23[HB_ind_nondetect], HB_ind_metal[HB_ind_nondetect], marker='^', facecolors = 'None', edgecolors = 'blue',
+                label = '$R_{23}$', alpha = 0.5)
+    ax6[1].scatter(O32[HB_ind_nondetect], HB_ind_metal[HB_ind_nondetect], marker='^', facecolors = 'None', edgecolors = 'red',
+                label = '$O_{32}$', alpha = 0.5)
+    ax6[0].legend(loc = 'best')
+    ax6[1].legend(loc = 'best')
+    ax6[0].set_ylabel('Metallicity')
+    ax6[0].set_title('$M_\star$-LH$\\beta$ Bins: Metallicity vs. $R_{23}$')
+    ax6[1].set_title('$M_\star$-LH$\\beta$ Bins: Metallicity vs. $O_{32}$')
     fig6.set_size_inches(8, 8)
     fig6.savefig(pdf_pages, format='pdf')
     
@@ -281,9 +345,9 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     ax7[1].scatter(log_mass[HB_ind_detect], HB_ind_metal[HB_ind_detect], s = 15, facecolors = 'None',
                    edgecolors = 'blue', label = 'Individual Detections')
     ax7[0].scatter(log_mass[mass_ind_nondetect], mass_ind_metal[mass_ind_nondetect], s = 15, marker='^',
-                   facecolors = 'None', edgecolors = 'blue', label = 'Individual Non-Detections')
+                   facecolors = 'None', edgecolors = 'blue', label = 'Individual Non-Detections', alpha = 0.5)
     ax7[1].scatter(log_mass[HB_ind_nondetect], HB_ind_metal[HB_ind_nondetect], s = 15, marker='^',
-                   facecolors = 'None', edgecolors = 'blue', label = 'Individual Non-Detections')
+                   facecolors = 'None', edgecolors = 'blue', label = 'Individual Non-Detections', alpha = 0.5)
     
     print('Number of mass bin individual sources plotted:', len(log_mass[mass_ind_detect]))
     print('Number of mass-LHbeta bin individual sources plotted:', len(log_mass[HB_ind_detect]))
@@ -292,12 +356,12 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     ax7[0].scatter(mass_avg_mass[mass_detect], mass_metal[mass_detect], s = 25, color = 'red',
                    label = 'Bin Detections')
     ax7[0].scatter(mass_avg_mass[mass_nondetect], mass_metal[mass_nondetect], s = 25, color = 'red',
-                   marker = '^', label = 'Bin Non-Detections')
+                   marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
     #HBeta bin detections and non-detections
     ax7[1].scatter(HB_avg_mass[HB_detect], HB_metal[HB_detect], s = 25, color = 'red',
                    label = 'Bin Detections')
     ax7[1].scatter(HB_avg_mass[HB_nondetect], HB_metal[HB_nondetect], s = 25, color = 'red',
-                   marker = '^', label = 'Bin Non-Detections')
+                   marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
 
     
     ##Curve fit 
@@ -350,6 +414,8 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     
 def mass_metal_fit(mass, a, b, g):
     '''
+    MTO is NOT held constant.
+    
     Andrews & Martini Mass-Metallicity Relation:
     8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
     '''
@@ -360,6 +426,8 @@ def mass_metal_fit(mass, a, b, g):
 
 def mass_metal_fit2(mass, a, g):
     '''
+    MTO is held constant.
+    
     Andrews & Martini Mass-Metallicity Relation:
     8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
     '''
@@ -371,6 +439,27 @@ def mass_metal_fit2(mass, a, g):
 
 
 def lum_vs_mass(fitspath, binning_file):
+    '''
+    Purpose:
+        This function creates a plot of HBeta Luminosity vs Stellar Mass for individual galaxy values.
+        
+    Usage:
+        plots.lum_vs_mass(fitspath, binning_file)
+        
+    Params:
+        fitspath --> fitspath --> a string of the file path where the input file is and where the output file
+            will be placed.
+        binning_file --> npz file containing the mass, HBeta luminosity, and bin edge values for each bin.
+            (Valid for either binning type.)
+        
+    Returns:
+        None
+        
+    Outputs:
+        fitspath + 'lum_vs_mass.pdf' --> a pdf containing a HBeta Luminosity vs Stellar Mass plot with each
+            bin's values separated by dashed lines to show the galaxies that fall within each bin.
+    '''
+    
     binning = np.load(fitspath + binning_file)
     lum = binning['lum']
     mass = binning['mass']
