@@ -5,6 +5,30 @@ from astropy.table import Table, Column
 
 
 def make_validation_table(fitspath, bin_pts_fname):
+    '''
+    Purpose: 
+        This function creates a validation table for a given binning set. The validation table
+        contains a OIII4363 detection column where 1.0 means detection, 0.5 means non-detection with
+        reliable OIII5007, and 0.0 means unreliable non-detection.
+        
+    Usage:
+        valid_table.make_validation_table(fitspath, bin_pts_fname)
+        
+    Params:
+        fitspath --> a string of the file path where the input file is and where the output file
+            will be placed.
+        bin_pts_fname --> a string describing the bin sizes/bin type. 
+            (e.g. 'revised_75_112_113_300_600_1444_1444')
+        
+    Returns: 
+        None
+        
+    Outputs:
+        fitspath + bin_pts_fname + '_validation.tbl' --> a validation table containing bin IDs;
+            minimum, maximum, and average masses in each bin; number of galaxies in each bin; and 
+            a column indicating if the bin has an OIII4363 detection or non-detection.
+    '''
+    
     massbin_table = asc.read(fitspath + bin_pts_fname + '_binning.tbl', format = 'fixed_width_two_line')
     em_table = asc.read(fitspath + bin_pts_fname + '_emission_lines.tbl')
     
@@ -55,12 +79,32 @@ def make_validation_table(fitspath, bin_pts_fname):
     
     
 def quality_assurance(bin_pts_fname, QA_flag):
-    #Limits 4363 line width
+    '''
+    Purpose:
+        This function allows for manual flagging of sources for quality assurance of OIII4363 detections.
+        Based on the bin_pts_fname keyword, the user can override the detection flag by setting a specific
+        bin index equal to the desired flag (1.0, 0.5, or 0.0).
+        
+    Usage:
+        valid_table.quality_assurance(bin_pts_fname, QA_flag)
+        
+    Params:
+        bin_pts_fname --> a string describing the bin sizes/bin type. 
+            (e.g. 'revised_75_112_113_300_600_1444_1444')
+        QA_flag --> a numpy zeros array the size of the number of bins. This is used to flag sources by
+            changing the value at a specific index to the desired flag.
+        
+    Returns: 
+        QA_flag --> the updated flag array.
+        
+    Outputs:
+        None
+    '''
     if bin_pts_fname == 'massLHbetabin_revised_75_112_113_300_600_1444_1444':
-        QA_flag[10] = 1.0
-        QA_flag[11] = 1.0
+        QA_flag[10] = 1.0    #has large line width on OIII4363
+        QA_flag[11] = 1.0    #has large line width on OIII4363
     elif bin_pts_fname == 'massbin_revised_75_112_113_300_600_1444_1444':   
-        QA_flag[5] = 1.0
+        QA_flag[5] = 1.0     #has large line width on OIII4363
         
     return QA_flag
         
