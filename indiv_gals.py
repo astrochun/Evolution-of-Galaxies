@@ -1,42 +1,42 @@
-#Creates table including arrays for T_e and line ratios for individual galaxies.
 import numpy as np
 from astropy.io import fits
 from astropy.io import ascii as asc
-from astropy.table import Table, Column
-from getpass import getuser
+from astropy.table import Table
 
-'''
-if getuser() == 'carol':
-    path = "C:\\Users\\carol\\Google Drive\\"
-    path2 = path + "MZEvolve\\massbin\\"
-    path3 = path + "Zcalbase_gal\\dataset\\"
-else:
-    path = "../DEEP2/" 
-    path2 = "../"
+
+
+def create_Te_line_table(fitspath, line_file, mass_bin_file, HB_bin_file, mass_Te_file, HB_Te_file):
+    '''
+    Purpose:
+        This function creates a table the size of the number of individual galaxies with valid mass, 
+        and it holds individual galaxy line measurements, bin temperatures (for both cases) applied to the
+        galaxies within each bin, detection markings, and individual and bin ID numbers.
+        
+    Usage:
+        indiv_gals.create_Te_line_table(fitspath, line_file, mass_bin_file, HB_bin_file, mass_Te_file, HB_Te_file)
+        
+    Params:
+        fitspath --> a string of the file path where the input file is and where the output file will be placed.
+        line_file --> a fits table containing the individual line measurements.
+        mass_bin_file --> an npz file containing the indices of galaxies, relative to line_file, contained in 
+            each mass bin. It also contains the mass values of all sources (indexed the same as line_file).
+        HB_bin_file --> an npz file containing the indices of galaxies, relative to line_file, contained in 
+            each mass-LHbeta bin. It also contains the log of the HBeta luminosity values of all sources.
+        mass_Te_file --> an ascii table containing the electron temperatures and detection markings for each
+            mass bin.
+        HB_Te_file --> an ascii table containing the electron temperatures and detection markings for each
+            mass-LHbeta bin.
+        
+    Returns:
+        None
+        
+    Outputs:
+        fitspath + 'individual_Te_emLines.tbl' --> an ascii table containing individual and bin ID numbers,
+            bin temperatures correlated to individual galaxies in each bin, detection markings, and individual
+            line fluxes and signal to noise.
+    '''
     
     
-HB_bin_type = 'hbeta_revised_75_112_113_300_600_1444_1444'
-mass_bin_type = 'revised_75_112_113_300_600_1444_1444'
-    
-###INPUT FILES 
-#contains bin indices
-HB_bin_file = 'mass_bin_hbeta_revised_75_112_113_300_600_1444_1444.npz'
-
-#contains electron temperatures
-HB_derived_prop_file = 'hbeta_revised_75_112_113_300_600_1444_1444_updated_massbin_derived_properties_metallicity.tbl'
-mass_derived_prop_file = 'revised_75_112_113_300_600_1444_1444_updated_massbin_derived_properties_metallicity.tbl'
-
-#contains mass and luminosity values
-mass_LHbeta_file = 'revised_75_112_113_300_600_1444_1444_mass_SFR_data.npz'
-
-#contains combined visual detections and S/N > 3 detections
-HB_valid_file = 'hbeta_revised_75_112_113_300_600_1444_1444_massbin_validation.tbl'
-mass_valid_file = 'revised_75_112_113_300_600_1444_1444_massbin_validation.tbl'
-'''
-
-
-
-def create_Te_lineratio_table(fitspath, line_file, mass_bin_file, HB_bin_file, mass_Te_file, HB_Te_file):
     mass_bin_npz = np.load(mass_bin_file)
     mass_Te_tbl = asc.read(mass_Te_file)
     HB_bin_npz = np.load(HB_bin_file)
