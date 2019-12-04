@@ -1,20 +1,26 @@
+'''
+Purpose:
+    This code stacks spectra (i.e. bins sources) based on stellar mass and subdivides those bins
+    further based on HBeta luminosity.
+'''
+
 from astropy.io import fits, ascii
 from collections import Counter
 import numpy as np
 from astropy.table import Table
 import matplotlib.pyplot as plt
-from getpass import getuser
 from os.path import exists
 import os
 
 
-
+'''
 if getuser() == 'carol':
     path = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
     path2 = path + "massbin\\"
 else:
     path = "../DEEP2/" 
     path2 = "../"
+'''
     
 
 def exclude_outliers(objno):
@@ -68,7 +74,44 @@ def interpolate_data(interp_file):
 
 def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = '', fitspath0 = '',
             spectra_plot = False, filename = False, adaptive = False, hbeta_bin = False, lum = []):
+    '''
+    Purpose:
+        This function excludes sources with invalid mass, sorts the sources based on mass, and stacks
+        spectra according to the provided number of sources in each bin. This function can bin the data
+        according to mass or subdivide the mass bins according to HBeta luminosity values.
+        
+    Usage:
+        library.binning(temp_x, bin_pts_input, interp_file, bin_pts_fname, mname = '', fitspath0 = '',
+                        spectra_plot = False, filename = False, adaptive = False, hbeta_bin = False, lum = [])
+        
+    Params:
+        *See section below for any parameters not listed here*
+        interp_file --> an npz file containing the interpolated mass results for sources with no mass.
+        bin_pts_fname --> a string denoting the binning type and bin sizes.
+        mname (OPTIONAL) --> the MastermaskArray.fits file.
+        fitspath0 (OPTIONAL) --> a string of the file path where the output files will be placed.
+        spectra_plot (OPTIONAL) --> True if a plot of stacked spectra is wanted. False otherwise (default).
+        filename (OPTIONAL) --> the Master_Grid.fits file.
+        adaptive (OPTIONAL) --> True if bin sizes vary. False if constant bin size (default).
+        hbeta_bin (OPTIONAL) --> True if HBeta luminosity sub-binning is wanted. False otherwise (default). 
+        lum (OPTIONAL) --> if HBeta luminosity binning is wanted, lum is a list of luminosity values for
+            all sources. The default is an empty list.
+        
+    Returns:
+        bin_edge --> left edge of each bin.
+        flux --> array of flux values for each bin.
+        
+    Outputs:
+        out_file --> an npz file containing bin information such as the indices of sources relative to 
+            temp_x that are in each bin, the first and last sources in each bin, average values, etc.
+        table_stack --> an ascii table with bin IDs and minimum, maximum, and average mass/HBeta luminosity
+            values for each bin.
+        composite_spectra --> a plot of the stacked spectra for each bin.
+    '''
+    
     """    
+    Parameters/Variables:
+        
     temp_x = array of stellar masses to be divided into bins --> unsorted
     objno = array of ID numbers --> unsorted
     bin_pts_input = number of points in each bin
@@ -131,6 +174,8 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
             idx_file.close()
     
     '''
+    Parameters/Variables (cont.):
+        
     bin_ind = list of lists where each inner list contains the indices relative to temp_x that are in each bin
     start = number that starts each bin --> i.e. if bin_pts = 75, 112, 113, 300, 600, 1444, 1444 then
                                             start = 0, 75, 112, 113, 300, 600, 1444
@@ -199,6 +244,8 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
             #for mass-LHbeta bins
             else:
                 '''
+                Parameters/Variables (cont.):
+                
                 lum_sort = Hbeta luminosity values of the valid masses in mass-sorted order
                 valid_hbeta = valid Hbeta luminosity indices that also have valid masses for one bin
                               --> sorted by valid mass
@@ -250,6 +297,8 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
             bin_redge.append(bin_stop)
             
         '''
+        Note:
+            
         The mass array saved here contains the 4140 masses (not the log(mass)) with the no mass indices replaced
         with interpolated values; it does NOT exclude sources excluded for binning (indices relative to
         original table). 
@@ -272,6 +321,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         ascii.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
         
     
+    #Plotting stacked spectra
     xlim = [4250,4450]
     if (spectra_plot == True):
         for i in range(count):
