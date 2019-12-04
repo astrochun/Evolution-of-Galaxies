@@ -1,5 +1,6 @@
 '''
-This is the general code that runs all codes.
+Purpose:
+    This code runs all other codes and the entire binning and individual analyses.
 '''
 
 import sys
@@ -28,6 +29,27 @@ else:
 
 
 def get_time(org_name):
+    '''
+    Purpose: 
+        This function finds and returns the path to a directory named after the current date (MMDDYYYY).
+        If the directory doesn't exist yet, it creates a new directory named after the current date in the
+        provided org_name directory.
+        
+    Usage:
+        fitspath = general.get_time(org_name)
+    
+    Params:
+        org_name --> a string of the directory that the date subdirectory will be in.
+        
+    Returns:
+        fitspath --> the path to the date directory.
+        
+    Outputs:    
+        "Path already exists" --> prints this message if the current date directory already exists. 
+        fitspath --> prints the path to the directory.
+    
+    '''
+    
     today = date.today()
     fitspath = path_init + org_name + '\\' + "%02i%02i%02i" % (today.month, today.day, today.year) + '\\'
     try:
@@ -54,6 +76,26 @@ def get_HB_luminosity():
 
 
 def run_bin_analysis():
+    '''
+    Purpose:
+        This function runs the entire binning process: binning, emission line fitting, validation table,
+        electron temperature and metallicity calculations, plotting results, and error propagation.
+        
+    Usage:
+        general.run_bin_analysis()
+        Requires user input: The user must specify which binning type (mass or masslhbeta). Spelling
+                             must be exact, but case does not matter. Program exits if incorrect input.
+        
+    Params:
+        None
+        
+    Returns:
+        None
+        
+    Outputs:
+        Calls other codes which produce output tables, pdfs, etc. (see function calls within code).    
+    '''
+    
     bin_type = input('Which binning type? mass or massLHbeta: ')
     if bin_type.lower() == 'mass':
         bin_type_str = 'massbin'
@@ -157,7 +199,27 @@ def run_bin_analysis():
  
     
 #date is a string of the date in MMDDYYYY format   
-def run_indiv_analysis(date):
+def run_indiv_analysis(date_mass, date_HB):
+    '''
+    Purpose:
+        This function runs the entire individual galaxy analysis process, which is based off both binning
+        results. It calls codes to consolidate binning and individual data, to calculate individual 
+        metallicities based on bin temperatures, and to plot useful relationships.
+        
+    Usage:
+        general.run_indiv_analysis()
+        
+    Params:
+        date_mass --> a string of the date directory that the mass bin results are in.
+        date_HB --> a string of the date directory that the mass-LHbeta bin results are in.
+        
+    Returns:
+        None
+        
+    Outputs:
+        Calls other codes which produce output tables, pdfs, etc. (see function calls within code).     
+    '''
+    
     fitspath = get_time('individual')
     
     bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
@@ -167,15 +229,15 @@ def run_indiv_analysis(date):
     
     
     line_file = path_init2 + 'dataset\\DEEP2_all_line_fit.fits'
-    mass_bin_npz = path_init + 'massbin\\' + date + '\\massbin_revised_75_112_113_300_600_1444_1444.npz'
-    mass_bin_file = path_init + 'massbin\\' + date + '\\massbin_revised_75_112_113_300_600_1444_1444_binning.tbl'
-    mass_Te_file = path_init + 'massbin\\' + date + '\\massbin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
-    HB_bin_npz = path_init + 'mass_LHbeta_bin\\' + date + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444.npz'
-    HB_bin_file = path_init + 'mass_LHbeta_bin\\' + date + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444_binning.tbl'
-    HB_Te_file = path_init + 'mass_LHbeta_bin\\' + date + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
+    mass_bin_npz = path_init + 'massbin\\' + date_mass + '\\massbin_revised_75_112_113_300_600_1444_1444.npz'
+    mass_bin_file = path_init + 'massbin\\' + date_mass + '\\massbin_revised_75_112_113_300_600_1444_1444_binning.tbl'
+    mass_Te_file = path_init + 'massbin\\' + date_mass + '\\massbin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
+    HB_bin_npz = path_init + 'mass_LHbeta_bin\\' + date_HB + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444.npz'
+    HB_bin_file = path_init + 'mass_LHbeta_bin\\' + date_HB + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444_binning.tbl'
+    HB_Te_file = path_init + 'mass_LHbeta_bin\\' + date_HB + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
     
     #Create individual Te and lines table
-    indiv_gals.create_Te_lineratio_table(fitspath, line_file, mass_bin_npz, HB_bin_npz, mass_Te_file, HB_Te_file)
+    indiv_gals.create_Te_line_table(fitspath, line_file, mass_bin_npz, HB_bin_npz, mass_Te_file, HB_Te_file)
     
     
     #Calculate individual metallicities 
