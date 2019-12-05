@@ -1,4 +1,8 @@
-#Calculates the R value, electron temperature, and metallicity from the flux table
+'''
+Purpose:
+    Calculates R value, electron temperature, and metallicity of sources.
+'''
+
 import numpy as np
 from astropy.io import ascii as asc
 from astropy.table import Table
@@ -45,6 +49,31 @@ def metallicity_calculation(T_e, two_beta, three_beta):
 
 
 def run_function(line_file, outfile, EBV, k_4363, k_5007):
+    '''
+    Purpose:
+        This function runs the R calculation, temperature calculation, and metallicity calculation
+        functions for the case of inidividual and stacked spectra.
+        
+    Usage:
+        R_temp_calcul.run_function(line_file, outfile, EBV, k_4363, k_5007)
+        
+    Params:
+        line_file --> ascii table that has all the data for each emission line.
+        outfile --> a string naming the tables that are produced by this function.
+        EBV --> an array of E(B - V) values. The array is the size of the number of sources (or bins).
+        k_4363 --> an array of dust extinction values at the OIII4363 emission line for each bin/individual source.
+        k_5007 --> an array of dust extinction values at the OIII5007 emission line for each bin/individual source.
+        
+    Returns:
+        None
+        
+    Outputs:
+        out_ascii --> an ascii table containing the bin temperatures, bin or individual metallicities,
+            and bin or individual line fluxes and S/N.
+        out_fits --> a fits table containing the bin temperatures, bin or individual metallicities,
+            and bin or individual line fluxes and S/N.
+    '''
+    
     line_table = asc.read(line_file)
     
     if 'two_beta' in line_table.keys():
