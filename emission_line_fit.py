@@ -1,3 +1,8 @@
+'''
+Purpose:
+    This code fits Gaussian curves to given emission lines and plots the results.
+'''
+
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
@@ -68,6 +73,10 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type,
 
 #calculating rms
 def rms_func(wave, dispersion, lambda_in, y0, sigma_array, scalefact, mask_flag):
+    '''
+    Purpose:
+        This function calculates RMS...
+    '''
     x_idx = np.where((np.abs(wave - lambda_in) <= 100) & (mask_flag == 0))[0]
 
     sigma = np.std(y0[x_idx])
@@ -85,6 +94,35 @@ def rms_func(wave, dispersion, lambda_in, y0, sigma_array, scalefact, mask_flag)
 #Plotting Zoomed 
 def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, working_wave, line_type = '',
                     outpdf = '', line_name = '', hbeta_bin = False):
+    '''
+    Purpose:
+        This function fits each emission line with a Gaussian curve. It also calculates and saves in a table
+        the Gaussian flux, observed flux, sigma, median, norm, RMS, and S/N for each provided emission line.
+        
+    Usage:
+        emission_line_fit.zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, working_wave,
+                                          line_type = '', outpdf = '', line_name = '', hbeta_bin = False)
+        
+    Params:
+        pdf_pages --> the pdf that the emission line fit plots are saved to.
+        N --> the number of galaxies in each bin.
+        Spect_1D --> an array of spectral data.
+        lambda0 --> a list of wavelengths (in Angstroms) that all the emission lines are at.
+        working_wave --> the wavelength (in Angstroms) that the emission line is at.
+        line_type (OPTIONAL) --> a string of the emission line type: Oxy2, Balmer, or Single. Default is ''.
+        outpdf (OPTIONAL) --> a string naming the pdf containing the emission line fits. Default is ''.
+        line_name (OPTIONAL) --> a string of the emission line name. Default is ''.
+        hbeta_bin (OPTIONAL) --> True if the binning used was mass-Hbeta luminosity binning. False if the 
+            binning used was mass binning (default).
+        
+    Returns:
+        tab0 --> the ascii table containing each emission line's Gaussian flux, observed flux, sigma, median,
+            norm, RMS, and S/N values.
+        
+    Outputs:
+        None
+    '''
+    
     if hbeta_bin == True:
         nrows = 4
         ncols = 4
@@ -194,7 +232,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
 
             resid = y_norm[x_sigsnip] - gauss0[x_sigsnip] + o1[3]  
 
-        #Plotting
+            #Plotting
             t_ax = ax_arr[row, col]
             t_ax.plot(wave, y_norm, 'k', linewidth = 0.6, label = 'Emission')
             t_ax.set_xlim([x1 + 45,x2 - 45])
@@ -278,8 +316,35 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
    
     
 
-def zm_general(fitspath, bin_pts_fname, Spect_1D, header, dispersion, wave, lambda0, line_type, line_name, s, a,
-               c, s1, a1, s2, a2, hbeta_bin = False):  
+def zm_general(fitspath, bin_pts_fname, Spect_1D, dispersion, wave, lambda0, line_type, line_name, s, a,
+               c, s1, a1, s2, a2, hbeta_bin = False):
+    '''
+    Purpose:
+        This function calls the emission line fitting and plotting functions, producing a pdf of the all
+        the fits and an ascii table containing measured data about each line.
+        
+    Usage:
+        emission_line_fit.zm_general(fitspath, bin_pts_fname, Spect_1D, dispersion, wave, lambda0,
+                                     line_type, line_name, s, a, c, s1, a1, s2, a2, hbeta_bin = False)
+        
+    Params:
+        fitspath --> a string of the file path where the output files will be placed.
+        bin_pts_fname --> a string denoting the binning type and bin sizes.
+        lambda0 --> a list of wavelengths (in Angstroms) that all the emission lines are at.
+        line_type --> a list of strings denoting the emission line type: Oxy2, Balmer, or Single.
+        line_name --> a list of strings denoting the emission line name.
+        hbeta_bin (OPTIONAL) --> True if the binning used was mass-Hbeta luminosity binning. False if the 
+            binning used was mass binning (default).        
+        
+    Returns:
+        None
+        
+    Outputs:
+        table_stack --> an ascii table containing each emission line's Gaussian flux, observed flux, sigma,
+            median, norm, RMS, and S/N values.
+        pdf_pages --> a pdf of all the emission line fits.
+    '''
+    
     outpdf = fitspath + bin_pts_fname + '_emission_lines.pdf'
     pdf_pages = PdfPages(outpdf)
     table0 = asc.read(fitspath + bin_pts_fname + '_binning.tbl', format = 'fixed_width_two_line') 
