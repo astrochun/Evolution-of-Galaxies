@@ -21,8 +21,8 @@ from Zcalbase_gal import histogram_plots
 
 
 if getuser() == 'carol':
-    path_init = 'C:\\Users\\carol\\Google Drive\\MZEvolve\\'  
-    path_init2 = 'C:\\Users\\carol\\Google Drive\\Zcalbase_gal\\'                 
+    path_init = 'C:/Users/carol/Google Drive/MZEvolve/'  
+    path_init2 = 'C:/Users/carol/Google Drive/Zcalbase_gal/'                 
 else:
     path_init = ''
 
@@ -51,7 +51,7 @@ def get_time(org_name):
     '''
     
     today = date.today()
-    fitspath = path_init + org_name + '\\' + "%02i%02i%02i" % (today.month, today.day, today.year) + '\\'
+    fitspath = path_init + org_name + '/' + "%02i%02i%02i" % (today.month, today.day, today.year) + '/'
     try:
         os.mkdir(fitspath)
     except FileExistsError:
@@ -157,7 +157,7 @@ def run_bin_analysis():
     s2 = 5
     a2 = 1.8
     
-    emission_line_fit.zm_general(fitspath, bin_pts_fname, Spect_1D, header, dispersion, wave, lambda0, line_type,
+    emission_line_fit.zm_general(fitspath, bin_pts_fname, Spect_1D, dispersion, wave, lambda0, line_type,
                                  line_name, s, a, c, s1, a1, s2, a2, hbeta_bin = bool_hbeta_bin)
     
     
@@ -189,11 +189,13 @@ def run_bin_analysis():
     
     
     #Run error propagation
+    valid_table = fitspath + bin_pts_fname + '_validation.tbl'
     error_prop.error_prop_chuncodes(fitspath, em_file, metal_file + '.tbl')
     dict_list = [fitspath + 'Te_propdist_dict.npz', fitspath + 'Te_xpeaks.npz', fitspath + 'metal_errors.npz',
                  fitspath + 'metal_xpeaks.npz', fitspath + 'metallicity_pdf.npz', fitspath + 'flux_propdist.npz',
                  fitspath + 'flux_errors.npz', fitspath + 'Te_errors.npz']
-    histogram_plots.run_histogram(fitspath, metal_file + '.tbl', dict_list)
+    histogram_plots.run_histogram_TM(fitspath, metal_file + '.tbl', dict_list, valid_table, sharex=True)
+    histogram_plots.run_histogram_FM(fitspath, metal_file + '.tbl', dict_list, valid_table, sharex=True)
     
     
  
@@ -228,13 +230,13 @@ def run_indiv_analysis(date_mass, date_HB):
     bin_pts_fname = 'revised_' + bin_pts_fname
     
     
-    line_file = path_init2 + 'dataset\\DEEP2_all_line_fit.fits'
-    mass_bin_npz = path_init + 'massbin\\' + date_mass + '\\massbin_revised_75_112_113_300_600_1444_1444.npz'
-    mass_bin_file = path_init + 'massbin\\' + date_mass + '\\massbin_revised_75_112_113_300_600_1444_1444_binning.tbl'
-    mass_Te_file = path_init + 'massbin\\' + date_mass + '\\massbin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
-    HB_bin_npz = path_init + 'mass_LHbeta_bin\\' + date_HB + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444.npz'
-    HB_bin_file = path_init + 'mass_LHbeta_bin\\' + date_HB + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444_binning.tbl'
-    HB_Te_file = path_init + 'mass_LHbeta_bin\\' + date_HB + '\\massLHbetabin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
+    line_file = path_init2 + 'dataset/DEEP2_all_line_fit.fits'
+    mass_bin_npz = path_init + 'massbin/' + date_mass + '/massbin_revised_75_112_113_300_600_1444_1444.npz'
+    mass_bin_file = path_init + 'massbin/' + date_mass + '/massbin_revised_75_112_113_300_600_1444_1444_binning.tbl'
+    mass_Te_file = path_init + 'massbin/' + date_mass + '/massbin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
+    HB_bin_npz = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_revised_75_112_113_300_600_1444_1444.npz'
+    HB_bin_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_revised_75_112_113_300_600_1444_1444_binning.tbl'
+    HB_Te_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
     
     #Create individual Te and lines table
     indiv_gals.create_Te_line_table(fitspath, line_file, mass_bin_npz, HB_bin_npz, mass_Te_file, HB_Te_file)
