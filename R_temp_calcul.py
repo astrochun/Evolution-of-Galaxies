@@ -174,12 +174,13 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         n = ('Source_ID', 'Mass_Bin_ID', 'Mass_LHBeta_Bin_ID', 'Mass_Bin_Detections', 'Mass_LHBeta_Bin_Detections',
              'Individual_Detections', 'Log10(Mass)', 'HBeta_Luminosity', 'Observed_Flux_5007', 
              'Observed_Flux_4959', 'Observed_Flux_3727', 'Observed_Flux_HBeta', 'Mass_Bin_Te',
-             'Mass_LHBeta_Bin_Te', 'R23', 'O32', 'Mass_Bin_O_s_ion', 'Mass_Bin_O_d_ion', 'Mass_Bin_com_O_log',
-             'Mass_LHBeta_Bin_O_s_ion', 'Mass_LHBeta_Bin_O_d_ion', 'Mass_LHBeta_Bin_com_O_log', 'E(B-V)')
+             'Mass_LHBeta_Bin_Te', 'R23', 'O32', 'OII/HBeta', 'OIII/HBeta', 'Mass_Bin_O_s_ion',
+             'Mass_Bin_O_d_ion', 'Mass_Bin_com_O_log', 'Mass_LHBeta_Bin_O_s_ion', 'Mass_LHBeta_Bin_O_d_ion',
+             'Mass_LHBeta_Bin_com_O_log', 'E(B-V)')
         tab0 = Table([source_ID, mass_bin_ID, HB_bin_ID, mass_bin_detect, HB_bin_detect,
                       indiv_detect, log_mass, LHbeta, OIII5007, OIII4959, OII, HBETA, mass_T_e, HB_T_e, 
-                      R23, O32, mass_O_s_ion, mass_O_d_ion, mass_com_O_log, HB_O_s_ion, HB_O_d_ion,
-                      HB_com_O_log, ebv], names = n)
+                      R23, O32, two_beta, three_beta, mass_O_s_ion, mass_O_d_ion, mass_com_O_log, HB_O_s_ion,
+                      HB_O_d_ion, HB_com_O_log, ebv], names = n)
         
     else:
         #Case for stacked spectra
@@ -189,7 +190,7 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         
         OII = line_table['OII_3727_Flux_Observed'].data
         SN_OII = line_table['OII_3727_S/N'].data
-        OIII4363 = line_table['Updated_OIII_4363_Flux_Observed'].data
+        OIII4363 = line_table['OIII_4363_Flux_Observed'].data
         SN_4363 = line_table['OIII_4363_S/N'].data
         OIII4959 = line_table['OIII_4958_Flux_Observed'].data
         SN_4959 = line_table['OIII_4958_S/N'].data
@@ -218,7 +219,7 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         
         
         n = ('ID', 'Detection', 'R23_Composite', 'O32_Composite', 'N_Galaxies', 'Observed_Flux_5007', 'S/N_5007', 'Observed_Flux_4959',
-             'S/N_4959', 'Updated_Observed_Flux_4363', 'S/N_4363', 'Observed_Flux_HBETA', 'S/N_HBETA', 'Observed_Flux_3727',
+             'S/N_4959', 'Observed_Flux_4363', 'S/N_4363', 'Observed_Flux_HBETA', 'S/N_HBETA', 'Observed_Flux_3727',
              'S/N_3727', 'Temperature', 'log_O_s', 'log_O_d', 'O_s_ion', 'O_d_ion', 'com_O_log')
         tab0 = Table([ID, detection, R23_composite, O32_composite, N_Galaxy, OIII5007, SN_5007, OIII4959,
                       SN_4959, OIII4363, SN_4363, HBETA, SN_HBETA, OII, SN_OII, T_e, log_O_s, log_O_d,
