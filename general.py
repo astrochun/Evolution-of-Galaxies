@@ -185,18 +185,18 @@ def run_bin_analysis():
     
     #Run plots
     out_fname = fitspath + bin_pts_fname + '_derived_properties_metallicity.pdf'
-    plots.bin_derived_props_plots(metal_file + '.tbl', em_file, out_fname)
+    plots.bin_derived_props_plots(metal_file + '.tbl', em_file, out_fname, bool_hbeta_bin)
     
-    
+    '''
     #Run error propagation
-    valid_table = fitspath + bin_pts_fname + '_validation.tbl'
-    error_prop.error_prop_chuncodes(fitspath, em_file, metal_file + '.tbl')
+    valid_tbl = fitspath + bin_pts_fname + '_validation.tbl'
+    error_prop.error_prop_chuncodes(fitspath, em_file, metal_file + '.tbl', valid_tbl)
     dict_list = [fitspath + 'Te_propdist_dict.npz', fitspath + 'Te_xpeaks.npz', fitspath + 'metal_errors.npz',
                  fitspath + 'metal_xpeaks.npz', fitspath + 'metallicity_pdf.npz', fitspath + 'flux_propdist.npz',
                  fitspath + 'flux_errors.npz', fitspath + 'Te_errors.npz']
-    histogram_plots.run_histogram_TM(fitspath, metal_file + '.tbl', dict_list, valid_table, sharex=True)
-    histogram_plots.run_histogram_FM(fitspath, metal_file + '.tbl', dict_list, valid_table, sharex=True)
-    
+    histogram_plots.run_histogram_TM(fitspath, metal_file + '.tbl', dict_list, valid_tbl, sharex=True)
+    histogram_plots.run_histogram_FM(fitspath, metal_file + '.tbl', dict_list, valid_tbl, sharex=True)
+    '''
     
  
     
@@ -223,6 +223,7 @@ def run_indiv_analysis(date_mass, date_HB):
     '''
     
     fitspath = get_time('individual')
+    print(fitspath)
     
     bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
     str_bin_pts_input = [str(val) for val in bin_pts_input]
@@ -231,12 +232,12 @@ def run_indiv_analysis(date_mass, date_HB):
     
     
     line_file = path_init2 + 'dataset/DEEP2_all_line_fit.fits'
-    mass_bin_npz = path_init + 'massbin/' + date_mass + '/massbin_revised_75_112_113_300_600_1444_1444.npz'
-    mass_bin_file = path_init + 'massbin/' + date_mass + '/massbin_revised_75_112_113_300_600_1444_1444_binning.tbl'
-    mass_Te_file = path_init + 'massbin/' + date_mass + '/massbin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
-    HB_bin_npz = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_revised_75_112_113_300_600_1444_1444.npz'
-    HB_bin_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_revised_75_112_113_300_600_1444_1444_binning.tbl'
-    HB_Te_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_revised_75_112_113_300_600_1444_1444_derived_properties_metallicity.tbl'
+    mass_bin_npz = path_init + 'massbin/' + date_mass + '/massbin_' + bin_pts_fname + '.npz'
+    mass_bin_file = path_init + 'massbin/' + date_mass + '/massbin_' + bin_pts_fname + '_binning.tbl'
+    mass_Te_file = path_init + 'massbin/' + date_mass + '/massbin_' + bin_pts_fname + '_derived_properties_metallicity.tbl'
+    HB_bin_npz = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_' + bin_pts_fname + '.npz'
+    HB_bin_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_' + bin_pts_fname + '_binning.tbl'
+    HB_Te_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_' + bin_pts_fname + '_derived_properties_metallicity.tbl'
     
     #Create individual Te and lines table
     indiv_gals.create_Te_line_table(fitspath, line_file, mass_bin_npz, HB_bin_npz, mass_Te_file, HB_Te_file)
