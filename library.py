@@ -303,7 +303,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         with interpolated values; it does NOT exclude sources excluded for binning (indices relative to
         original table). 
         The luminosity array saved here contains the 4140 luminosities (log(lum)) with the >44 and nans replaced
-        to -1.
+        with -1.
         '''
         np.savez(out_file, mass = temp_x, lum = lum, bin_ind = bin_ind, bin_start = bin_start, bin_edge = bin_edge, 
                  bin_redge = bin_redge, flux = flux, wavelength = wavelength, mass_avg = mass_avg,
