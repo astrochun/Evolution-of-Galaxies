@@ -63,9 +63,10 @@ def make_validation_table(fitspath, bin_pts_fname):
     
     #Add updated OIII4363 flux column and detection column to emission_line.tbl
     out_ascii_em_table = fitspath + bin_pts_fname + '_emission_lines.tbl'
-    updated_O_4363_col = Column(updated_O_4363_flux, name = 'Updated_OIII_4363_Flux_Observed')
+    em_table['OIII_4363_Flux_Observed'].name = 'Original_OIII_4363_Flux_Observed' 
+    updated_O_4363_col = Column(updated_O_4363_flux, name = 'OIII_4363_Flux_Observed')
     detection_col = Column(detections, name = 'Detection')
-    em_table.add_column(updated_O_4363_col, index=30) 
+    em_table.add_column(updated_O_4363_col, index=31) 
     em_table.add_column(detection_col, index=7)
     asc.write(em_table, out_ascii_em_table, format = 'fixed_width_two_line', overwrite = True)
         
