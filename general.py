@@ -28,7 +28,7 @@ else:
 
 
 
-def get_time(org_name):
+def get_time(org_name, bin_pts):
     '''
     Purpose: 
         This function finds and returns the path to a directory named after the current date (MMDDYYYY).
@@ -51,8 +51,10 @@ def get_time(org_name):
     '''
     
     today = date.today()
-    fitspath = path_init + org_name + '/' + "%02i%02i%02i" % (today.month, today.day, today.year) + '/'
+    fitspath = path_init + org_name + '/' + "%02i%02i%02i" % (today.month, today.day, today.year) + '/' #+ bin_pts + '/'
     try:
+        os.mkdir(fitspath)
+        fitspath += bin_pts + '/'
         os.mkdir(fitspath)
     except FileExistsError:
         print("Path already exists")
@@ -75,7 +77,7 @@ def get_HB_luminosity():
 
 
 
-def run_bin_analysis():
+def run_bin_analysis(err_prop = False):
     '''
     Purpose:
         This function runs the entire binning process: binning, emission line fitting, validation table,
@@ -87,7 +89,7 @@ def run_bin_analysis():
                              must be exact, but case does not matter. Program exits if incorrect input.
         
     Params:
-        None
+        err_prop --> True if it is desired for the error propagation code to be run, False otherwise (by default).
         
     Returns:
         None
@@ -96,17 +98,21 @@ def run_bin_analysis():
         Calls other codes which produce output tables, pdfs, etc. (see function calls within code).    
     '''
     
+    bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
+    str_bin_pts_input = [str(val) for val in bin_pts_input]
+    bin_pts_name = "_".join(str_bin_pts_input)
+    
     bin_type = input('Which binning type? mass or massLHbeta: ')
     if bin_type.lower() == 'mass':
         bin_type_str = 'massbin'
         HB_lum = []
         bool_hbeta_bin = False
-        fitspath = get_time('massbin')
+        fitspath = get_time('massbin', bin_pts_name)
     elif bin_type.lower() == 'masslhbeta':
         bin_type_str = 'massLHbetabin'
         HB_lum = get_HB_luminosity()
         bool_hbeta_bin = True
-        fitspath = get_time('mass_LHbeta_bin')
+        fitspath = get_time('mass_LHbeta_bin', bin_pts_name)
     else:
         print('Invalid binning type')
         sys.exit(0)
@@ -121,10 +127,12 @@ def run_bin_analysis():
     
     mass_revised = result_revised['best.stellar.m_star'].data
     
-    bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
-    str_bin_pts_input = [str(val) for val in bin_pts_input]
-    bin_pts_fname = "_".join(str_bin_pts_input)
-    bin_pts_fname = bin_type_str + '_revised_' + bin_pts_fname
+    #bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
+    #str_bin_pts_input = [str(val) for val in bin_pts_input]
+    #bin_pts_fname = "_".join(str_bin_pts_input)
+    #bin_pts_fname = bin_type_str + '_revised_' + bin_pts_fname
+    bin_pts_fname = 'revised'   ### get rid of
+    #fitspath += "_".join(str_bin_pts_input) + '/'
 
     
     plt.figure(figsize=(14,8))
@@ -187,16 +195,17 @@ def run_bin_analysis():
     out_fname = fitspath + bin_pts_fname + '_derived_properties_metallicity.pdf'
     plots.bin_derived_props_plots(metal_file + '.tbl', em_file, out_fname, bool_hbeta_bin)
     
-    '''
+    
     #Run error propagation
-    valid_tbl = fitspath + bin_pts_fname + '_validation.tbl'
-    error_prop.error_prop_chuncodes(fitspath, em_file, metal_file + '.tbl', valid_tbl)
-    dict_list = [fitspath + 'Te_propdist_dict.npz', fitspath + 'Te_xpeaks.npz', fitspath + 'metal_errors.npz',
-                 fitspath + 'metal_xpeaks.npz', fitspath + 'metallicity_pdf.npz', fitspath + 'flux_propdist.npz',
-                 fitspath + 'flux_errors.npz', fitspath + 'Te_errors.npz']
-    histogram_plots.run_histogram_TM(fitspath, metal_file + '.tbl', dict_list, valid_tbl, sharex=True)
-    histogram_plots.run_histogram_FM(fitspath, metal_file + '.tbl', dict_list, valid_tbl, sharex=True)
-    '''
+    if err_prop == True:
+        valid_tbl = fitspath + bin_pts_fname + '_validation.tbl'
+        error_prop.error_prop_chuncodes(fitspath, em_file, metal_file + '.tbl', valid_tbl)
+        dict_list = [fitspath + 'Te_propdist_dict.npz', fitspath + 'Te_xpeaks.npz', fitspath + 'metal_errors.npz',
+                     fitspath + 'metal_xpeaks.npz', fitspath + 'metallicity_pdf.npz', fitspath + 'flux_propdist.npz',
+                     fitspath + 'flux_errors.npz', fitspath + 'Te_errors.npz']
+        histogram_plots.run_histogram_TM(fitspath, metal_file + '.tbl', dict_list, valid_tbl, sharex=True)
+        histogram_plots.run_histogram_FM(fitspath, metal_file + '.tbl', dict_list, valid_tbl, sharex=True)
+    
     
  
     
@@ -227,8 +236,9 @@ def run_indiv_analysis(date_mass, date_HB):
     
     bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
     str_bin_pts_input = [str(val) for val in bin_pts_input]
-    bin_pts_fname = "_".join(str_bin_pts_input)
-    bin_pts_fname = 'revised_' + bin_pts_fname
+    #bin_pts_fname = "_".join(str_bin_pts_input)
+    bin_pts_fname = 'revised_'   ### get rid of
+    fitspath += "_".join(str_bin_pts_input) + '/'
     
     
     line_file = path_init2 + 'dataset/DEEP2_all_line_fit.fits'
