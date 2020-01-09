@@ -150,7 +150,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     logx_sort = np.log10(x_sort)
     
            
-    out_file = fitspath0 + bin_pts_fname + '.npz'
+    out_file = fitspath0 + bin_pts_fname + '_binning.npz'
     
     #Check if binning npz file already exists    
     if exists(out_file):
@@ -212,6 +212,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         N = []
         lowest_hbeta = []
         highest_hbeta = []
+        lum_avg = []
         count = 0
         count2 = 0
             
@@ -275,6 +276,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
                 highest_hbeta.append(np.max(lum[non_neg]))
                 lowest_hbeta.append(np.min(lum[upper_idx]))
                 highest_hbeta.append(np.max(lum[upper_idx]))
+                lum_avg += [np.mean(lum[non_neg])] + [np.mean(lum[upper_idx])]
                 bin_redge.append(logx_sort[start + len(lower_idx) - 1])
                 bin_edge.append(logx_sort[start + len(lower_idx)])
                 bin_ind.append(lower_idx)
@@ -307,7 +309,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         '''
         np.savez(out_file, mass = temp_x, lum = lum, bin_ind = bin_ind, bin_start = bin_start, bin_edge = bin_edge, 
                  bin_redge = bin_redge, flux = flux, wavelength = wavelength, mass_avg = mass_avg,
-                 bin_ID = bin_ID, N = N, lowest_hbeta = lowest_hbeta, highest_hbeta = highest_hbeta)
+                 bin_ID = bin_ID, N = N, lowest_hbeta = lowest_hbeta, highest_hbeta = highest_hbeta, lum_avg = lum_avg)
         
         if adaptive == False:
             out_ascii = fitspath0 + str(bin_pts_input) + '_binning.tbl' 
@@ -316,8 +318,9 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         if hbeta_bin == False:
             lowest_hbeta = np.zeros(len(bin_pts_input))
             highest_hbeta = np.zeros(len(bin_pts_input))
-        n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies', 'Lowest Hbeta', 'Highest Hbeta')
-        table_stack = Table([bin_ID, bin_edge, bin_redge, mass_avg, N, lowest_hbeta, highest_hbeta], names = n)
+            lum_avg = np.zeros(len(bin_pts_input))
+        n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies', 'Lowest Hbeta', 'Highest Hbeta', 'lum_avg')
+        table_stack = Table([bin_ID, bin_edge, bin_redge, mass_avg, N, lowest_hbeta, highest_hbeta, lum_avg], names = n)
         ascii.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
         
     
