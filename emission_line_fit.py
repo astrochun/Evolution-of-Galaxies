@@ -316,7 +316,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
    
     
 
-def zm_general(fitspath, bin_pts_fname, Spect_1D, dispersion, wave, lambda0, line_type, line_name, s, a,
+def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_name, s, a,
                c, s1, a1, s2, a2, hbeta_bin = False):
     '''
     Purpose:
@@ -324,12 +324,11 @@ def zm_general(fitspath, bin_pts_fname, Spect_1D, dispersion, wave, lambda0, lin
         the fits and an ascii table containing measured data about each line.
         
     Usage:
-        emission_line_fit.zm_general(fitspath, bin_pts_fname, Spect_1D, dispersion, wave, lambda0,
+        emission_line_fit.zm_general(fitspath, Spect_1D, dispersion, wave, lambda0,
                                      line_type, line_name, s, a, c, s1, a1, s2, a2, hbeta_bin = False)
         
     Params:
         fitspath --> a string of the file path where the output files will be placed.
-        bin_pts_fname --> a string denoting the binning type and bin sizes.
         lambda0 --> a list of wavelengths (in Angstroms) that all the emission lines are at.
         line_type --> a list of strings denoting the emission line type: Oxy2, Balmer, or Single.
         line_name --> a list of strings denoting the emission line name.
@@ -345,10 +344,10 @@ def zm_general(fitspath, bin_pts_fname, Spect_1D, dispersion, wave, lambda0, lin
         pdf_pages --> a pdf of all the emission line fits.
     '''
     
-    outpdf = fitspath + bin_pts_fname + '_emission_lines.pdf'
+    outpdf = fitspath + 'emission_lines.pdf'   ###
     pdf_pages = PdfPages(outpdf)
-    table0 = asc.read(fitspath + bin_pts_fname + '_binning.tbl', format = 'fixed_width_two_line') 
-    out_ascii = fitspath + bin_pts_fname + '_emission_lines.tbl'
+    table0 = asc.read(fitspath + 'binning.tbl', format = 'fixed_width_two_line')   ###
+    out_ascii = fitspath + 'emission_lines.tbl'   ###
     N = table0['Number of Galaxies'].data
     
     for ii in range(len(lambda0)):
