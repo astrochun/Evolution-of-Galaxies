@@ -178,9 +178,10 @@ def bin_derived_props_plots(metal_file, em_file, out_file, hbeta_bin = False):
     #Metallicity vs Mass
     fig7, ax7 = plt.subplots()
     ax7.scatter(avg_mass[detect], com_O_log[detect], marker = '.')
-    #y = 8.798 - np.log10(1 + ((10**8.901)/(10**avg_mass))**0.640)
-    #ax7.plot(avg_mass, y, color='g', linestyle = '-', marker = '*')
     ax7.scatter(avg_mass[non_detect], com_O_log[non_detect], marker = '^')
+    mass = np.arange(8.2, 9.9, 0.05)
+    y = 8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
+    ax7.plot(mass, y, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
     ax7.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax7.set_ylabel('12+log(O/H) $T_e$')
     ax7.set_title('Composite Metallicity vs. Avg Mass')
