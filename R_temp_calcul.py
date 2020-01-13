@@ -172,8 +172,8 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         
         
         n = ('Source_ID', 'Mass_Bin_ID', 'Mass_LHBeta_Bin_ID', 'Mass_Bin_Detections', 'Mass_LHBeta_Bin_Detections',
-             'Individual_Detections', 'Log10(Mass)', 'HBeta_Luminosity', 'Observed_Flux_5007', 
-             'Observed_Flux_4959', 'Observed_Flux_3727', 'Observed_Flux_HBeta', 'Mass_Bin_Te',
+             'Individual_Detections', 'Log10(Mass)', 'HBeta_Luminosity', 'OIII_5007_Flux_Observed', 
+             'OIII_4958_Flux_Observed', 'OII_3727_Flux_Observed', 'HBETA_Flux_Observed', 'Mass_Bin_Te',
              'Mass_LHBeta_Bin_Te', 'R23', 'O32', 'OII/HBeta', 'OIII/HBeta', 'Mass_Bin_O_s_ion',
              'Mass_Bin_O_d_ion', 'Mass_Bin_com_O_log', 'Mass_LHBeta_Bin_O_s_ion', 'Mass_LHBeta_Bin_O_d_ion',
              'Mass_LHBeta_Bin_com_O_log', 'E(B-V)')
@@ -218,9 +218,10 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)
         
         
-        n = ('ID', 'Detection', 'R23_Composite', 'O32_Composite', 'N_Galaxies', 'Observed_Flux_5007', 'S/N_5007', 'Observed_Flux_4959',
-             'S/N_4959', 'Observed_Flux_4363', 'S/N_4363', 'Observed_Flux_HBETA', 'S/N_HBETA', 'Observed_Flux_3727',
-             'S/N_3727', 'Temperature', 'log_O_s', 'log_O_d', 'O_s_ion', 'O_d_ion', 'com_O_log')
+        n = ('ID', 'Detection', 'R23_Composite', 'O32_Composite', 'N_Galaxies', 'OIII_5007_Flux_Observed', 
+             'OIII_5007_S/N', 'OIII_4958_Flux_Observed', 'OIII_4958_S/N', 'OIII_4363_Flux_Observed', 'OIII_4363_S/N',
+             'HBETA_Flux_Observed', 'HBETA_S/N', 'OII_3727_Flux_Observed', 'OII_3727_S/N', 'Temperature',
+             'log_O_s', 'log_O_d', 'O_s_ion', 'O_d_ion', 'com_O_log')
         tab0 = Table([ID, detection, R23_composite, O32_composite, N_Galaxy, OIII5007, SN_5007, OIII4959,
                       SN_4959, OIII4363, SN_4363, HBETA, SN_HBETA, OII, SN_OII, T_e, log_O_s, log_O_d,
                       O_s_ion, O_d_ion, com_O_log], names = n)
