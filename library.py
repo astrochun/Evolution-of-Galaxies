@@ -72,7 +72,7 @@ def interpolate_data(interp_file):
     
 
 
-def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = '', fitspath0 = '',
+def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '',
             spectra_plot = False, filename = False, adaptive = False, hbeta_bin = False, lum = []):
     '''
     Purpose:
@@ -81,13 +81,12 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         according to mass or subdivide the mass bins according to HBeta luminosity values.
         
     Usage:
-        library.binning(temp_x, bin_pts_input, interp_file, bin_pts_fname, mname = '', fitspath0 = '',
+        library.binning(temp_x, bin_pts_input, interp_file, mname = '', fitspath0 = '',
                         spectra_plot = False, filename = False, adaptive = False, hbeta_bin = False, lum = [])
         
     Params:
         *See section below for any parameters not listed here*
         interp_file --> an npz file containing the interpolated mass results for sources with no mass.
-        bin_pts_fname --> a string denoting the binning type and bin sizes.
         mname (OPTIONAL) --> the MastermaskArray.fits file.
         fitspath0 (OPTIONAL) --> a string of the file path where the output files will be placed.
         spectra_plot (OPTIONAL) --> True if a plot of stacked spectra is wanted. False otherwise (default).
@@ -150,7 +149,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
     logx_sort = np.log10(x_sort)
     
            
-    out_file = fitspath0 + bin_pts_fname + '_binning.npz'
+    out_file = fitspath0 + 'binning.npz'
     
     #Check if binning npz file already exists    
     if exists(out_file):
@@ -158,7 +157,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         rinput = input('Do you want to delete file? Yes or no ')
         if rinput.lower() == 'yes':
             os.remove(out_file)
-            print(fitspath0 + bin_pts_fname + '.npz deleted.')
+            print(fitspath0 + 'binning.npz deleted.')
         else:
             idx_file = np.load(out_file) 
             bin_ind = idx_file['bin_ind'] 
@@ -314,7 +313,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, bin_pts_fname, mname = ''
         if adaptive == False:
             out_ascii = fitspath0 + str(bin_pts_input) + '_binning.tbl' 
         else:
-            out_ascii = fitspath0 + bin_pts_fname + '_binning.tbl'
+            out_ascii = fitspath0 + 'binning.tbl'
         if hbeta_bin == False:
             lowest_hbeta = np.zeros(len(bin_pts_input))
             highest_hbeta = np.zeros(len(bin_pts_input))
