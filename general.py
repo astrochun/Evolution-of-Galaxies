@@ -40,9 +40,10 @@ def get_time(org_name, bin_pts):
     
     Params:
         org_name --> a string of the directory that the date subdirectory will be in.
+        bin_pts --> a string of the number of galaxies in each bin. (e.g. '75_112_113_300_600_1444_1444')
         
     Returns:
-        fitspath --> the path to the date directory.
+        fitspath --> the path to the date/bin_pts directory.
         
     Outputs:    
         "Path already exists" --> prints this message if the current date directory already exists. 
@@ -51,7 +52,7 @@ def get_time(org_name, bin_pts):
     '''
     
     today = date.today()
-    fitspath = path_init + org_name + '/' + "%02i%02i%02i" % (today.month, today.day, today.year) + '/' #+ bin_pts + '/'
+    fitspath = path_init + org_name + '/' + "%02i%02i%02i" % (today.month, today.day, today.year) + '/' 
     try:
         os.mkdir(fitspath)
         fitspath += bin_pts + '/'
@@ -126,24 +127,17 @@ def run_bin_analysis(err_prop = False):
     interp_file = path_init + 'cfht_I_band_revised_interp_data.npz'
     
     mass_revised = result_revised['best.stellar.m_star'].data
-    
-    #bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
-    #str_bin_pts_input = [str(val) for val in bin_pts_input]
-    #bin_pts_fname = "_".join(str_bin_pts_input)
-    #bin_pts_fname = bin_type_str + '_revised_' + bin_pts_fname
-    bin_pts_fname = 'revised'   ### get rid of
-    #fitspath += "_".join(str_bin_pts_input) + '/'
 
     
     plt.figure(figsize=(14,8))
-    edge, flux = library.binning(mass_revised, result_revised['id'], bin_pts_input, interp_file, bin_pts_fname,
+    edge, flux = library.binning(mass_revised, result_revised['id'], bin_pts_input, interp_file,
                                  filename = master_grid, mname = master_mask_array, fitspath0 = fitspath,
                                  spectra_plot = True, adaptive = True, hbeta_bin = bool_hbeta_bin, lum = HB_lum)
     plt.tight_layout()
-    plt.savefig(fitspath + bin_pts_fname + '_composite_spectra_OHmasked_interp.pdf', bbox_inches = 'tight', pad_inches = 0)
+    plt.savefig(fitspath + 'composite_spectra_OHmasked_interp.pdf', bbox_inches = 'tight', pad_inches = 0)
     
     hdr = fits.getheader(master_grid)
-    flux_fits_file = fitspath + bin_pts_fname + '_flux.fits'
+    flux_fits_file = fitspath + 'flux.fits'
     fits.writeto(flux_fits_file, flux, hdr)
     
     
@@ -165,13 +159,13 @@ def run_bin_analysis(err_prop = False):
     s2 = 5
     a2 = 1.8
     
-    emission_line_fit.zm_general(fitspath, bin_pts_fname, Spect_1D, dispersion, wave, lambda0, line_type,
+    emission_line_fit.zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type,
                                  line_name, s, a, c, s1, a1, s2, a2, hbeta_bin = bool_hbeta_bin)
     
     
     
     #Run validation table
-    valid_table.make_validation_table(fitspath, bin_pts_fname)
+    valid_table.make_validation_table(fitspath, bin_type_str)
     
     
     #Run dust attenuation
@@ -180,32 +174,37 @@ def run_bin_analysis(err_prop = False):
     k_4363 = np.zeros(len(edge))
     k_5007 = np.zeros(len(edge))
     '''
-    em_file = fitspath + bin_pts_fname + '_emission_lines.tbl'
-    dust_attenuation(fitspath, bin_pts_fname, em_file)
+    em_file = fitspath + 'emission_lines.tbl'
+    dust_attenuation(fitspath, em_file)
     '''
     
     
     #Run R, Te, and Metallicity calculations        
-    em_file = fitspath + bin_pts_fname + '_emission_lines.tbl'
-    metal_file = fitspath + bin_pts_fname + '_derived_properties_metallicity'
+    em_file = fitspath + 'emission_lines.tbl'
+    metal_file = fitspath + 'derived_properties_metallicity'
     R_temp_calcul.run_function(em_file, metal_file, EBV, k_4363, k_5007)
     
     
     #Run plots
-    out_fname = fitspath + bin_pts_fname + '_derived_properties_metallicity.pdf'
+    out_fname = fitspath + 'derived_properties_metallicity.pdf'
     plots.bin_derived_props_plots(metal_file + '.tbl', em_file, out_fname, bool_hbeta_bin)
     
     
-    #Run error propagation
+    #Run error propagation, histograms, and revised data plots
     if err_prop == True:
-        valid_tbl = fitspath + bin_pts_fname + '_validation.tbl'
+        valid_tbl = fitspath + 'validation.tbl'
         error_prop.error_prop_chuncodes(fitspath, em_file, metal_file + '.tbl', valid_tbl)
-        dict_list = [fitspath + 'Te_propdist_dict.npz', fitspath + 'Te_xpeaks.npz', fitspath + 'metal_errors.npz',
-                     fitspath + 'metal_xpeaks.npz', fitspath + 'metallicity_pdf.npz', fitspath + 'flux_propdist.npz',
-                     fitspath + 'flux_errors.npz', fitspath + 'Te_errors.npz']
-        histogram_plots.run_histogram_TM(fitspath, metal_file + '.tbl', dict_list, valid_tbl, sharex=True)
-        histogram_plots.run_histogram_FM(fitspath, metal_file + '.tbl', dict_list, valid_tbl, sharex=True)
-    
+        TM_dict_list = [fitspath + 'Te_propdist_dict.npz', fitspath + 'Te_xpeaks.npz', fitspath + 'metal_errors.npz',
+                        fitspath + 'metal_xpeaks.npz', fitspath + 'metallicity_pdf.npz', fitspath + 'Te_errors.npz']
+        FR_dict_list = [fitspath + 'flux_propdist.npz', fitspath + 'flux_errors.npz', fitspath + 'flux_xpeak.npz']
+        histogram_plots.run_histogram_TM(fitspath, metal_file + '.tbl', TM_dict_list, valid_tbl, sharex=False)
+        histogram_plots.run_histogram_FR(fitspath, metal_file + '.tbl', FR_dict_list, valid_tbl, sharex=False)
+        metal_file = fitspath + 'derived_properties_metallicityrevised'
+        em_file = fitspath + 'emission_linesrevised.tbl'
+        out_fname = fitspath + 'derived_properties_metallicityrevised.pdf'
+        plots.bin_derived_props_plots(metal_file + '.tbl', em_file, out_fname, bool_hbeta_bin)
+
+
     
  
     
@@ -236,18 +235,16 @@ def run_indiv_analysis(date_mass, date_HB):
     
     bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
     str_bin_pts_input = [str(val) for val in bin_pts_input]
-    #bin_pts_fname = "_".join(str_bin_pts_input)
-    bin_pts_fname = 'revised_'   ### get rid of
     fitspath += "_".join(str_bin_pts_input) + '/'
     
     
     line_file = path_init2 + 'dataset/DEEP2_all_line_fit.fits'
-    mass_bin_npz = path_init + 'massbin/' + date_mass + '/massbin_' + bin_pts_fname + '.npz'
-    mass_bin_file = path_init + 'massbin/' + date_mass + '/massbin_' + bin_pts_fname + '_binning.tbl'
-    mass_Te_file = path_init + 'massbin/' + date_mass + '/massbin_' + bin_pts_fname + '_derived_properties_metallicity.tbl'
-    HB_bin_npz = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_' + bin_pts_fname + '.npz'
-    HB_bin_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_' + bin_pts_fname + '_binning.tbl'
-    HB_Te_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/massLHbetabin_' + bin_pts_fname + '_derived_properties_metallicity.tbl'
+    mass_bin_npz = path_init + 'massbin/' + date_mass + '/75_112_113_300_600_1444_1444/binning.npz'
+    mass_bin_file = path_init + 'massbin/' + date_mass + '/75_112_113_300_600_1444_1444/binning.tbl'
+    mass_Te_file = path_init + 'massbin/' + date_mass + '/75_112_113_300_600_1444_1444/derived_properties_metallicityrevised.tbl'
+    HB_bin_npz = path_init + 'mass_LHbeta_bin/' + date_HB + '/75_112_113_300_600_1444_1444/binning.npz'  
+    HB_bin_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/75_112_113_300_600_1444_1444/binning.tbl'  
+    HB_Te_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/75_112_113_300_600_1444_1444/derived_properties_metallicityrevised.tbl'
     
     #Create individual Te and lines table
     indiv_gals.create_Te_line_table(fitspath, line_file, mass_bin_npz, HB_bin_npz, mass_Te_file, HB_Te_file)
