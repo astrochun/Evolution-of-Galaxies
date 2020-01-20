@@ -6,9 +6,11 @@ Purpose:
 import numpy as np
 from astropy.io import ascii as asc
 from astropy.table import Table
+from Metallicity_Stack_Commons import temp_metallicity_calc
     
     
-
+##Old
+'''
 def R_calculation(OIII4363, OIII5007, EBV, k_4363, k_5007):
     R_value = (OIII4363 / (OIII5007 * (1 + 1/3.1))) * 10**(0.4*EBV*(k_4363 - k_5007))
     return R_value
@@ -45,7 +47,8 @@ def metallicity_calculation(T_e, two_beta, three_beta):
     com_O_log[detect] = np.log10(com_O[detect]) + 12
 
     return O_s_ion, O_d_ion, com_O_log, O_s_ion_log, O_d_ion_log
-
+'''
+##
 
 
 def run_function(line_file, outfile, EBV, k_4363, k_5007):
@@ -78,7 +81,7 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
     
     if 'two_beta' in line_table.keys():
         #Case for individual spectra 
-        
+        '''
         out_ascii = outfile + '.tbl'
         out_fits = outfile + '.fits'
         
@@ -105,7 +108,7 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
              'Observed_Flux_HBeta', 'Temperature', 'Detections', 'O_s_ion', 'O_d_ion', 'com_O_log')
         tab0 = Table([source_ID, R23_individual, O32_individual, OIII5007, OIII4959, HBETA, T_e, detections,
                       O_s_ion, O_d_ion, com_O_log], names = n)
-    
+        '''
     
     elif 'Log10(Mass)' in line_table.keys():
         #Case for individual spectra
@@ -167,8 +170,8 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         
         
         
-        mass_O_s_ion, mass_O_d_ion, mass_com_O_log, mass_log_O_s, mass_log_O_d = metallicity_calculation(mass_T_e, two_beta, three_beta)
-        HB_O_s_ion, HB_O_d_ion, HB_com_O_log, HB_log_O_s, HB_log_O_d = metallicity_calculation(HB_T_e, two_beta, three_beta)
+        mass_O_s_ion, mass_O_d_ion, mass_com_O_log, mass_log_O_s, mass_log_O_d = temp_metallicity_calc.metallicity_calculation(mass_T_e, two_beta, three_beta)
+        HB_O_s_ion, HB_O_d_ion, HB_com_O_log, HB_log_O_s, HB_log_O_d = temp_metallicity_calc.metallicity_calculation(HB_T_e, two_beta, three_beta)
         
         
         n = ('Source_ID', 'Mass_Bin_ID', 'Mass_LHBeta_Bin_ID', 'Mass_Bin_Detections', 'Mass_LHBeta_Bin_Detections',
@@ -213,9 +216,9 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         O32_composite = np.log10(((1 + 1/3.1) * OIII5007) / OII)
         
         #R, Te, and metallicity calculations
-        R_value = R_calculation(OIII4363, OIII5007, EBV, k_4363, k_5007)
-        T_e = temp_calculation(R_value)
-        O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)
+        R_value = temp_metallicity_calc.R_calculation(OIII4363, OIII5007, EBV, k_4363, k_5007)
+        T_e = temp_metallicity_calc.temp_calculation(R_value)
+        O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = temp_metallicity_calc.metallicity_calculation(T_e, two_beta, three_beta)
         
         
         n = ('ID', 'Detection', 'R23_Composite', 'O32_Composite', 'N_Galaxies', 'OIII_5007_Flux_Observed', 
