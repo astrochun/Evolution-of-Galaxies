@@ -18,17 +18,27 @@ from chun_codes.cardelli import *
 from Evolution_of_Galaxies import library, emission_line_fit, R_temp_calcul, valid_table, plots, indiv_gals
 from Zcalbase_gal.Analysis.DEEP2_R23_O32 import error_prop
 from Zcalbase_gal import histogram_plots
+from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict, k_dict, attenuation
 
+##New
+path = get_user()
+path_init = path + 'MZEvolve/'
+path_init2 = path + 'Zcalbase_gal/'
+##
 
+##Old
+'''
 if getuser() == 'carol':
     path_init = 'C:/Users/carol/Google Drive/MZEvolve/'  
     path_init2 = 'C:/Users/carol/Google Drive/Zcalbase_gal/'                 
 else:
     path_init = ''
+'''
+##   
+    
 
 
-
-def get_time(org_name, bin_pts):
+def get_time(org_name, bin_pts = '', run_bin = False):
     '''
     Purpose: 
         This function finds and returns the path to a directory named after the current date (MMDDYYYY).
@@ -40,7 +50,10 @@ def get_time(org_name, bin_pts):
     
     Params:
         org_name --> a string of the directory that the date subdirectory will be in.
-        bin_pts --> a string of the number of galaxies in each bin. (e.g. '75_112_113_300_600_1444_1444')
+        bin_pts (OPTIONAL) --> a string of the number of galaxies in each bin. (e.g. '75_112_113_300_600_1444_1444')
+        run_bin (OPTIONAL) --> a boolean that tells if the user is running get_time() for bin analysis or
+            not. If True, it creates a subdirectory called bin_pts. Default is False.
+        
         
     Returns:
         fitspath --> the path to the date/bin_pts directory.
@@ -55,8 +68,9 @@ def get_time(org_name, bin_pts):
     fitspath = path_init + org_name + '/' + "%02i%02i%02i" % (today.month, today.day, today.year) + '/' 
     try:
         os.mkdir(fitspath)
-        fitspath += bin_pts + '/'
-        os.mkdir(fitspath)
+        if run_bin:
+            fitspath += bin_pts + '/'
+            os.mkdir(fitspath)
     except FileExistsError:
         print("Path already exists")
     print(fitspath)
@@ -90,7 +104,7 @@ def run_bin_analysis(err_prop = False):
                              must be exact, but case does not matter. Program exits if incorrect input.
         
     Params:
-        err_prop --> True if it is desired for the error propagation code to be run, False otherwise (by default).
+        err_prop (OPTIONAL) --> True if it is desired for the error propagation code to be run, False otherwise (by default).
         
     Returns:
         None
@@ -99,25 +113,33 @@ def run_bin_analysis(err_prop = False):
         Calls other codes which produce output tables, pdfs, etc. (see function calls within code).    
     '''
     
-    bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
-    str_bin_pts_input = [str(val) for val in bin_pts_input]
-    bin_pts_name = "_".join(str_bin_pts_input)
-    
     bin_type = input('Which binning type? mass or massLHbeta: ')
     if bin_type.lower() == 'mass':
         bin_type_str = 'massbin'
         HB_lum = []
         bool_hbeta_bin = False
-        fitspath = get_time('massbin', bin_pts_name)
+        #fitspath = get_time('massbin', bin_pts_name, run_bin = True)
     elif bin_type.lower() == 'masslhbeta':
-        bin_type_str = 'massLHbetabin'
+        bin_type_str = 'mass_LHbeta_bin'
         HB_lum = get_HB_luminosity()
         bool_hbeta_bin = True
-        fitspath = get_time('mass_LHbeta_bin', bin_pts_name)
+        #fitspath = get_time('mass_LHbeta_bin', bin_pts_name, run_bin = True)
     else:
         print('Invalid binning type')
         sys.exit(0)
+      
+    bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
+    str_bin_pts_input = [str(val) for val in bin_pts_input]
+    bin_pts_name = "_".join(str_bin_pts_input)
     
+    ##New
+    fitspath = dir_date(bin_type_str, path_init, year = True)
+    fitspath += bin_pts_name + '/'
+    try:
+        os.mkdir(fitspath)
+    except FileExistsError:
+        print("Path already exists")
+    ##
     
     
     #Run binning (in the case of adaptive binning)
@@ -147,9 +169,19 @@ def run_bin_analysis(err_prop = False):
     dispersion = header['CDELT1']
     wave = header['CRVAL1'] + dispersion*np.arange(header['NAXIS1'])
     
+    ##New
+    lambda0 = fitting_lines_dict['lambda0']
+    line_type = fitting_lines_dict['line_type']
+    line_name = fitting_lines_dict['line_name']
+    ##
+    
+    ##Old
+    '''
     lambda0 = [3726.18, 4101.73, 4340.46, 4363.21, 4861.32, 4958.91, 5006.84]
     line_type = ['Oxy2', 'Balmer', 'Balmer', 'Single', 'Balmer', 'Single', 'Single']
     line_name = ['OII_3727', 'HDELTA', 'HGAMMA', 'OIII_4363', 'HBETA', 'OIII_4958', 'OIII_5007']
+    '''
+    ##
     
     s = 1.0
     a = 1.0
@@ -169,18 +201,16 @@ def run_bin_analysis(err_prop = False):
     
     
     #Run dust attenuation
-    #change later once function is implemented and get actual values
-    EBV = np.zeros(len(edge))
-    k_4363 = np.zeros(len(edge))
-    k_5007 = np.zeros(len(edge))
-    '''
     em_file = fitspath + 'emission_lines.tbl'
-    dust_attenuation(fitspath, em_file)
-    '''
+    combine_asc = asc.read(em_file)
+    attenuation.compute_EBV(fitspath[:-1], combine_asc)
     
     
-    #Run R, Te, and Metallicity calculations        
-    em_file = fitspath + 'emission_lines.tbl'
+    #Run R, Te, and Metallicity calculations 
+    k_4363 = k_dict['OIII_4363']
+    k_5007 = k_dict['OIII_5007']
+    EBV_file = asc.read(fitspath + 'dust_attenuation_values.tbl') 
+    EBV = EBV_file['E(B-V)'].data
     metal_file = fitspath + 'derived_properties_metallicity'
     R_temp_calcul.run_function(em_file, metal_file, EBV, k_4363, k_5007)
     
@@ -230,13 +260,14 @@ def run_indiv_analysis(date_mass, date_HB):
         Calls other codes which produce output tables, pdfs, etc. (see function calls within code).     
     '''
     
-    fitspath = get_time('individual')
-    print(fitspath)
+    ##New
+    fitspath = dir_date('individual', path_init, year = True)
+    ##
     
-    bin_pts_input = [75, 112, 113, 300, 600, 1444, 1444]
-    str_bin_pts_input = [str(val) for val in bin_pts_input]
-    fitspath += "_".join(str_bin_pts_input) + '/'
-    
+    ##Old
+    #fitspath = get_time('individual')
+    ##
+
     
     line_file = path_init2 + 'dataset/DEEP2_all_line_fit.fits'
     mass_bin_npz = path_init + 'massbin/' + date_mass + '/75_112_113_300_600_1444_1444/binning.npz'
@@ -251,6 +282,7 @@ def run_indiv_analysis(date_mass, date_HB):
     
     
     #Calculate individual metallicities 
+    ##Need to add EBV values and k values to large table
     EBV = np.zeros(4088)
     k_4363 = np.zeros(4088)
     k_5007 = np.zeros(4088)
