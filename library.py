@@ -11,6 +11,7 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 from os.path import exists
 import os
+from Metallicity_Stack_Commons import exclude_outliers
 
 
 '''
@@ -23,6 +24,8 @@ else:
 '''
     
 
+##Old
+'''
 def exclude_outliers(objno):
     flag = np.zeros(len(objno), dtype=int)
     bad_data = np.array(['32007727', '32101412', '42006031a', '32035286', '14023705'])
@@ -31,7 +34,9 @@ def exclude_outliers(objno):
         flag[idx] = 1
     
     return flag
-
+'''
+##
+    
 
 def stack_spectra(fname, mname='', plot = False, indices = 'placeholder'):
     hdu = fits.open(fname)
