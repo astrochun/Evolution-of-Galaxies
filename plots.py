@@ -245,9 +245,10 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     O32 = MT_ascii['O32'].data
     two_beta = MT_ascii['OII/HBeta'].data
     three_beta = MT_ascii['OIII/HBeta'].data
-    indiv_detect = MT_ascii['Individual_Detections'].data
-    mass_bin_detect = MT_ascii['Mass_Bin_Detections'].data    
-    HB_bin_detect = MT_ascii['Mass_LHBeta_Bin_Detections'].data    
+    mass_indiv_detect = MT_ascii['Mass_Individual_Detections'].data
+    HB_indiv_detect = MT_ascii['MassLHB_Individual_Detections'].data
+    #mass_bin_detect = MT_ascii['Mass_Bin_Detections'].data    
+    #HB_bin_detect = MT_ascii['Mass_LHBeta_Bin_Detections'].data    
     
     
     ##bin data, i.e. comes from either mass or HB specific files
@@ -267,10 +268,18 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     HB_nondetect = np.where(HB_detect_col == 0.5)[0]
     
     #individual
+    mass_ind_detect = np.where(mass_indiv_detect == 1.0)[0]
+    mass_ind_nondetect = np.where(mass_indiv_detect == 0.5)[0]
+    HB_ind_detect = np.where(HB_indiv_detect == 1.0)[0]
+    HB_ind_nondetect = np.where(HB_indiv_detect == 0.5)[0]
+    ##Old
+    '''
     mass_ind_detect = np.where((indiv_detect == 1.0) & (mass_bin_detect == 1.0))[0]
     mass_ind_nondetect = np.where((indiv_detect == 1.0) & (mass_bin_detect == 0.5))[0]
     HB_ind_detect = np.where((indiv_detect == 1.0) & (LHbeta > 0) & (HB_bin_detect == 1.0))[0]
     HB_ind_nondetect = np.where((indiv_detect == 1.0) & (LHbeta > 0) & (HB_bin_detect == 0.5))[0]
+    '''
+    ##
 
 
 
