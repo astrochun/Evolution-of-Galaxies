@@ -63,7 +63,8 @@ def create_Te_line_table(fitspath, line_file, mass_bin_file, HB_bin_file, mass_T
     
     
     EBV_array = np.zeros(len(idx_array))             
-    indiv_detect_array = np.zeros(len(idx_array))        
+    mass_indiv_detect = np.zeros(len(idx_array))
+    massLHB_indiv_detect = np.zeros(len(idx_array))        
     mass_array = np.log10(mass[idx_array])
     LHbeta_array = LHbeta[idx_array]        
     line_table = line_table[idx_array]   
@@ -104,22 +105,17 @@ def create_Te_line_table(fitspath, line_file, mass_bin_file, HB_bin_file, mass_T
     
     out_ascii = fitspath + 'individual_Te_emLines.tbl'  
     n = ('OBJNO', 'Mass_Bin_ID', 'Mass_LHBeta_Bin_ID', 'Log10(Mass)', 'HBeta_Luminosity', 'Mass_Bin_Detections',
-         'Mass_LHBeta_Bin_Detections', 'Individual_Detections', 'E(B-V)', 'Mass_Bin_Te', 'Mass_LHBeta_Bin_Te',
-         'OII_Flux', 'OII_SN', 'OIII4959_Flux', 'OIII4959_SN', 'OIII5007_Flux', 'OIII5007_SN', 'HBETA_Flux',
-         'HBETA_SN')
+         'Mass_LHBeta_Bin_Detections', 'Mass_Individual_Detections', 'MassLHB_Individual_Detections', 'E(B-V)',
+         'Mass_Bin_Te', 'Mass_LHBeta_Bin_Te', 'OII_Flux', 'OII_SN', 'OIII4959_Flux', 'OIII4959_SN',
+         'OIII5007_Flux', 'OIII5007_SN', 'HBETA_Flux', 'HBETA_SN')
     Te_line_table = Table([objno, mass_bin_ID, HB_bin_ID, mass_array, LHbeta_array, mass_detect_array,
-                            HB_detect_array, indiv_detect_array, EBV_array, mass_Te_array,
+                            HB_detect_array, mass_indiv_detect, massLHB_indiv_detect, EBV_array, mass_Te_array,
                             HB_Te_array, OII_Flux, OII_SN, OIII4959_Flux, OIII4959_SN, OIII5007_Flux,
                             OIII5007_SN, HBETA_Flux, HBETA_SN], names = n)
     asc.write(Te_line_table, out_ascii, format = 'fixed_width_two_line', overwrite = True)
     
     
     hdu.close()
-    
-    
-    
-    
-    
     
     
     
