@@ -47,8 +47,6 @@ def bin_derived_props_plots(metal_file, em_file, out_file, hbeta_bin = False):
     OIII5007 = em_table['OIII_5007_Flux_Observed'].data
     HBeta = em_table['HBETA_Flux_Observed'].data
     
-    #non_detect = np.where(detection != 1)[0]
-    #detect = np.where(detection == 1)[0]
     detect = np.where(detection == 1)[0]
     non_detect = np.where(detection == 0.5)[0]   #non-detection with reliable 5007
         
@@ -110,22 +108,13 @@ def bin_derived_props_plots(metal_file, em_file, out_file, hbeta_bin = False):
     ax1[0, 2].annotate('OII/HBeta', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
     ax1[1, 0].annotate('OIII/HBeta', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
     ax1[1, 1].annotate('4363/(5007 * (1 + 1/3.1))', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
-    ax1[1, 2].annotate('HBeta Luminosity', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
-    '''
-    ax1[1, 2].annotate('1. R23\n2. O32\n3. OII/HBeta\n4. OIII/HBeta\n5. 4363/(5007 * (1 + 1/3.1))', [0.05, 0.80],
-                       xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
-    
-    if hbeta_bin == True:
-        ax1[1, 2].annotate('Blue = Upper Detect\nCyan = Lower Detect\nRed = Upper Non-Detect\nPink = Lower Non-Detect', 
-                           [0.4, 0.90], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '8')
-    '''    
+    ax1[1, 2].annotate('HBeta Luminosity', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')  
         
     ax1[1, 0].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax1[1, 1].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax1[1, 2].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')     
     for t_ax in ax1:
         for tt in range(len(t_ax)):
-            #t_ax[tt].set_xlim(6.0,11.0)
             t_ax[tt].tick_params(axis = 'x', labelbottom=True)
     plt.subplots_adjust(left = 0.075, right = 0.97, bottom = 0.075, top = 0.99, wspace = 0.225, hspace = 0.05)
     pdf_pages.savefig()    
@@ -246,9 +235,7 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     two_beta = MT_ascii['OII/HBeta'].data
     three_beta = MT_ascii['OIII/HBeta'].data
     mass_indiv_detect = MT_ascii['Mass_Individual_Detections'].data
-    HB_indiv_detect = MT_ascii['MassLHB_Individual_Detections'].data
-    #mass_bin_detect = MT_ascii['Mass_Bin_Detections'].data    
-    #HB_bin_detect = MT_ascii['Mass_LHBeta_Bin_Detections'].data    
+    HB_indiv_detect = MT_ascii['MassLHB_Individual_Detections'].data 
     
     
     ##bin data, i.e. comes from either mass or HB specific files
@@ -272,20 +259,9 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
     mass_ind_nondetect = np.where(mass_indiv_detect == 0.5)[0]
     HB_ind_detect = np.where(HB_indiv_detect == 1.0)[0]
     HB_ind_nondetect = np.where(HB_indiv_detect == 0.5)[0]
-    ##Old
-    '''
-    mass_ind_detect = np.where((indiv_detect == 1.0) & (mass_bin_detect == 1.0))[0]
-    mass_ind_nondetect = np.where((indiv_detect == 1.0) & (mass_bin_detect == 0.5))[0]
-    HB_ind_detect = np.where((indiv_detect == 1.0) & (LHbeta > 0) & (HB_bin_detect == 1.0))[0]
-    HB_ind_nondetect = np.where((indiv_detect == 1.0) & (LHbeta > 0) & (HB_bin_detect == 0.5))[0]
-    '''
-    ##
-
 
 
     pdf_pages = PdfPages(fitspath + 'individual_metal_plots' + MTO + '.pdf')
-    
-    
     
     
     ##HBeta Luminosity vs Mass ColorMap=Metallicity##
@@ -505,10 +481,7 @@ def indiv_derived_props_plots(fitspath, metal_Te_file, mass_bin_file, HB_bin_fil
                    marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
 
     
-    ##Curve fit 
-    #exclude last mass bin data point for curve-fitting purposes
-    #mass_detect = mass_detect[:-1]
-    
+    ##Curve fit     
     fail = False
     if restrict_MTO == False:
         p0 = [8.798, 8.901, 0.640]
