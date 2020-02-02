@@ -45,19 +45,19 @@ def make_validation_table(fitspath, bin_type_str):
     
     
     ##Update OIII4363 values for non-detections
-    #1.0 --> detection, 0.0 --> non-detection, 0.5 --> non-detection with reliable 5007
+    #1.0 --> detection, 0.0 --> non-detection, 0.5 --> non-detection with reliable 5007 or detection with wide line
     detections = np.zeros(len(ID))
     valid_stacks_idx = np.where((O_4363_SN >= 3) & (O_5007_SN > 100) & (O_4363_sigma < 2))[0] 
     reliable_5007_stacks = np.where((O_4363_SN < 3) & (O_5007_SN > 100))[0]
     wide_lines_valid = np.where((O_4363_SN >= 3) & (O_5007_SN > 100) & (O_4363_sigma >= 2))[0]
     detections[valid_stacks_idx] = 1
     detections[reliable_5007_stacks] = 0.5
-    detections[wide_lines_valid] = 1
-    QA_flag = np.zeros(len(O_4363_flux))
-    QA_flag = quality_assurance(bin_type_str, QA_flag)
+    detections[wide_lines_valid] = 0.5
+    #QA_flag = np.zeros(len(O_4363_flux))
+    #QA_flag = quality_assurance(bin_type_str, QA_flag)
     updated_O_4363_flux = np.zeros(len(O_4363_flux))
     for i in range(len(O_4363_flux)):
-        if detections[i] == 0.0 or detections[i] == 0.5 or QA_flag[i] == 1.0:
+        if detections[i] == 0.0 or detections[i] == 0.5:  # or QA_flag[i] == 1.0:
             updated_O_4363_flux[i] = 3 * HGamma_rms[i]
         elif detections[i] == 1.0:
             updated_O_4363_flux[i] = O_4363_flux[i] 
@@ -73,7 +73,7 @@ def make_validation_table(fitspath, bin_type_str):
     asc.write(em_table, out_ascii_em_table, format = 'fixed_width_two_line', overwrite = True)
         
     #Create validation table
-    out_ascii_valid_table = fitspath + 'validation.tbl'  ###
+    out_ascii_valid_table = fitspath + 'validation.tbl' 
     n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies', 'Detection')
     valid_table = Table([ID, mass_min, mass_max, mass_avg, N, detections], names = n)
     asc.write(valid_table, out_ascii_valid_table, format = 'fixed_width_two_line', overwrite = True)
@@ -102,7 +102,7 @@ def quality_assurance(bin_type_str, QA_flag):
     Outputs:
         None
     '''
-    if bin_type_str == 'massLHbetabin':
+    if bin_type_str == 'mass_LHbeta_bin':
         QA_flag[10] = 1.0    #has large line width on OIII4363
         QA_flag[11] = 1.0    #has large line width on OIII4363
     elif bin_type_str == 'massbin':   
