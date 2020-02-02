@@ -1,9 +1,3 @@
-'''
-Purpose:
-    This code stacks spectra (i.e. bins sources) based on stellar mass and subdivides those bins
-    further based on HBeta luminosity.
-'''
-
 from astropy.io import fits, ascii
 from collections import Counter
 import numpy as np
@@ -13,29 +7,6 @@ from os.path import exists
 import os
 from Metallicity_Stack_Commons import exclude_outliers
 
-
-'''
-if getuser() == 'carol':
-    path = "C:\\Users\\carol\\Google Drive\\MZEvolve\\"
-    path2 = path + "massbin\\"
-else:
-    path = "../DEEP2/" 
-    path2 = "../"
-'''
-    
-
-##Old
-'''
-def exclude_outliers(objno):
-    flag = np.zeros(len(objno), dtype=int)
-    bad_data = np.array(['32007727', '32101412', '42006031a', '32035286', '14023705'])
-    for ii in range(len(bad_data)):
-        idx = [xx for xx in range(len(objno)) if bad_data[ii] == objno[xx]]
-        flag[idx] = 1
-    
-    return flag
-'''
-##
     
 
 def stack_spectra(fname, mname='', plot = False, indices = 'placeholder'):
