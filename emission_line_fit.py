@@ -1,8 +1,3 @@
-'''
-Purpose:
-    This code fits Gaussian curves to given emission lines and plots the results.
-'''
-
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
@@ -10,33 +5,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 from astropy.table import Table, hstack
 from pylab import subplots_adjust
 from scipy.optimize import curve_fit 
-from astropy.convolution import Box1DKernel, convolve
-#from Metallicity_Stack_Commons.fitting import movingaverage_box1D, gauss, double_gauss, oxy2_gauss, rms_func, con1
-#from Metallicity_Stack_Commons import scalefact
-
-scalefact = 1e-17
-
-##Old
-
-def movingaverage_box1D(values, width, boundary = 'fill', fill_value = 0.0):
-    box_kernel = Box1DKernel(width)
-    smooth = convolve(values, box_kernel, boundary = boundary, fill_value = fill_value)
-    return smooth
+from Metallicity_Stack_Commons.fitting import movingaverage_box1D, gauss, double_gauss, oxy2_gauss, rms_func, con1
+from Metallicity_Stack_Commons import scalefact
 
 
-def gauss(x, xbar, s, a, c):
-    return a * np.exp(-(x - xbar)**2 / (2 * s**2)) + c
-
-
-def double_gauss(x, xbar, s1, a1, c, s2, a2): 
-    return a1 * np.exp(-(x - xbar)**2 / (2 * s1**2)) + c + a2 * np.exp(-(x - xbar)**2 / (2 * s2**2))
-
-
-def oxy2_gauss(x, xbar, s1, a1, c, s2, a2):
-    con1 = 3728.91/3726.16
-    return a1 * np.exp(-(x - xbar)**2 / (2 * s1**2)) + c + a2 * np.exp(-(x - (xbar * con1))**2 / (2 * s2**2))
-
-##
 
 def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type, s2):
     med0 = np.median(y_norm[x_idx_mask])
@@ -75,28 +47,8 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type,
     else:
         return None, med0, max0
 
-##Old
-
-#calculating rms
-def rms_func(wave, dispersion, lambda_in, y0, sigma_array, mask_flag):
-
-    x_idx = np.where((np.abs(wave - lambda_in) <= 100) & (mask_flag == 0))[0]
-
-    sigma = np.std(y0[x_idx])
-    pix = 5 * sigma_array / dispersion 
-    s_pix = np.sqrt(pix)
-
-    ini_sig = s_pix * sigma * dispersion
-    RMS_pix = sigma * dispersion / scalefact
-   
-    return ini_sig / scalefact, RMS_pix
-
-##
 
 
-#for each individual stack
-#electron temperature and the R23 and O32 values 
-#Plotting Zoomed 
 def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, working_wave, line_type = '',
                     outpdf = '', line_name = '', hbeta_bin = False):
     '''
@@ -145,7 +97,6 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
                           (mask_flag == 0))[0]
     
     x0 = wave   
-    #scalefact = 1e-17
     
     
     #Initializing Arrays
@@ -176,7 +127,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
         x1 = working_wave - 100
         x2 = working_wave + 100
 
-        #y_smooth = movingaverage_box1D(Spect_1D[rr] / scalefact, 2, boundary = 'extend')
+        y_smooth = movingaverage_box1D(Spect_1D[rr] / scalefact, 2, boundary = 'extend')
 
         o1, med0, max0 = get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type, s2)
         
@@ -210,7 +161,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
                 y_norm_diff = y_norm[x_sigsnip] - neg0[x_sigsnip]
 
             if line_type == 'Oxy2':
-                con1 = 3728.91/3726.16  ##
+                #con1 = 3728.91/3726.16
                 x_sigsnip = np.where(((x0 - working_wave) / o1[1] >= -2.5) & ((x0 - working_wave * con1) / o1[4] <= 2.5))[0]
                 gauss0 = oxy2_gauss(x0, *o1)
             
