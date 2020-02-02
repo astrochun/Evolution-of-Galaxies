@@ -102,8 +102,12 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         O32[HB_detect] = np.log10(((1 + 1/3.1) * OIII5007[HB_detect]) / OII[HB_detect])
         
         
-        mass_O_s_ion, mass_O_d_ion, mass_com_O_log, mass_log_O_s, mass_log_O_d = metallicity_calculation(mass_T_e, two_beta, three_beta)
-        HB_O_s_ion, HB_O_d_ion, HB_com_O_log, HB_log_O_s, HB_log_O_d = metallicity_calculation(HB_T_e, two_beta, three_beta)
+        mass_com_O_log, mass_metal_dict = metallicity_calculation(mass_T_e, two_beta, three_beta)
+        HB_com_O_log, HB_metal_dict = metallicity_calculation(HB_T_e, two_beta, three_beta)
+        mass_O_s_ion = mass_metal_dict["O_s_ion"]
+        mass_O_d_ion = mass_metal_dict["O_d_ion"]
+        HB_O_s_ion = HB_metal_dict["O_s_ion"]
+        HB_O_d_ion = HB_metal_dict["O_d_ion"]
         
         n = ('Source_ID', 'Mass_Bin_ID', 'Mass_LHBeta_Bin_ID', 'Mass_Bin_Detections', 'Mass_LHBeta_Bin_Detections',
              'Mass_Individual_Detections', 'MassLHB_Individual_Detections', 'Log10(Mass)', 'HBeta_Luminosity', 'OIII_5007_Flux_Observed', 
@@ -146,9 +150,13 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         O32_composite = np.log10(((1 + 1/3.1) * OIII5007) / OII)
         
         #R, Te, and metallicity calculations
-        R_value = R_calculation(OIII4363, OIII5007, EBV, k_4363, k_5007)
+        R_value = R_calculation(OIII4363, OIII5007, EBV)
         T_e = temp_calculation(R_value)
-        O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)        
+        com_O_log, metal_dict = metallicity_calculation(T_e, two_beta, three_beta)
+        O_s_ion = metal_dict["O_s_ion"]
+        O_d_ion = metal_dict["O_d_ion"]
+        log_O_s = metal_dict["O_s_ion_log"]
+        log_O_d = metal_dict["O_d_ion_log"]        
         
         n = ('ID', 'Detection', 'R23_Composite', 'O32_Composite', 'N_Galaxies', 'OIII_5007_Flux_Observed', 
              'OIII_5007_S/N', 'OIII_4958_Flux_Observed', 'OIII_4958_S/N', 'OIII_4363_Flux_Observed', 'OIII_4363_S/N',
