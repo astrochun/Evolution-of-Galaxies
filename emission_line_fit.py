@@ -317,6 +317,6 @@ def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_na
 
     
     pdf_pages.close()
-
+  
 
  
