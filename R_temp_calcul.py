@@ -1,61 +1,14 @@
-'''
-Purpose:
-    Calculates R value, electron temperature, and metallicity of sources.
-'''
-
 import numpy as np
 from astropy.io import ascii as asc
 from astropy.table import Table
-from Metallicity_Stack_Commons import temp_metallicity_calc
+from Metallicity_Stack_Commons.temp_metallicity_calc import R_calculation, temp_calculation, metallicity_calculation 
     
     
-##Old
-'''
-def R_calculation(OIII4363, OIII5007, EBV, k_4363, k_5007):
-    R_value = (OIII4363 / (OIII5007 * (1 + 1/3.1))) * 10**(0.4*EBV*(k_4363 - k_5007))
-    return R_value
-
-
-def temp_calculation(R, a = 13205, b = 0.92506, c = 0.98062):
-    T_e = a*(-np.log10(R) - b)**(-1*c)      
-    return T_e
-
-
-def metallicity_calculation(T_e, two_beta, three_beta): 
-    O_s_ion = np.zeros(len(T_e))
-    O_d_ion = np.zeros(len(T_e))
-    com_O = np.zeros(len(T_e))
-    com_O_log = np.zeros(len(T_e))
-    O_s_ion_log = np.zeros(len(T_e))
-    O_d_ion_log = np.zeros(len(T_e))
-    t_3 = np.zeros(len(T_e))
-    t_2 = np.zeros(len(T_e))
-    x2 = np.zeros(len(T_e))
-    
-    detect = np.where((two_beta != 0) & (three_beta != 0))[0]
-    
-    t_3[detect] = T_e[detect] * 1e-4
-    t_2[detect] = 0.7 * t_3[detect] + 0.17
-    x2[detect] = 1e-4 * 1e3 * t_2[detect]**(-0.5)
-
-    O_s_ion_log[detect] = np.log10(two_beta[detect]) + 5.961 + 1.676 / t_2[detect] - 0.4 * np.log10(t_2[detect]) - 0.034 * t_2[detect] + np.log10(1 + 1.35 * x2[detect]) - 12
-    O_d_ion_log[detect] = np.log10(three_beta[detect]) + 6.200 + 1.251 / t_3[detect] - 0.55 * np.log10(t_3[detect]) - 0.014 * (t_3[detect]) - 12
-
-    O_s_ion[detect] = 10**(O_s_ion_log[detect])
-    O_d_ion[detect] = 10**(O_d_ion_log[detect])
-    com_O[detect] = O_s_ion[detect] + O_d_ion[detect]
-    com_O_log[detect] = np.log10(com_O[detect]) + 12
-
-    return O_s_ion, O_d_ion, com_O_log, O_s_ion_log, O_d_ion_log
-'''
-##
-
-
 def run_function(line_file, outfile, EBV, k_4363, k_5007):
     '''
     Purpose:
         This function runs the R calculation, temperature calculation, and metallicity calculation
-        functions for the case of inidividual and stacked spectra.
+        functions for the case of individual and stacked spectra.
         
     Usage:
         R_temp_calcul.run_function(line_file, outfile, EBV, k_4363, k_5007)
@@ -79,40 +32,8 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
     
     line_table = asc.read(line_file)
     
-    if 'two_beta' in line_table.keys():
-        #Case for individual spectra 
-        '''
-        out_ascii = outfile + '.tbl'
-        out_fits = outfile + '.fits'
-        
-        OIII4959 = line_table['OIII4959'].data
-        OIII5007 = line_table['OIII5007'].data
-        HBETA = line_table['HBeta'].data
-        HGAMMA = line_table['HGamma'].data
-        SNR_HG = line_table['SNR_HG'].data
-        raw_OIII4363 = line_table['OIII4363'].data
-        SNR_4363 = line_table['SNR_4363'].data
-        R23_individual = line_table['Individual_R23'].data
-        O32_individual = line_table['Individual_O32'].data
-        detections = line_table['Detection'].data
-        
-        two_beta = line_table['two_beta'].data
-        three_beta = line_table['three_beta'].data
-        T_e = line_table['Temperature'].data
-        source_ID = line_table['Source_ID'].data
-        
-        
-        O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)
-        
-        n = ('Source_ID', 'R23', 'O32', 'Observed_Flux_5007', 'Observed_Flux_4959',
-             'Observed_Flux_HBeta', 'Temperature', 'Detections', 'O_s_ion', 'O_d_ion', 'com_O_log')
-        tab0 = Table([source_ID, R23_individual, O32_individual, OIII5007, OIII4959, HBETA, T_e, detections,
-                      O_s_ion, O_d_ion, com_O_log], names = n)
-        '''
-    
-    elif 'Log10(Mass)' in line_table.keys():
+    if 'Log10(Mass)' in line_table.keys():
         #Case for individual spectra
-    
         out_ascii = outfile + '.tbl'
         out_fits = outfile + '.fits'
         
@@ -134,22 +55,34 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         HB_T_e = line_table['Mass_LHBeta_Bin_Te'].data
         HB_bin_detect = line_table['Mass_LHBeta_Bin_Detections'].data
         mass_bin_detect = line_table['Mass_Bin_Detections'].data
-        indiv_detect = line_table['Individual_Detections'].data 
+        mass_indiv_detect = line_table['Mass_Individual_Detections'].data 
+        HB_indiv_detect = line_table['MassLHB_Individual_Detections'].data 
         ebv = line_table['E(B-V)'].data
         
-        
+        #Detection variables here include the non-detections with reliable limits so that the metallicity
+        #is calculated for those sources.
         mass_detect = np.where(((mass_bin_detect == 1.0) | (mass_bin_detect == 0.5)) & (np.isfinite(OIII5007) == True) &
-                               (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OIII4959) == True) & 
-                               (OIII4959 >= 1e-18) & (OIII4959 <= 1e-15) & (np.isfinite(OII) == True) &
+                               (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OII) == True) &
                                (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
                                (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
         HB_detect = np.where(((HB_bin_detect == 1.0) | (HB_bin_detect == 0.5)) & (np.isfinite(OIII5007) == True) & 
-                             (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OIII4959) == True) & 
-                             (OIII4959 >= 1e-18) & (OIII4959 <= 1e-15) & (np.isfinite(OII) == True) & 
+                             (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OII) == True) & 
                              (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
-                             (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
-        indiv_detect[mass_detect] = 1.0
-        indiv_detect[HB_detect] = 1.0
+                             (HBETA >= 1e-18) & (HBETA <= 1e-15) & (LHbeta > 0))[0]
+        mass_nondetect = np.where((mass_bin_detect == 0.5) & (np.isfinite(OIII5007) == True) & 
+                                  (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OII) == True) & 
+                                  (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
+                                  (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
+        HB_nondetect = np.where((HB_bin_detect == 0.5) & (np.isfinite(OIII5007) == True) & 
+                                (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OII) == True) & 
+                                (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
+                                (HBETA >= 1e-18) & (HBETA <= 1e-15) & (LHbeta > 0))[0]
+        
+        #Correct detection markings (detection vs non-detection w/ reliable limits) are applied here
+        mass_indiv_detect[mass_detect] = 1.0
+        HB_indiv_detect[HB_detect] = 1.0
+        mass_indiv_detect[mass_nondetect] = 0.5
+        HB_indiv_detect[HB_nondetect] = 0.5
         
         #create zero arrays all same length
         two_beta = np.zeros(len(source_ID))
@@ -169,25 +102,22 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         O32[HB_detect] = np.log10(((1 + 1/3.1) * OIII5007[HB_detect]) / OII[HB_detect])
         
         
-        
-        mass_O_s_ion, mass_O_d_ion, mass_com_O_log, mass_log_O_s, mass_log_O_d = temp_metallicity_calc.metallicity_calculation(mass_T_e, two_beta, three_beta)
-        HB_O_s_ion, HB_O_d_ion, HB_com_O_log, HB_log_O_s, HB_log_O_d = temp_metallicity_calc.metallicity_calculation(HB_T_e, two_beta, three_beta)
-        
+        mass_O_s_ion, mass_O_d_ion, mass_com_O_log, mass_log_O_s, mass_log_O_d = metallicity_calculation(mass_T_e, two_beta, three_beta)
+        HB_O_s_ion, HB_O_d_ion, HB_com_O_log, HB_log_O_s, HB_log_O_d = metallicity_calculation(HB_T_e, two_beta, three_beta)
         
         n = ('Source_ID', 'Mass_Bin_ID', 'Mass_LHBeta_Bin_ID', 'Mass_Bin_Detections', 'Mass_LHBeta_Bin_Detections',
-             'Individual_Detections', 'Log10(Mass)', 'HBeta_Luminosity', 'OIII_5007_Flux_Observed', 
+             'Mass_Individual_Detections', 'MassLHB_Individual_Detections', 'Log10(Mass)', 'HBeta_Luminosity', 'OIII_5007_Flux_Observed', 
              'OIII_4958_Flux_Observed', 'OII_3727_Flux_Observed', 'HBETA_Flux_Observed', 'Mass_Bin_Te',
              'Mass_LHBeta_Bin_Te', 'R23', 'O32', 'OII/HBeta', 'OIII/HBeta', 'Mass_Bin_O_s_ion',
              'Mass_Bin_O_d_ion', 'Mass_Bin_com_O_log', 'Mass_LHBeta_Bin_O_s_ion', 'Mass_LHBeta_Bin_O_d_ion',
              'Mass_LHBeta_Bin_com_O_log', 'E(B-V)')
         tab0 = Table([source_ID, mass_bin_ID, HB_bin_ID, mass_bin_detect, HB_bin_detect,
-                      indiv_detect, log_mass, LHbeta, OIII5007, OIII4959, OII, HBETA, mass_T_e, HB_T_e, 
-                      R23, O32, two_beta, three_beta, mass_O_s_ion, mass_O_d_ion, mass_com_O_log, HB_O_s_ion,
-                      HB_O_d_ion, HB_com_O_log, ebv], names = n)
+                      mass_indiv_detect, HB_indiv_detect, log_mass, LHbeta, OIII5007, OIII4959, OII, HBETA,
+                      mass_T_e, HB_T_e, R23, O32, two_beta, three_beta, mass_O_s_ion, mass_O_d_ion, 
+                      mass_com_O_log, HB_O_s_ion, HB_O_d_ion, HB_com_O_log, ebv], names = n)
         
     else:
         #Case for stacked spectra
-        
         out_ascii = outfile + '.tbl'
         out_fits = outfile + '.fits'
         
@@ -216,10 +146,9 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         O32_composite = np.log10(((1 + 1/3.1) * OIII5007) / OII)
         
         #R, Te, and metallicity calculations
-        R_value = temp_metallicity_calc.R_calculation(OIII4363, OIII5007, EBV, k_4363, k_5007)
-        T_e = temp_metallicity_calc.temp_calculation(R_value)
-        O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = temp_metallicity_calc.metallicity_calculation(T_e, two_beta, three_beta)
-        
+        R_value = R_calculation(OIII4363, OIII5007, EBV, k_4363, k_5007)
+        T_e = temp_calculation(R_value)
+        O_s_ion, O_d_ion, com_O_log, log_O_s, log_O_d = metallicity_calculation(T_e, two_beta, three_beta)        
         
         n = ('ID', 'Detection', 'R23_Composite', 'O32_Composite', 'N_Galaxies', 'OIII_5007_Flux_Observed', 
              'OIII_5007_S/N', 'OIII_4958_Flux_Observed', 'OIII_4958_S/N', 'OIII_4363_Flux_Observed', 'OIII_4363_S/N',
@@ -229,9 +158,14 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
                       SN_4959, OIII4363, SN_4363, HBETA, SN_HBETA, OII, SN_OII, T_e, log_O_s, log_O_d,
                       O_s_ion, O_d_ion, com_O_log], names = n)
 
-        
-
     
     asc.write(tab0, out_ascii, format = 'fixed_width_two_line', overwrite = True)
-    tab0.write(out_fits, format = 'fits', overwrite = True)
+    tab0.write(out_fits, format = 'fits', overwrite = True) 
+    
+    
+    
+    
+    
+    
+    
     
