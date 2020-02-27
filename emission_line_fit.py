@@ -7,6 +7,7 @@ from pylab import subplots_adjust
 from scipy.optimize import curve_fit 
 from Metallicity_Stack_Commons.fitting import movingaverage_box1D, gauss, double_gauss, oxy2_gauss, rms_func, con1
 from Metallicity_Stack_Commons import scalefact
+from Metallicity_Stack_Commons.column_names import gauss_lines_names0, filename_dict
 
 
 
@@ -49,8 +50,8 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type,
 
 
 
-def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, working_wave, line_type = '',
-                    outpdf = '', line_name = '', hbeta_bin = False):
+def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, working_wave, curr_line_cols,
+                    line_type = '', outpdf = '', line_name = '', hbeta_bin = False):
     '''
     Purpose:
         This function fits each emission line with a Gaussian curve. It also calculates and saves in a table
@@ -102,6 +103,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
     #Initializing Arrays
     flux_g_array = np.zeros(Spect_1D.shape[0])
     flux_s_array = np.zeros(Spect_1D.shape[0])
+    center_array = np.zeros(Spect_1D.shape[0])
     sigma_array = np.zeros(Spect_1D.shape[0])
     median_array = np.zeros(Spect_1D.shape[0])
     norm_array = np.zeros(Spect_1D.shape[0])
@@ -179,6 +181,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
             #Filling In Arrays
             flux_g_array[rr] = flux_g 
             flux_s_array[rr] = flux_s
+            center_array[rr] = o1[0]
             sigma_array[rr] = o1[1]
             median_array[rr] = o1[3]
             norm_array[rr] = max0
@@ -262,10 +265,8 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
             fig.savefig(pdf_pages, format ='pdf')
      
     #Writing Ascii Tables and Fits Tables  
-    n = ('Flux_Gaussian', 'Flux_Observed', 'Sigma', 'Median', 'Norm', 'RMS', 'S/N')
-    n = tuple([line_name + '_' + val for val in n])
-    tab0 = Table([flux_g_array, flux_s_array, sigma_array, median_array, norm_array, RMS_array, SN_array], names = n)
-     
+    n = tuple(curr_line_cols)
+    tab0 = Table([flux_g_array, flux_s_array, SN_array, center_array, norm_array, median_array, sigma_array], names = n) 
     print('Done!')
     return tab0
 
@@ -302,15 +303,16 @@ def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_na
     
     outpdf = fitspath + 'emission_lines.pdf'
     pdf_pages = PdfPages(outpdf)
-    table0 = asc.read(fitspath + 'binning.tbl', format = 'fixed_width_two_line')
-    out_ascii = fitspath + 'emission_lines.tbl'
-    N = table0['Number of Galaxies'].data
+    table0 = asc.read(fitspath + filename_dict['bin_info'], format = 'fixed_width_two_line')
+    out_ascii = fitspath + filename_dict['bin_fit']
+    N = table0['N_stack'].data
     
     for ii in range(len(lambda0)):
-        em_table = zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, lambda0[ii],
+        curr_line_cols = [line_col for line_col in gauss_lines_names0 if line_col.startswith(line_name[ii])]
+        em_table = zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, lambda0[ii], curr_line_cols,
                                    line_type = line_type[ii], line_name = line_name[ii], hbeta_bin = hbeta_bin)
         if ii == 0:
-            table_stack = hstack([table0, em_table])
+            table_stack = em_table
         else:
             table_stack = hstack([table_stack, em_table])
     asc.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
