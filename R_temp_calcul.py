@@ -2,9 +2,10 @@ import numpy as np
 from astropy.io import ascii as asc
 from astropy.table import Table
 from Metallicity_Stack_Commons.temp_metallicity_calc import R_calculation, temp_calculation, metallicity_calculation 
+from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_ratios0, bin_names0
     
     
-def run_function(line_file, outfile, EBV, k_4363, k_5007):
+def run_function(line_file, bin_file, outfile, EBV, k_4363, k_5007):
     '''
     Purpose:
         This function runs the R calculation, temperature calculation, and metallicity calculation
@@ -34,8 +35,6 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
     
     if 'Log10(Mass)' in line_table.keys():
         #Case for individual spectra
-        out_ascii = outfile + '.tbl'
-        out_fits = outfile + '.fits'
         
         OII = line_table['OII_Flux'].data
         SN_OII = line_table['OII_SN'].data
@@ -122,53 +121,34 @@ def run_function(line_file, outfile, EBV, k_4363, k_5007):
         
     else:
         #Case for stacked spectra
-        out_ascii = outfile + '.tbl'
-        out_fits = outfile + '.fits'
+        bin_table = asc.read(bin_file, format = 'fixed_width_two_line')
+        bin_IDs = bin_table[bin_names0[0]].data
         
         OII = line_table['OII_3727_Flux_Observed'].data
-        SN_OII = line_table['OII_3727_S/N'].data
         OIII4363 = line_table['OIII_4363_Flux_Observed'].data
-        SN_4363 = line_table['OIII_4363_S/N'].data
-        OIII4959 = line_table['OIII_4958_Flux_Observed'].data
-        SN_4959 = line_table['OIII_4958_S/N'].data
         OIII5007 = line_table['OIII_5007_Flux_Observed'].data
-        SN_5007 = line_table['OIII_5007_S/N'].data
         HBETA = line_table['HBETA_Flux_Observed'].data
-        SN_HBETA = line_table['HBETA_S/N'].data
-        
-        N_Galaxy = line_table['Number of Galaxies'].data
-        avg_mass = line_table['mass_avg'].data 
-        detection = line_table['Detection'].data
-        ID = line_table['ID'].data
-        log_mass = avg_mass
         
         two_beta = OII / HBETA
         three_beta = (OIII5007 * (1 + 1/3.1)) / HBETA
         
         #Calculate R23 composite and O32 composite
-        R23_composite = np.log10((OII + ((1 + 1/3.1) * OIII5007)) / HBETA)
-        O32_composite = np.log10(((1 + 1/3.1) * OIII5007) / OII)
+        logR23_comp = np.log10((OII + ((1 + 1/3.1) * OIII5007)) / HBETA)
+        logO32_comp = np.log10(((1 + 1/3.1) * OIII5007) / OII)
         
         #R, Te, and metallicity calculations
         R_value = R_calculation(OIII4363, OIII5007, EBV)
         T_e = temp_calculation(R_value)
         com_O_log, metal_dict = metallicity_calculation(T_e, two_beta, three_beta)
-        O_s_ion = metal_dict["O_s_ion"]
-        O_d_ion = metal_dict["O_d_ion"]
-        log_O_s = metal_dict["O_s_ion_log"]
-        log_O_d = metal_dict["O_d_ion_log"]        
         
-        n = ('ID', 'Detection', 'R23_Composite', 'O32_Composite', 'N_Galaxies', 'OIII_5007_Flux_Observed', 
-             'OIII_5007_S/N', 'OIII_4958_Flux_Observed', 'OIII_4958_S/N', 'OIII_4363_Flux_Observed', 'OIII_4363_S/N',
-             'HBETA_Flux_Observed', 'HBETA_S/N', 'OII_3727_Flux_Observed', 'OII_3727_S/N', 'Temperature',
-             'log_O_s', 'log_O_d', 'O_s_ion', 'O_d_ion', 'com_O_log')
-        tab0 = Table([ID, detection, R23_composite, O32_composite, N_Galaxy, OIII5007, SN_5007, OIII4959,
-                      SN_4959, OIII4363, SN_4363, HBETA, SN_HBETA, OII, SN_OII, T_e, log_O_s, log_O_d,
-                      O_s_ion, O_d_ion, com_O_log], names = n)
+        n = tuple([bin_names0[0]] + bin_ratios0 + temp_metal_names0)
+        tab0 = Table([bin_IDs, logR23_comp, logO32_comp, two_beta, three_beta, T_e, com_O_log, 
+                      metal_dict["O_s_ion_log"], metal_dict["O_d_ion_log"], metal_dict["O_s_ion"],
+                      metal_dict["O_d_ion"]], names = n)        
 
     
-    asc.write(tab0, out_ascii, format = 'fixed_width_two_line', overwrite = True)
-    tab0.write(out_fits, format = 'fits', overwrite = True) 
+    asc.write(tab0, outfile, format = 'fixed_width_two_line', overwrite = True)
+    tab0.write(outfile.replace('.tbl', '.fits'), format = 'fits', overwrite = True) 
     
     
     
