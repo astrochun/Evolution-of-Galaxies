@@ -7,7 +7,7 @@ from pylab import subplots_adjust
 from scipy.optimize import curve_fit 
 from Metallicity_Stack_Commons.fitting import movingaverage_box1D, gauss, double_gauss, oxy2_gauss, rms_func, con1
 from Metallicity_Stack_Commons import scalefact
-from Metallicity_Stack_Commons.column_names import gauss_lines_names0, filename_dict
+from Metallicity_Stack_Commons.column_names import gauss_lines_names0, filename_dict, bin_names0
 
 
 
@@ -305,14 +305,16 @@ def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_na
     pdf_pages = PdfPages(outpdf)
     table0 = asc.read(fitspath + filename_dict['bin_info'], format = 'fixed_width_two_line')
     out_ascii = fitspath + filename_dict['bin_fit']
-    N = table0['N_stack'].data
+    ID = table0[bin_names0[0]].data
+    N = table0[bin_names0[1]].data
     
     for ii in range(len(lambda0)):
         curr_line_cols = [line_col for line_col in gauss_lines_names0 if line_col.startswith(line_name[ii])]
         em_table = zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, lambda0[ii], curr_line_cols,
                                    line_type = line_type[ii], line_name = line_name[ii], hbeta_bin = hbeta_bin)
         if ii == 0:
-            table_stack = em_table
+            tab0 = Table([ID], names = tuple(bin_names0[0]))
+            table_stack = hstack([tab0, em_table])
         else:
             table_stack = hstack([table_stack, em_table])
     asc.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
