@@ -1,6 +1,7 @@
 from astropy.io import ascii as asc
 import numpy as np
-from astropy.table import Table, Column
+from astropy.table import Table
+from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, remove_from_list
  
 
 
@@ -28,20 +29,16 @@ def make_validation_table(fitspath, bin_type_str):
             a column indicating if the bin has an OIII4363 detection or non-detection.
     '''
     
-    massbin_table = asc.read(fitspath + 'binning.tbl', format = 'fixed_width_two_line')
-    em_table = asc.read(fitspath + 'emission_lines.tbl')
+    bin_table = asc.read(fitspath + filename_dict['bin_info'], format = 'fixed_width_two_line')
+    em_table = asc.read(fitspath + filename_dict['bin_fit'])
     
-    ID = massbin_table['ID'].data
-    mass_min = massbin_table['mass_min'].data
-    mass_max = massbin_table['mass_max'].data
-    mass_avg = massbin_table['mass_avg'].data
-    N = massbin_table['Number of Galaxies'].data
+    ID = bin_table[bin_names0[0]].data
     
     O_4363_flux = em_table['OIII_4363_Flux_Observed'].data
     O_4363_SN = em_table['OIII_4363_S/N'].data
     O_4363_sigma = em_table['OIII_4363_Sigma'].data
     O_5007_SN = em_table['OIII_5007_S/N'].data
-    HGamma_rms = em_table['HGAMMA_RMS'].data
+    HGamma_rms = em_table['HGAMMA_RMS'].data  ##?
     
     
     ##Update OIII4363 values for non-detections
@@ -62,7 +59,7 @@ def make_validation_table(fitspath, bin_type_str):
         elif detections[i] == 1.0:
             updated_O_4363_flux[i] = O_4363_flux[i] 
     
-    
+    '''
     #Add updated OIII4363 flux column and detection column to emission_line.tbl
     out_ascii_em_table = fitspath + 'emission_lines.tbl'
     em_table['OIII_4363_Flux_Observed'].name = 'Original_OIII_4363_Flux_Observed' 
@@ -71,11 +68,13 @@ def make_validation_table(fitspath, bin_type_str):
     em_table.add_column(updated_O_4363_col, index=31) 
     em_table.add_column(detection_col, index=7)
     asc.write(em_table, out_ascii_em_table, format = 'fixed_width_two_line', overwrite = True)
+    '''
         
     #Create validation table
-    out_ascii_valid_table = fitspath + 'validation.tbl' 
-    n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies', 'Detection')
-    valid_table = Table([ID, mass_min, mass_max, mass_avg, N, detections], names = n)
+    out_ascii_valid_table = fitspath + filename_dict['bin_valid'] 
+    cols = remove_from_list(bin_names0, bin_names0[1])
+    n = tuple(cols + ['OIII_4363_Flux_Observed'])
+    valid_table = Table([ID, detections, O_4363_flux], names = n)
     asc.write(valid_table, out_ascii_valid_table, format = 'fixed_width_two_line', overwrite = True)
     
     
