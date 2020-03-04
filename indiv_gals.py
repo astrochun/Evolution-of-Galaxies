@@ -2,11 +2,14 @@ import numpy as np
 from astropy.io import fits
 from astropy.io import ascii as asc
 from astropy.table import Table
+from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0, indv_names0
+    
 
 
 
-def create_Te_line_table(fitspath, line_file, mass_bin_file, HB_bin_file, mass_Te_file, HB_Te_file):
+def indiv_bin_info_table(fitspath, line_file, bin_npz_file, LHb_bin = False):
     '''
+    REDO DOCUMENTATION
     Purpose:
         This function creates a table the size of the number of individual galaxies with valid mass, 
         and it holds individual galaxy line measurements, bin temperatures (for both cases) applied to the
@@ -36,88 +39,66 @@ def create_Te_line_table(fitspath, line_file, mass_bin_file, HB_bin_file, mass_T
             line fluxes and signal to noise.
     '''
     
+    if LHb_bin == True:
+        bin_type = 'logLHb'
+    else:
+        bin_type = 'logM'
     
-    mass_bin_npz = np.load(mass_bin_file)
-    mass_Te_tbl = asc.read(mass_Te_file)
-    HB_bin_npz = np.load(HB_bin_file)
-    HB_Te_tbl = asc.read(HB_Te_file)
+    bin_npz = np.load(bin_npz_file)
+    bin_tbl = asc.read(fitspath + filename_dict['bin_info'])
     hdu = fits.open(line_file)
     
     
     line_table = hdu[1].data
-    mass_bin_ind = mass_bin_npz['bin_ind']            #valid mass bin indices relative to unsorted data table
-    HB_bin_ind = HB_bin_npz['bin_ind']                #valid mass-LHBeta bin indices relative to unsorted data table
-    mass_Te = mass_Te_tbl['Temperature'].data         #Mass bin electron temperatures
-    HB_Te = HB_Te_tbl['Temperature'].data             #HBeta bin electron temperatures
-    mass = mass_bin_npz['mass']
-    LHbeta = HB_bin_npz['lum']
-    mass_detect = mass_Te_tbl['Detection'].data       #Mass bin detections
-    HB_detect = HB_Te_tbl['Detection'].data           #HBeta bin detections            
-    
-    
-    #Get all mass bin valid indices in 1D array
-    mass_valid_idx = []
-    for ii in range(len(mass_bin_ind)):
-        mass_valid_idx += list(mass_bin_ind[ii])               
-    idx_array = np.array(mass_valid_idx)                     
-    
-    
-    EBV_array = np.zeros(len(idx_array))             
-    mass_indiv_detect = np.zeros(len(idx_array))
-    massLHB_indiv_detect = np.zeros(len(idx_array))        
-    mass_array = np.log10(mass[idx_array])
-    LHbeta_array = LHbeta[idx_array]        
-    line_table = line_table[idx_array]   
-
-
-    #Get individual lines fluxes and S/N           
     objno = line_table['OBJNO']
-    OII_Flux = line_table['OII_FLUX_DATA']
-    OII_SN = line_table['OII_SNR']
-    OIII4959_Flux = line_table['OIIIB_FLUX_DATA']
-    OIII4959_SN = line_table['OIIIB_SNR']
-    OIII5007_Flux = line_table['OIIIR_FLUX_DATA']
-    OIII5007_SN = line_table['OIIIR_SNR']
-    HBETA_Flux = line_table['HB_FLUX_DATA']
-    HBETA_SN = line_table['HB_SNR'] 
+    bin_ID = bin_tbl['bin_ID'].data
+    bin_min = bin_tbl[bin_type + '_min'].data
+    bin_max = bin_tbl[bin_type + '_max'].data
+    bin_avg = bin_tbl[bin_type + '_avg'].data
+    bin_median = bin_tbl[bin_type + '_median'].data
+    bin_idx = bin_npz['bin_ind']     #valid mass bin indices relative to unsorted data table                    
     
     
-    #only works if mass bins are split into two MLHbeta bins --> fix library.py and adapt for more general case
-    mass_bin_ID = []
-    HB_bin_ID = []
-    mass_Te_array = []
-    HB_Te_array = []
-    mass_detect_array = []
-    HB_detect_array = []
-    kk = 1    
-    for ii in range(len(HB_bin_ind)):
-        for jj in range(len(HB_bin_ind[ii])):
-            mass_bin_ID.append(kk)
-            HB_bin_ID.append(ii + 1)
-            HB_Te_array.append(HB_Te[ii])
-            mass_Te_array.append(mass_Te[kk - 1])
-            
-            HB_detect_array.append(HB_detect[ii]) 
-            mass_detect_array.append(mass_detect[kk - 1])
-            
-        if (ii + 1) % 2 == 0:
-            kk += 1
+    #Get all bin valid values in 1D array
+    valid_idx = []
+    bin_ID_array = []
+    bin_min_array = []
+    bin_max_array = []
+    bin_avg_array = []
+    bin_median_array = []
+    for ii in range(len(bin_idx)):
+        valid_idx += list(bin_idx[ii])
+        for jj in range(len(bin_idx[ii])):
+            bin_ID_array.append(bin_ID[ii]) 
+            bin_min_array.append(bin_min[ii])
+            bin_max_array.append(bin_max[ii])
+            bin_avg_array.append(bin_avg[ii])
+            bin_median_array.append(bin_median[ii])             
+    idx_array = np.array(valid_idx)                     
+
     
-    out_ascii = fitspath + 'individual_Te_emLines.tbl'  
-    n = ('OBJNO', 'Mass_Bin_ID', 'Mass_LHBeta_Bin_ID', 'Log10(Mass)', 'HBeta_Luminosity', 'Mass_Bin_Detections',
-         'Mass_LHBeta_Bin_Detections', 'Mass_Individual_Detections', 'MassLHB_Individual_Detections', 'E(B-V)',
-         'Mass_Bin_Te', 'Mass_LHBeta_Bin_Te', 'OII_Flux', 'OII_SN', 'OIII4959_Flux', 'OIII4959_SN',
-         'OIII5007_Flux', 'OIII5007_SN', 'HBETA_Flux', 'HBETA_SN')
-    Te_line_table = Table([objno, mass_bin_ID, HB_bin_ID, mass_array, LHbeta_array, mass_detect_array,
-                            HB_detect_array, mass_indiv_detect, massLHB_indiv_detect, EBV_array, mass_Te_array,
-                            HB_Te_array, OII_Flux, OII_SN, OIII4959_Flux, OIII4959_SN, OIII5007_Flux,
-                            OIII5007_SN, HBETA_Flux, HBETA_SN], names = n)
-    asc.write(Te_line_table, out_ascii, format = 'fixed_width_two_line', overwrite = True)
+    out_ascii = fitspath + filename_dict['indv_bin_info']  
+    bin_cols = [bin_names0[0], indv_names0[0]]
+    bin_cols += [col for col in bin_mzevolve_names0 if col.startswith(bin_type)]
+    indiv_bin_info_tbl = Table([bin_ID_array, objno[idx_array], bin_min_array, bin_max_array, bin_avg_array,
+                                bin_median_array], n = tuple(bin_cols))
+    asc.write(indiv_bin_info_tbl, out_ascii, format = 'fixed_width_two_line', overwrite = True)
     
     
     hdu.close()
+  
     
     
+    
+    #Get individual lines fluxes and S/N           
+    #OII_Flux = line_table['OII_FLUX_DATA']
+    #OII_SN = line_table['OII_SNR']
+    #OIII4959_Flux = line_table['OIIIB_FLUX_DATA']
+    #OIII4959_SN = line_table['OIIIB_SNR']
+    #OIII5007_Flux = line_table['OIIIR_FLUX_DATA']
+    #OIII5007_SN = line_table['OIIIR_SNR']
+    #HBETA_Flux = line_table['HB_FLUX_DATA']
+    #HBETA_SN = line_table['HB_SNR'] 
     
     
     
