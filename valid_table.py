@@ -1,7 +1,7 @@
 from astropy.io import ascii as asc
 import numpy as np
 from astropy.table import Table
-from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, remove_from_list
+from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0
  
 
 
@@ -33,6 +33,7 @@ def make_validation_table(fitspath, bin_type_str):
     em_table = asc.read(fitspath + filename_dict['bin_fit'])
     
     ID = bin_table[bin_names0[0]].data
+    Nstack = bin_table[bin_names0[1]].data
     
     O_4363_flux = em_table['OIII_4363_Flux_Observed'].data
     O_4363_SN = em_table['OIII_4363_S/N'].data
@@ -72,9 +73,8 @@ def make_validation_table(fitspath, bin_type_str):
         
     #Create validation table
     out_ascii_valid_table = fitspath + filename_dict['bin_valid'] 
-    cols = remove_from_list(bin_names0, bin_names0[1])
-    n = tuple(cols + ['OIII_4363_Flux_Observed'])
-    valid_table = Table([ID, detections, O_4363_flux], names = n)
+    n = tuple(bin_names0 + ['OIII_4363_Flux_Observed'])
+    valid_table = Table([ID, Nstack, detections, O_4363_flux], names = n)
     asc.write(valid_table, out_ascii_valid_table, format = 'fixed_width_two_line', overwrite = True)
     
     
