@@ -279,13 +279,13 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
         '''
         Note:
             
-        The mass array saved here contains the 4140 masses (not the log(mass)) with the no mass indices replaced
+        The mass array saved here contains the 4140 masses (log(mass)) with the no mass indices replaced
         with interpolated values; it does NOT exclude sources excluded for binning (indices relative to
         original table). 
         The luminosity array saved here contains the 4140 luminosities (log(lum)) with the >44 and nans replaced
         with -1.
         '''
-        np.savez(out_file, mass = temp_x, lum = lum, bin_ind = bin_ind, bin_start = bin_start, logM_min = bin_edge, 
+        np.savez(out_file, mass = np.log10(temp_x), lum = lum, bin_ind = bin_ind, bin_start = bin_start, logM_min = bin_edge, 
                  logM_max = bin_redge, flux = flux, wavelength = wavelength, logM_avg = mass_avg, logM_median = mass_median,
                  bin_ID = bin_ID, N_stack = N, logLHb_min = lowest_hbeta, logLHb_max = highest_hbeta, logLHb_avg = lum_avg, logLHb_median)
         
