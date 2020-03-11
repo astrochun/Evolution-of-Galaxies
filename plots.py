@@ -3,10 +3,11 @@ import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.optimize import curve_fit 
+from Metallicity_Stack_Commons import OIII_r
       
     
 
-def bin_derived_props_plots(metal_file, em_file, out_file, hbeta_bin = False):
+def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file, hbeta_bin = False):
     '''
     Purpose: 
         This function creates plots for the stacked spectra (bins): OII/HBeta vs Stellar Mass,
@@ -33,15 +34,17 @@ def bin_derived_props_plots(metal_file, em_file, out_file, hbeta_bin = False):
     
     metal_table = asc.read(metal_file)
     em_table = asc.read(em_file)
+    bin_table = asc.read(bin_file)
+    valid_table = asc.read(valid_file)
     pdf_pages = PdfPages(out_file)
     
-    com_O_log = metal_table['com_O_log'].data
-    T_e = metal_table['Temperature'].data
-    R23_composite = metal_table['R23_Composite'].data
-    O32_composite = metal_table['O32_Composite'].data
+    com_O_log = metal_table['12+log(O/H)'].data
+    T_e = metal_table['T_e'].data
+    R23_composite = metal_table['logR23_composite'].data
+    O32_composite = metal_table['logO32_composite'].data
     
-    avg_mass = em_table['mass_avg'].data
-    detection = em_table['Detection'].data
+    avg_mass = bin_table['logM_avg'].data
+    detection = valid_table['Detection'].data
     OII = em_table['OII_3727_Flux_Observed'].data
     OIII4363 = em_table['OIII_4363_Flux_Observed'].data
     OIII5007 = em_table['OIII_5007_Flux_Observed'].data
@@ -52,8 +55,8 @@ def bin_derived_props_plots(metal_file, em_file, out_file, hbeta_bin = False):
         
     #Line ratios        
     OII_HBeta = OII / HBeta
-    OIII_HBeta = (OIII5007 * (1 + 1/3.1)) / HBeta            
-    OIII_ratio = OIII4363 / (OIII5007 * (1 + 1/3.1))            
+    OIII_HBeta = (OIII5007 * (1 + 1/OIII_r)) / HBeta            
+    OIII_ratio = OIII4363 / (OIII5007 * (1 + 1/OIII_r))            
     
     #Line Ratios vs Mass
     fig1, ax1 = plt.subplots(2, 3, sharex = True)
