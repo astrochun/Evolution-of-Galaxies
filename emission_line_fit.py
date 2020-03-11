@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
-from astropy.table import Table, hstack
+from astropy.table import Table, hstack, Column
 from pylab import subplots_adjust
 from scipy.optimize import curve_fit 
 from Metallicity_Stack_Commons.fitting import movingaverage_box1D, gauss, double_gauss, oxy2_gauss, rms_func, con1
@@ -105,8 +105,10 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
     flux_s_array = np.zeros(Spect_1D.shape[0])
     center_array = np.zeros(Spect_1D.shape[0])
     sigma_array = np.zeros(Spect_1D.shape[0])
+    abs_sigma_array = np.zeros(Spect_1D.shape[0])
     median_array = np.zeros(Spect_1D.shape[0])
     norm_array = np.zeros(Spect_1D.shape[0])
+    abs_norm_array = np.zeros(Spect_1D.shape[0])
     RMS_array = np.zeros(Spect_1D.shape[0])
     SN_array = np.zeros(Spect_1D.shape[0])
     
@@ -187,7 +189,9 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
             norm_array[rr] = max0
             RMS_array[rr] = ini_sig1
             SN_array[rr] = (flux_s / ini_sig1)
-            
+            if line_type == 'Balmer':
+                abs_sigma_array[rr] = o1[4]
+                #abs_norm_array[rr] =
 
             resid = y_norm[x_sigsnip] - gauss0[x_sigsnip] + o1[3]  
 
@@ -266,7 +270,12 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
      
     #Writing Ascii Tables and Fits Tables  
     n = tuple(curr_line_cols)
-    tab0 = Table([flux_g_array, flux_s_array, SN_array, center_array, norm_array, median_array, sigma_array], names = n) 
+    if line_type == 'Balmer':
+        tab0 = Table([flux_g_array, flux_s_array, SN_array, center_array, norm_array, median_array, 
+                      sigma_array, abs_norm_array, abs_sigma_array], names = n)
+    else:
+        tab0 = Table([flux_g_array, flux_s_array, SN_array, center_array, norm_array, median_array, 
+                      sigma_array], names = n) 
     print('Done!')
     return tab0
 
@@ -301,11 +310,11 @@ def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_na
         pdf_pages --> a pdf of all the emission line fits.
     '''
     
-    outpdf = fitspath + 'emission_lines.pdf'
+    outpdf = fitspath + filename_dict['bin_fit'].replace('.tbl', '.pdf')
     pdf_pages = PdfPages(outpdf)
     table0 = asc.read(fitspath + filename_dict['bin_info'], format = 'fixed_width_two_line')
     out_ascii = fitspath + filename_dict['bin_fit']
-    ID = table0[bin_names0[0]].data
+    ID = table0[bin_names0[0]]
     N = table0[bin_names0[1]].data
     
     for ii in range(len(lambda0)):
@@ -313,7 +322,7 @@ def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_na
         em_table = zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, lambda0[ii], curr_line_cols,
                                    line_type = line_type[ii], line_name = line_name[ii], hbeta_bin = hbeta_bin)
         if ii == 0:
-            tab0 = Table([ID], names = tuple(bin_names0[0]))
+            tab0 = Table([ID])
             table_stack = hstack([tab0, em_table])
         else:
             table_stack = hstack([table_stack, em_table])
