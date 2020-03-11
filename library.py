@@ -287,7 +287,8 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
         '''
         np.savez(out_file, mass = np.log10(temp_x), lum = lum, bin_ind = bin_ind, bin_start = bin_start, logM_min = bin_edge, 
                  logM_max = bin_redge, flux = flux, wavelength = wavelength, logM_avg = mass_avg, logM_median = mass_median,
-                 bin_ID = bin_ID, N_stack = N, logLHb_min = lowest_hbeta, logLHb_max = highest_hbeta, logLHb_avg = lum_avg, logLHb_median)
+                 bin_ID = bin_ID, N_stack = N, logLHb_min = lowest_hbeta, logLHb_max = highest_hbeta, logLHb_avg = lum_avg, 
+                 logLHb_median = lhb_median)
         
         if adaptive == False:
             out_ascii = fitspath0 + str(bin_pts_input) + '_binning.tbl' 
