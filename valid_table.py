@@ -39,7 +39,7 @@ def make_validation_table(fitspath, bin_type_str):
     O_4363_SN = em_table['OIII_4363_S/N'].data
     O_4363_sigma = em_table['OIII_4363_Sigma'].data
     O_5007_SN = em_table['OIII_5007_S/N'].data
-    HGamma_rms = em_table['HGAMMA_RMS'].data  ##?
+    #HGamma_rms = em_table['HGAMMA_RMS'].data  ## temp fix
     
     
     ##Update OIII4363 values for non-detections
@@ -55,10 +55,13 @@ def make_validation_table(fitspath, bin_type_str):
     #QA_flag = quality_assurance(bin_type_str, QA_flag)
     updated_O_4363_flux = np.zeros(len(O_4363_flux))
     for i in range(len(O_4363_flux)):
+        #Temp fix to run
+        '''
         if detections[i] == 0.0 or detections[i] == 0.5:  # or QA_flag[i] == 1.0:
             updated_O_4363_flux[i] = 3 * HGamma_rms[i]
         elif detections[i] == 1.0:
-            updated_O_4363_flux[i] = O_4363_flux[i] 
+        '''
+        updated_O_4363_flux[i] = O_4363_flux[i] 
     
     '''
     #Add updated OIII4363 flux column and detection column to emission_line.tbl
