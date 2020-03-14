@@ -40,7 +40,7 @@ def get_HB_luminosity():
 
 
 
-def run_bin_analysis(err_prop = False):
+def run_bin_analysis(err_prop = False, indiv = False):
     '''
     Purpose:
         This function runs the entire binning process: binning, emission line fitting, validation table,
@@ -64,11 +64,9 @@ def run_bin_analysis(err_prop = False):
     bin_type = input('Which binning type? mass or massLHbeta: ')
     if bin_type.lower() == 'mass':
         bin_type_str = 'massbin'
-        #HB_lum = []
         bool_hbeta_bin = False
     elif bin_type.lower() == 'masslhbeta':
         bin_type_str = 'mass_LHbeta_bin'
-        #HB_lum = get_HB_luminosity()
         bool_hbeta_bin = True
     else:
         print('Invalid binning type')
@@ -175,13 +173,30 @@ def run_bin_analysis(err_prop = False):
         em_file = fitspath + filename_dict['bin_fit_rev']
         out_fname = fitspath + filename_dict['bin_derived_prop_rev'].replace('.tbl', '.pdf')
         plots.bin_derived_props_plots(metal_file, em_file, out_fname, bool_hbeta_bin)
-
-
-    
+        
+        
+    if indiv == True:
+        #Create individual_bin_info table
+        line_file = path_init2 + 'dataset/DEEP2_all_line_fit.fits'
+        bin_npz_file = fitspath + filename_dict['bin_info'].replace('.tbl', '.npz')
+        indiv_gals.indiv_bin_info_table(fitspath, line_file, bin_npz_file, valid_file, LHb_bin = bool_hbeta_bin)
  
-       
+        #Create individual_properties table
+        indiv_gals.indiv_em_table(fitspath, line_file, bin_npz_file)
+        
+        #Create individual_derived_properties table
+        indiv_props_file = fitspath + filename_dict['indv_prop']
+        indiv_bin_file = fitspath + filename_dict['indv_bin_info']
+        indiv_gals.indiv_derived_props(fitspath, fitspath + metal_file, indiv_props_file, indiv_bin_file)
+        
+        #Make individual galaxy plots
+        
+        
+        
+        
+'''        
 def run_indiv_analysis(date_mass, date_HB):
-    '''
+    
     Purpose:
         This function runs the entire individual galaxy analysis process, which is based off both binning
         results. It calls codes to consolidate binning and individual data, to calculate individual 
@@ -200,7 +215,7 @@ def run_indiv_analysis(date_mass, date_HB):
         
     Outputs:
         Calls other codes which produce output tables, pdfs, etc. (see function calls within code).     
-    '''
+    
     
     fitspath = dir_date('individual', path_init, year = True)
 
@@ -235,7 +250,7 @@ def run_indiv_analysis(date_mass, date_HB):
     plots.indiv_derived_props_plots(fitspath, metal_file + '.tbl', mass_bin_file, HB_bin_file, mass_Te_file,
                                     HB_Te_file, MTO, restrict_MTO = True)
     
-    
+ '''   
     
     
     
