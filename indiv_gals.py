@@ -4,12 +4,14 @@ from astropy.io import ascii as asc
 from astropy.table import Table
 from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0, indv_names0, gauss_names0
 from Metallicity_Stack_Commons import line_name
-#from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
+from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
     
 
 
 
-def indiv_bin_info_table(fitspath, line_file, bin_npz_file, LHb_bin = False):
+def indiv_bin_info_table(fitspath, line_file, bin_npz_file, valid_file, LHb_bin = False):
+    #This function makes individual_bin_info.tbl   
+
     '''
     REDO DOCUMENTATION
     Purpose:
@@ -48,17 +50,19 @@ def indiv_bin_info_table(fitspath, line_file, bin_npz_file, LHb_bin = False):
     
     bin_npz = np.load(bin_npz_file)
     bin_tbl = asc.read(fitspath + filename_dict['bin_info'])
+    valid_tbl = asc.read(fitspath + filename_dict['bin_valid'])
     hdu = fits.open(line_file)
     
     
     line_table = hdu[1].data
     objno = line_table['OBJNO']
-    bin_ID = bin_tbl['bin_ID'].data
+    bin_ID = bin_tbl[bin_names0[0]].data
     bin_min = bin_tbl[bin_type + '_min'].data
     bin_max = bin_tbl[bin_type + '_max'].data
     bin_avg = bin_tbl[bin_type + '_avg'].data
     bin_median = bin_tbl[bin_type + '_median'].data
-    bin_idx = bin_npz['bin_ind']     #valid mass bin indices relative to unsorted data table                    
+    bin_idx = bin_npz['bin_ind']     #valid mass bin indices relative to unsorted data table 
+    detect = valid_tbl[bin_names0[2]].data                   
     
     
     #Get all bin valid values in 1D array
@@ -68,6 +72,7 @@ def indiv_bin_info_table(fitspath, line_file, bin_npz_file, LHb_bin = False):
     bin_max_array = []
     bin_avg_array = []
     bin_median_array = []
+    detect_array = []
     for ii in range(len(bin_idx)):
         valid_idx += list(bin_idx[ii])
         for jj in range(len(bin_idx[ii])):
@@ -75,15 +80,16 @@ def indiv_bin_info_table(fitspath, line_file, bin_npz_file, LHb_bin = False):
             bin_min_array.append(bin_min[ii])
             bin_max_array.append(bin_max[ii])
             bin_avg_array.append(bin_avg[ii])
-            bin_median_array.append(bin_median[ii])             
+            bin_median_array.append(bin_median[ii]) 
+            detect_array.append(detect[ii])            
     idx_array = np.array(valid_idx)                     
 
     
     out_ascii = fitspath + filename_dict['indv_bin_info']  
-    bin_cols = [bin_names0[0], indv_names0[0]]
+    bin_cols = [bin_names0[0], bin_names0[2], indv_names0[0]]
     bin_cols += [col for col in bin_mzevolve_names0 if col.startswith(bin_type)]
-    indiv_bin_info_tbl = Table([bin_ID_array, objno[idx_array], bin_min_array, bin_max_array, bin_avg_array,
-                                bin_median_array], n = tuple(bin_cols))
+    indiv_bin_info_tbl = Table([bin_ID_array, detect_array, objno[idx_array], bin_min_array, bin_max_array, bin_avg_array,
+                                bin_median_array], names = tuple(bin_cols))
     asc.write(indiv_bin_info_tbl, out_ascii, format = 'fixed_width_two_line', overwrite = True)
     
     
@@ -93,7 +99,9 @@ def indiv_bin_info_table(fitspath, line_file, bin_npz_file, LHb_bin = False):
     
     
     
-def indiv_em_table(fitspath, line_file, bin_npz_file):  
+def indiv_em_table(fitspath, line_file, bin_npz_file): 
+    #This function makes individual_properties.tbl
+    
     hdu = fits.open(line_file)
     bin_npz = np.load(bin_npz_file)
     
@@ -119,12 +127,12 @@ def indiv_em_table(fitspath, line_file, bin_npz_file):
     OIII5007_Flux = line_table['OIIIR_FLUX_DATA']
     OIII5007_SN = line_table['OIIIR_SNR']
     
-    line_cols = gauss_names0[1:3]
+    line_cols = [gauss_names0[0], gauss_names0[2]]
     line_names = [line_name[0], line_name[4], line_name[-1]] 
     cols = []
     for ii in range(len(line_names)):
-        cols += list(line_names[ii] + '_' + line_cols[0])
-        cols += list(line_names[ii] + '_' + line_cols[1])
+        cols += [line_names[ii] + '_' + line_cols[0]]
+        cols += [line_names[ii] + '_' + line_cols[1]]
 
     out_ascii = fitspath + filename_dict['indv_prop']
     n = [indv_names0[0]] + indv_names0[3:5] + cols 
@@ -134,12 +142,28 @@ def indiv_em_table(fitspath, line_file, bin_npz_file):
     
     
     
-'''    
-def indiv_derived_props(fitspath, bin_file, indiv_bin_file, indiv_props_file):
+   
+def indiv_derived_props(fitspath, bin_derpropsrev_file, indiv_props_file, indiv_bin_file):
+    #This function makes individual_derived_properties.tbl
+    
+    #outfile = fitspath + filename_dict['indv_derived_prop']
+    outfile = fitspath + 'individual_derived_properties.tbl'
     
     #Create individual_derived_props
-    main(fitspath, '', fitspath + bin_file, indiv_bin_file, indiv_props_file, det3 = False)
-'''   
+    main(fitspath, '', bin_derpropsrev_file, indiv_props_file, indiv_bin_file, outfile, det3 = False)  
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
