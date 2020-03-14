@@ -36,7 +36,7 @@ def run_function(line_file, bin_file, outfile, EBV, k_4363, k_5007):
     
     if 'Log10(Mass)' in line_table.keys():
         #Case for individual spectra
-        
+        '''
         OII = line_table['OII_3727_Flux_Observed'].data
         SN_OII = line_table['OII_3727_S/N'].data
         HBETA = line_table['HBETA_Flux_Observed'].data
@@ -59,7 +59,7 @@ def run_function(line_file, bin_file, outfile, EBV, k_4363, k_5007):
         
         #Detection variables here include the non-detections with reliable limits so that the metallicity
         #is calculated for those sources.
-        '''
+        
         mass_detect = np.where(((mass_bin_detect == 1.0) | (mass_bin_detect == 0.5)) & (np.isfinite(OIII5007) == True) &
                                (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OII) == True) &
                                (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
@@ -76,7 +76,7 @@ def run_function(line_file, bin_file, outfile, EBV, k_4363, k_5007):
                                 (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OII) == True) & 
                                 (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
                                 (HBETA >= 1e-18) & (HBETA <= 1e-15) & (LHbeta > 0))[0]
-        '''
+        
         
         #Correct detection markings (detection vs non-detection w/ reliable limits) are applied here
         #mass_indiv_detect[mass_detect] = 1.0
@@ -90,7 +90,7 @@ def run_function(line_file, bin_file, outfile, EBV, k_4363, k_5007):
         R23 = np.zeros(len(source_ID))
         O32 = np.zeros(len(source_ID))  
         
-        '''
+        
         two_beta[mass_detect] = OII[mass_detect] / HBETA[mass_detect]
         two_beta[HB_detect] = OII[HB_detect] / HBETA[HB_detect]
         three_beta[mass_detect] = (OIII5007[mass_detect] * (1 + 1/OIII_r)) / HBETA[mass_detect]
@@ -101,7 +101,7 @@ def run_function(line_file, bin_file, outfile, EBV, k_4363, k_5007):
         R23[HB_detect] = np.log10((OII[HB_detect] + ((1 + 1/OIII_r) * OIII5007[HB_detect])) / HBETA[HB_detect])
         O32[mass_detect] = np.log10(((1 + 1/OIII_r) * OIII5007[mass_detect]) / OII[mass_detect])
         O32[HB_detect] = np.log10(((1 + 1/OIII_r) * OIII5007[HB_detect]) / OII[HB_detect])
-        '''
+        
         
         
         mass_com_O_log, mass_metal_dict = metallicity_calculation(mass_T_e, two_beta, three_beta)
@@ -117,7 +117,7 @@ def run_function(line_file, bin_file, outfile, EBV, k_4363, k_5007):
              'Mass_LHBeta_Bin_Te', 'R23', 'O32', 'OII/HBeta', 'OIII/HBeta', 'Mass_Bin_O_s_ion',
              'Mass_Bin_O_d_ion', 'Mass_Bin_com_O_log', 'Mass_LHBeta_Bin_O_s_ion', 'Mass_LHBeta_Bin_O_d_ion',
              'Mass_LHBeta_Bin_com_O_log', 'E(B-V)')
-        '''
+        
         tab0 = Table([source_ID, mass_bin_ID, HB_bin_ID, mass_bin_detect, HB_bin_detect,
                       mass_indiv_detect, HB_indiv_detect, log_mass, LHbeta, OIII5007, OIII4959, OII, HBETA,
                       mass_T_e, HB_T_e, R23, O32, two_beta, three_beta, mass_O_s_ion, mass_O_d_ion, 
