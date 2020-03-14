@@ -62,7 +62,7 @@ def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file,
     fig1, ax1 = plt.subplots(2, 3, sharex = True)
     
     if hbeta_bin == True:
-        lum_avg = em_table['lum_avg'].data
+        lum_avg = bin_table['logLHb_avg'].data
         for ii in range(len(detect)):
             if detect[ii] % 2 == 0:
                 ax1[0, 0].scatter(avg_mass[detect[ii]], R23_composite[detect[ii]], marker = '.', color = 'cyan')
