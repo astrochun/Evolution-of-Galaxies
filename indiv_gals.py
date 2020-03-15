@@ -4,7 +4,7 @@ from astropy.io import ascii as asc
 from astropy.table import Table
 from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0, indv_names0, gauss_names0
 from Metallicity_Stack_Commons import line_name
-from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
+#from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
     
 
 
@@ -141,8 +141,8 @@ def indiv_em_table(fitspath, line_file, bin_npz_file):
     asc.write(indiv_props_tbl, out_ascii, format = 'fixed_width_two_line', overwrite = True)
     
     
-    
-   
+
+'''
 def indiv_derived_props(fitspath, bin_derpropsrev_file, indiv_props_file, indiv_bin_file):
     #This function makes individual_derived_properties.tbl
     
@@ -151,7 +151,7 @@ def indiv_derived_props(fitspath, bin_derpropsrev_file, indiv_props_file, indiv_
     
     #Create individual_derived_props
     main(fitspath, '', bin_derpropsrev_file, indiv_props_file, indiv_bin_file, outfile, det3 = False)  
-    
+'''   
     
     
     
