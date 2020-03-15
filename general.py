@@ -17,6 +17,7 @@ from Zcalbase_gal.Analysis.DEEP2_R23_O32 import error_prop
 from Zcalbase_gal import histogram_plots
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict, k_dict, attenuation
 from Metallicity_Stack_Commons.column_names import filename_dict
+from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
 
 
 path = get_user()
@@ -185,9 +186,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
         indiv_gals.indiv_em_table(fitspath, line_file, bin_npz_file)
         
         #Create individual_derived_properties table
-        indiv_props_file = fitspath + filename_dict['indv_prop']
-        indiv_bin_file = fitspath + filename_dict['indv_bin_info']
-        indiv_gals.indiv_derived_props(fitspath, fitspath + metal_file, indiv_props_file, indiv_bin_file)
+        main(fitspath, '', revised = False, det3 = False)
         
         #Make individual galaxy plots
         
