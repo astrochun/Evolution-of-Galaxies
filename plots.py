@@ -277,7 +277,30 @@ def indiv_derived_props_plots(fitspath, mass_indiv_bin_file, LHb_indiv_bin_file,
     LHb_detect = np.where(LHb_detect_col == 1.0)[0]
     LHb_nondetect = np.where(LHb_detect_col == 0.5)[0]
     
-    #individual
+    #individual    
+    
+    #Detection variables here include the non-detections with reliable limits so that the metallicity
+        #is calculated for those sources.
+        
+        mass_detect = np.where(((mass_bin_detect == 1.0) | (mass_bin_detect == 0.5)) & (np.isfinite(OIII5007) == True) &
+                               (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OII) == True) &
+                               (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
+                               (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
+        HB_detect = np.where(((HB_bin_detect == 1.0) | (HB_bin_detect == 0.5)) & (np.isfinite(OIII5007) == True) & 
+                             (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OII) == True) & 
+                             (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
+                             (HBETA >= 1e-18) & (HBETA <= 1e-15) & (LHbeta > 0))[0]
+        mass_nondetect = np.where((mass_bin_detect == 0.5) & (np.isfinite(OIII5007) == True) & 
+                                  (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OII) == True) & 
+                                  (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
+                                  (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
+        HB_nondetect = np.where((HB_bin_detect == 0.5) & (np.isfinite(OIII5007) == True) & 
+                                (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15) & (np.isfinite(OII) == True) & 
+                                (OII >= 1e-18) & (OII <= 1e-15) & (np.isfinite(HBETA) == True) & 
+                                (HBETA >= 1e-18) & (HBETA <= 1e-15) & (LHbeta > 0))[0]
+
+
+
     ###REDO by excluding those with bad lines
     mass_ind_detect = np.where(mass_indiv_detect == 1.0)[0]
     mass_ind_nondetect = np.where(mass_indiv_detect == 0.5)[0]
