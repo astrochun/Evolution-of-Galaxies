@@ -165,7 +165,6 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
                 y_norm_diff = y_norm[x_sigsnip] - neg0[x_sigsnip]
 
             if line_type == 'Oxy2':
-                #con1 = 3728.91/3726.16
                 x_sigsnip = np.where(((x0 - working_wave) / o1[1] >= -2.5) & ((x0 - working_wave * con1) / o1[4] <= 2.5))[0]
                 gauss0 = oxy2_gauss(x0, *o1)
             
@@ -191,7 +190,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
             SN_array[rr] = (flux_s / ini_sig1)
             if line_type == 'Balmer':
                 abs_sigma_array[rr] = o1[4]
-                #abs_norm_array[rr] =
+                abs_norm_array[rr] = o1[5]
 
             resid = y_norm[x_sigsnip] - gauss0[x_sigsnip] + o1[3]  
 
