@@ -11,13 +11,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
-from Evolution_of_Galaxies import library, emission_line_fit, valid_table, plots, indiv_gals
+from Evolution_of_Galaxies import library, emission_line_fit, plots, indiv_gals
 from Evolution_of_Galaxies.R_temp_calcul import run_function
 from Zcalbase_gal.Analysis.DEEP2_R23_O32 import error_prop
 from Zcalbase_gal import histogram_plots
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict, k_dict, attenuation
 from Metallicity_Stack_Commons.column_names import filename_dict
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
+from Metallicity_Stack_Commons import valid_table
 
 
 path = get_user()
@@ -130,7 +131,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     
     
     #Run validation table
-    valid_table.make_validation_table(fitspath, bin_type_str)
+    valid_table.make_validation_table(fitspath)
     valid_file = fitspath + filename_dict['bin_valid']
     
     
