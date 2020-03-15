@@ -4,7 +4,6 @@ from astropy.io import ascii as asc
 from astropy.table import Table
 from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0, indv_names0, gauss_names0
 from Metallicity_Stack_Commons import line_name
-#from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
     
 
 
@@ -120,39 +119,44 @@ def indiv_em_table(fitspath, line_file, bin_npz_file):
     line_table = hdu[1].data 
     line_table = line_table[idx_array]
     ID = line_table['OBJNO']      
-    OII_Flux = line_table['OII_FLUX_DATA']
-    OII_SN = line_table['OII_SNR']
-    HBETA_Flux = line_table['HB_FLUX_DATA']
+    OII_FluxG = line_table['OIIB_FLUX_MOD']
+    OII_FluxO = line_table['OIIB_FLUX_DATA']
+    OII_RMS = line_table['OIIB_NOISE']
+    OII_SN = line_table['OIIB_SNR']
+    OII_Center = line_table['OIIB_LAMBDA']
+    OII_Norm = line_table['OIIB_PEAK']
+    OII_Med = line_table['OIIB_Y0']
+    OII_Sigma = line_table['OIIB_SIGMA']
+    HBETA_FluxG = line_table['HB_FLUX_MOD']
+    HBETA_FluxO = line_table['HB_FLUX_DATA']
+    HBETA_RMS = line_table['HB_NOISE']
     HBETA_SN = line_table['HB_SNR']
-    OIII5007_Flux = line_table['OIIIR_FLUX_DATA']
+    HBETA_Center = line_table['HB_LAMBDA']
+    HBETA_Norm = line_table['HB_PEAK']
+    HBETA_Med = line_table['HB_Y0']
+    HBETA_Sigma = line_table['HB_SIGMA']
+    OIII5007_FluxG = line_table['OIIIR_FLUX_MOD']
+    OIII5007_FluxO = line_table['OIIIR_FLUX_DATA']
+    OIII5007_RMS = line_table['OIIIR_NOISE']
     OIII5007_SN = line_table['OIIIR_SNR']
+    OIII5007_Center = line_table['OIIIR_LAMBDA']
+    OIII5007_Norm = line_table['OIIIR_PEAK']
+    OIII5007_Med = line_table['OIIIR_Y0']
+    OIII5007_Sigma = line_table['OIIIR_SIGMA']
     
-    line_cols = [gauss_names0[0], gauss_names0[2]]
-    line_names = [line_name[0], line_name[4], line_name[-1]] 
     cols = []
+    line_names = [line_name[0], line_name[4], line_name[-1]]
     for ii in range(len(line_names)):
-        cols += [line_names[ii] + '_' + line_cols[0]]
-        cols += [line_names[ii] + '_' + line_cols[1]]
+        for jj in range(len(gauss_names0)):
+            cols += [line_names[ii] + '_' + gauss_names0[jj]]
 
     out_ascii = fitspath + filename_dict['indv_prop']
     n = [indv_names0[0]] + indv_names0[3:5] + cols 
-    indiv_props_tbl = Table([ID, logM, logLHb, OII_Flux, OII_SN, HBETA_Flux, HBETA_SN, OIII5007_Flux, 
-                             OIII5007_SN], names = n)
+    indiv_props_tbl = Table([ID, logM, logLHb, OII_FluxG, OII_FluxO, OII_SN, OII_Center, OII_Norm, OII_Med,
+                             OII_Sigma, HBETA_FluxG, HBETA_FluxO, HBETA_SN, HBETA_Center, HBETA_Norm, 
+                             HBETA_Med, HBETA_Sigma, OIII5007_FluxG, OIII5007_FluxO, OIII5007_SN, 
+                             OIII5007_Center, OIII5007_Norm, OIII5007_Med, OIII5007_Sigma,], names = n)
     asc.write(indiv_props_tbl, out_ascii, format = 'fixed_width_two_line', overwrite = True)
-    
-    
-
-'''
-def indiv_derived_props(fitspath, bin_derpropsrev_file, indiv_props_file, indiv_bin_file):
-    #This function makes individual_derived_properties.tbl
-    
-    #outfile = fitspath + filename_dict['indv_derived_prop']
-    outfile = fitspath + 'individual_derived_properties.tbl'
-    
-    #Create individual_derived_props
-    main(fitspath, '', bin_derpropsrev_file, indiv_props_file, indiv_bin_file, outfile, det3 = False)  
-'''   
-    
     
     
     
