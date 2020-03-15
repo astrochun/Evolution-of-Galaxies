@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from os.path import exists
 import os
 from Metallicity_Stack_Commons import exclude_outliers
+from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0, merge_column_names, remove_from_list
 
     
 
@@ -125,7 +126,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
     logx_sort = np.log10(x_sort)
     
            
-    out_file = fitspath0 + 'binning.npz'
+    out_file = fitspath0 + filename_dict['bin_info'].replace('.tbl', '.npz')
     
     #Check if binning npz file already exists    
     if exists(out_file):
@@ -136,13 +137,10 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
             print(fitspath0 + 'binning.npz deleted.')
         else:
             idx_file = np.load(out_file) 
-            bin_ind = idx_file['bin_ind'] 
-            bin_start = idx_file['bin_start']
             bin_edge = idx_file['bin_edge']
             bin_redge = idx_file['bin_redge']
             flux = idx_file['flux']
             wavelength = idx_file['wavelength']
-            mass_avg = idx_file['mass_avg']
             bin_ID = idx_file['bin_ID']
             count = len(bin_ID)
             N = idx_file['N']
@@ -183,11 +181,13 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
         flux = []
         wavelength = []
         mass_avg = []
+        mass_median = []
         bin_ID = []
         N = []
         lowest_hbeta = []
         highest_hbeta = []
         lum_avg = []
+        lhb_median = []
         count = 0
         count2 = 0
             
@@ -215,6 +215,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
                     wavelength.append(wave)
                 N.append(len(valid_ind_sort[start:stop]))
                 mass_avg.append(np.mean(logx_sort[start:stop]))
+                mass_median.append(np.median(logx_sort[start:stop]))
                 bin_ID.append(count)    
                     
             #for mass-LHbeta bins
@@ -252,6 +253,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
                 lowest_hbeta.append(np.min(lum[upper_idx]))
                 highest_hbeta.append(np.max(lum[upper_idx]))
                 lum_avg += [np.mean(lum[non_neg])] + [np.mean(lum[upper_idx])]
+                lhb_median += [np.median(lum[non_neg])] + [np.median(lum[upper_idx])]
                 bin_redge.append(logx_sort[start + len(lower_idx) - 1])
                 bin_edge.append(logx_sort[start + len(lower_idx)])
                 bin_ind.append(lower_idx)
@@ -265,6 +267,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
                     wavelength += [lower_wave] + [upper_wave]
                     N += [len(lower_idx), len(upper_idx)]
                 mass_avg += [np.mean(logx[lower_idx])] + [np.mean(logx[upper_idx])]
+                mass_median += [np.median(logx[lower_idx])] + [np.median(logx[upper_idx])]
                 count2 += 1
                 bin_ID.append(count2)
                 count2 += 1
@@ -276,26 +279,29 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
         '''
         Note:
             
-        The mass array saved here contains the 4140 masses (not the log(mass)) with the no mass indices replaced
+        The mass array saved here contains the 4140 masses (log(mass)) with the no mass indices replaced
         with interpolated values; it does NOT exclude sources excluded for binning (indices relative to
         original table). 
         The luminosity array saved here contains the 4140 luminosities (log(lum)) with the >44 and nans replaced
         with -1.
         '''
-        np.savez(out_file, mass = temp_x, lum = lum, bin_ind = bin_ind, bin_start = bin_start, bin_edge = bin_edge, 
-                 bin_redge = bin_redge, flux = flux, wavelength = wavelength, mass_avg = mass_avg,
-                 bin_ID = bin_ID, N = N, lowest_hbeta = lowest_hbeta, highest_hbeta = highest_hbeta, lum_avg = lum_avg)
+        np.savez(out_file, mass = np.log10(temp_x), lum = lum, bin_ind = bin_ind, bin_start = bin_start, logM_min = bin_edge, 
+                 logM_max = bin_redge, flux = flux, wavelength = wavelength, logM_avg = mass_avg, logM_median = mass_median,
+                 bin_ID = bin_ID, N_stack = N, logLHb_min = lowest_hbeta, logLHb_max = highest_hbeta, logLHb_avg = lum_avg, 
+                 logLHb_median = lhb_median)
         
         if adaptive == False:
             out_ascii = fitspath0 + str(bin_pts_input) + '_binning.tbl' 
         else:
-            out_ascii = fitspath0 + 'binning.tbl'
+            out_ascii = fitspath0 + filename_dict['bin_info']
         if hbeta_bin == False:
             lowest_hbeta = np.zeros(len(bin_pts_input))
             highest_hbeta = np.zeros(len(bin_pts_input))
             lum_avg = np.zeros(len(bin_pts_input))
-        n = ('ID', 'mass_min', 'mass_max', 'mass_avg', 'Number of Galaxies', 'Lowest Hbeta', 'Highest Hbeta', 'lum_avg')
-        table_stack = Table([bin_ID, bin_edge, bin_redge, mass_avg, N, lowest_hbeta, highest_hbeta, lum_avg], names = n)
+            lhb_median = np.zeros(len(bin_pts_input))
+        column_names0 = remove_from_list(bin_names0, [bin_names0[-1]])
+        all_column_names = tuple(merge_column_names(column_names0, bin_mzevolve_names0))
+        table_stack = Table([bin_ID, N, bin_edge, bin_redge, mass_avg, mass_median, lowest_hbeta, highest_hbeta, lum_avg, lhb_median], names = all_column_names)        
         ascii.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
         
     
