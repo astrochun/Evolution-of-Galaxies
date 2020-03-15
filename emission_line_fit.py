@@ -271,10 +271,10 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
     n = tuple(curr_line_cols)
     if line_type == 'Balmer':
         tab0 = Table([flux_g_array, flux_s_array, SN_array, center_array, norm_array, median_array, 
-                      sigma_array, abs_norm_array, abs_sigma_array], names = n)
+                      sigma_array, RMS_array, abs_norm_array, abs_sigma_array], names = n)
     else:
         tab0 = Table([flux_g_array, flux_s_array, SN_array, center_array, norm_array, median_array, 
-                      sigma_array], names = n) 
+                      sigma_array, RMS_array], names = n) 
     print('Done!')
     return tab0
 
