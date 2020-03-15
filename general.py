@@ -186,7 +186,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
         indiv_gals.indiv_em_table(fitspath, line_file, bin_npz_file)
         
         #Create individual_derived_properties table
-        main(fitspath, '', revised = False, det3 = False)
+        main(fitspath, '', revised = False, det3 = True)
         
         #Make individual galaxy plots
         
