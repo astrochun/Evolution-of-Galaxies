@@ -187,7 +187,7 @@ def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file,
 
 
 
-def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False):    
+def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised = False):    
     '''
     REDO DOCUMENTATION
     Purpose:
@@ -233,8 +233,13 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False):
     LHb_valid_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_valid'])
     mass_bin_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_info'])
     LHb_bin_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_info'])
-    mass_metal_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_derived_prop'])
-    LHb_metal_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_derived_prop'])
+    
+    if revised == True:
+         mass_metal_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_derived_prop_rev'])
+         LHb_metal_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_derived_prop_rev'])
+    else:    
+        mass_metal_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_derived_prop'])
+        LHb_metal_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_derived_prop'])
 
 
     ##individual galaxy data, i.e. comes from MT_ascii
