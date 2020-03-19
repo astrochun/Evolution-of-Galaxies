@@ -201,7 +201,7 @@ def run_indiv_plots():
     
     dataset = '03192020/75_112_113_300_600_1444_1443/'
     
-    plots.indiv_derived_props_plots(path_init, dataset, restrict_MTO = True)
+    plots.indiv_derived_props_plots(path_init, dataset, restrict_MTO = True, revised = True)
     
     
     
