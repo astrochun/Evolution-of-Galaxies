@@ -187,10 +187,7 @@ def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file,
 
 
 
-def indiv_derived_props_plots(fitspath, mass_indiv_bin_file, LHb_indiv_bin_file, mass_indiv_props_file, 
-                              mass_indiv_metal_file, LHb_indiv_props_file, LHb_indiv_metal_file, 
-                              mass_valid_file, LHb_valid_file, mass_bin_file, LHb_bin_file, 
-                              mass_bin_metal_file, LHb_bin_metal_file, MTO, restrict_MTO = False):    
+def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False):    
     '''
     REDO DOCUMENTATION
     Purpose:
@@ -225,19 +222,19 @@ def indiv_derived_props_plots(fitspath, mass_indiv_bin_file, LHb_indiv_bin_file,
             Metallicity vs R23 and O32, Metallicity vs Stellar Mass.
     '''
     
-    mass_indiv_MT_tbl = asc.read(mass_indiv_metal_file)
-    mass_indiv_props_tbl = asc.read(mass_indiv_props_file)
-    LHb_indiv_MT_tbl = asc.read(LHb_indiv_metal_file)
-    LHb_indiv_props_tbl = asc.read(LHb_indiv_props_file)
-    mass_indiv_bin_tbl = asc.read(mass_indiv_bin_file)
-    LHb_indiv_bin_tbl = asc.read(LHb_indiv_bin_file)
+    mass_indiv_MT_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['indv_derived_prop'])
+    LHb_indiv_MT_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['indv_derived_prop'])
+    mass_indiv_props_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['indv_prop'])
+    LHb_indiv_props_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['indv_prop'])
+    mass_indiv_bin_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['indv_bin_info'])
+    LHb_indiv_bin_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['indv_bin_info'])
     
-    mass_valid_tbl = asc.read(mass_valid_file)
-    LHb_valid_tbl = asc.read(LHb_valid_file)
-    mass_bin_tbl = asc.read(mass_bin_file)
-    LHb_bin_tbl = asc.read(LHb_bin_file)
-    mass_metal_tbl = asc.read(mass_bin_metal_file)
-    LHb_metal_tbl = asc.read(LHb_bin_metal_file)
+    mass_valid_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_valid'])
+    LHb_valid_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_valid'])
+    mass_bin_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_info'])
+    LHb_bin_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_info'])
+    mass_metal_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_derived_prop'])
+    LHb_metal_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_derived_prop'])
 
 
     ##individual galaxy data, i.e. comes from MT_ascii
@@ -303,19 +300,12 @@ def indiv_derived_props_plots(fitspath, mass_indiv_bin_file, LHb_indiv_bin_file,
                                   (LHb_HBETA >= 1e-18) & (LHb_HBETA <= 1e-15) & (LHbbin_log_LHb > 0))[0]
 
 
-    '''
-    ###REDO by excluding those with bad lines
-    mass_ind_detect = np.where(mass_indiv_detect == 1.0)[0]
-    mass_ind_nondetect = np.where(mass_indiv_detect == 0.5)[0]
-    LHb_ind_detect = np.where(LHb_indiv_detect == 1.0)[0]
-    LHb_ind_nondetect = np.where(LHb_indiv_detect == 0.5)[0]
-    ###
-    '''
-
-    if MTO == True:
-        pdf_pages = PdfPages(fitspath + filename_dict['indv_derived_prop'].replace('.tbl', 'constMTO.pdf'))
+    if restrict_MTO == True:
+        pdf_pages = PdfPages(fitspath + 'massbin/' + dataset + filename_dict['indv_derived_prop'].replace('.tbl', 'constMTO.pdf'))
+        pdf_pages = PdfPages(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['indv_derived_prop'].replace('.tbl', 'constMTO.pdf'))
     else:
-        pdf_pages = PdfPages(fitspath + filename_dict['indv_derived_prop'].replace('.tbl', '.pdf'))
+        pdf_pages = PdfPages(fitspath + 'massbin/' + dataset + filename_dict['indv_derived_prop'].replace('.tbl', '.pdf'))
+        pdf_pages = PdfPages(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['indv_derived_prop'].replace('.tbl', '.pdf'))
     
     
     ##HBeta Luminosity vs Mass ColorMap=Metallicity##
@@ -523,8 +513,8 @@ def indiv_derived_props_plots(fitspath, mass_indiv_bin_file, LHb_indiv_bin_file,
                     marker='^', facecolors = 'None', edgecolors = 'blue', label = 'Individual Non-Detections',
                     alpha = 0.5)
     
-    print('Number of mass bin individual sources plotted:', len(Mbin_log_mass[mass_ind_detect]))
-    print('Number of mass-LHbeta bin individual sources plotted:', len(LHbbin_log_mass[LHb_ind_detect]))
+    print('Number of mass bin individual sources plotted:', len(Mbin_log_mass[mass_indv_detect]))
+    print('Number of mass-LHbeta bin individual sources plotted:', len(LHbbin_log_mass[LHb_indv_detect]))
     
     #Mass bin detections and non-detections
     ax11[0].scatter(mass_avg_mass[mass_detect], mass_metal[mass_detect], s = 25, color = 'red',
