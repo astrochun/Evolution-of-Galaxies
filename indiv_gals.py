@@ -155,7 +155,7 @@ def indiv_em_table(fitspath, line_file, bin_npz_file):
     indiv_props_tbl = Table([ID, logM, logLHb, OII_FluxG, OII_FluxO, OII_SN, OII_Center, OII_Norm, OII_Med,
                              OII_Sigma, OII_RMS, HBETA_FluxG, HBETA_FluxO, HBETA_SN, HBETA_Center, HBETA_Norm, 
                              HBETA_Med, HBETA_Sigma, HBETA_RMS, OIII5007_FluxG, OIII5007_FluxO, OIII5007_SN, 
-                             OIII5007_Center, OIII5007_Norm, OIII5007_Med, OIII5007_Sigma, OIII5007_RMS], names = n)
+                             OIII5007_Center, OIII5007_Norm, OIII5007_Med, OIII5007_Sigma, OIII5007_RMS], names = tuple(n))
     asc.write(indiv_props_tbl, out_ascii, format = 'fixed_width_two_line', overwrite = True)
     
     
