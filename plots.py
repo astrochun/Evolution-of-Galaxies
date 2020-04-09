@@ -8,7 +8,7 @@ from Metallicity_Stack_Commons.column_names import indv_names0, temp_metal_names
       
     
 
-def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file, hbeta_bin = False):
+def bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_file, hbeta_bin = False):
     '''
     Purpose: 
         This function creates plots for the stacked spectra (bins): OII/HBeta vs Stellar Mass,
@@ -50,6 +50,34 @@ def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file,
     OIII4363 = em_table['OIII_4363_Flux_Observed'].data
     OIII5007 = em_table['OIII_5007_Flux_Observed'].data
     HBeta = em_table['HBETA_Flux_Observed'].data
+    
+    #if err_bars == True:
+    try:
+        Te_err_npz = np.load(fitspath + 'Te_errors.npz')
+        metal_err_npz = np.load(fitspath + 'metal_errors.npz')
+        
+        Te_err = np.log10(Te_err_npz['Te_lowhigh_error'])
+        metal_err = np.log10(metal_err_npz['com_O_log_lowhigh_error'])
+        
+        err_bars = True
+        Te_low_err = []
+        Te_high_err = []
+        metal_low_err = []
+        metal_high_err = []
+        for ii in range(len(Te_err)):
+            Te_low_err.append(Te_err[ii][0])
+            Te_high_err.append(Te_err[ii][1])
+            metal_low_err.append(metal_err[ii][0])
+            metal_high_err.append(metal_err[ii][1])
+        Te_lowhigh_err = [Te_low_err, Te_high_err]
+        metal_lowhigh_err = [metal_low_err, metal_high_err]
+        print(Te_lowhigh_err)
+        print(metal_lowhigh_err)
+        print(err_bars)      
+        
+                
+    except:
+        err_bars = False
     
     detect = np.where(detection == 1)[0]
     non_detect = np.where(detection == 0.5)[0]   #non-detection with reliable 5007
@@ -127,6 +155,8 @@ def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file,
     fig2, ax2 = plt.subplots()
     ax2.scatter(np.log10(T_e[detect]), R23_composite[detect], marker = '.')
     ax2.scatter(np.log10(T_e[non_detect]), R23_composite[non_detect], marker = '<')
+    if err_bars == True:
+        ax2.errorbar(np.log10(T_e[detect]), R23_composite[detect], xerr = Te_lowhigh_err, fmt = '.')
     ax2.set_xlabel('$T_e$ (K)')
     ax2.set_ylabel('$R_{23}$')
     ax2.set_title('$R_{23}$ vs. Temperatures')
@@ -136,6 +166,8 @@ def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file,
     fig3, ax3 = plt.subplots()
     ax3.scatter(np.log10(T_e[detect]), O32_composite[detect], marker = '.')
     ax3.scatter(np.log10(T_e[non_detect]), O32_composite[non_detect], marker = '<')
+    if err_bars == True:
+        ax3.errorbar(np.log10(T_e[detect]), O32_composite[detect], xerr = Te_lowhigh_err, fmt = '.')
     ax3.set_xlabel('$T_e$ (K)')
     ax3.set_ylabel('$O_{32}$')
     ax3.set_title('$O_{32}$ vs. Temperatures')
@@ -145,6 +177,8 @@ def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file,
     fig4, ax4 = plt.subplots()
     ax4.scatter(R23_composite[detect], com_O_log[detect], marker = '.')
     ax4.scatter(R23_composite[non_detect], com_O_log[non_detect], marker = '^')
+    if err_bars == True:
+        ax4.errorbar(R23_composite[detect], com_O_log[detect], yerr = metal_lowhigh_err, fmt = '.')
     ax4.set_xlabel('$R_{23}$')
     ax4.set_ylabel('12+log(O/H) $T_e$')
     ax4.set_title('Composite Metallicity vs. $R_{23}$')
@@ -154,6 +188,8 @@ def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file,
     fig5, ax5 = plt.subplots()
     ax5.scatter(O32_composite[detect], com_O_log[detect], marker = '.')
     ax5.scatter(O32_composite[non_detect], com_O_log[non_detect], marker = '^')
+    if err_bars == True:
+        ax5.errorbar(O32_composite[detect], com_O_log[detect], yerr = metal_lowhigh_err, fmt = '.')
     ax5.set_xlabel('$O_{32}$')
     ax5.set_ylabel('12+log(O/H) $T_e$')
     ax5.set_title('Composite Metallicity vs. O32')
@@ -163,6 +199,8 @@ def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file,
     fig6, ax6 = plt.subplots()
     ax6.scatter(avg_mass[detect], np.log10(T_e[detect]), marker = '.')
     ax6.scatter(avg_mass[non_detect], np.log10(T_e[non_detect]), marker = 'v')
+    if err_bars == True:
+        ax6.errorbar(avg_mass[detect], np.log10(T_e[detect]), yerr = Te_lowhigh_err, fmt = '.')
     ax6.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax6.set_ylabel('$T_e$ (K)')
     ax6.set_title('Temperatures vs. Avg Mass')
@@ -172,6 +210,8 @@ def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file,
     fig7, ax7 = plt.subplots()
     ax7.scatter(avg_mass[detect], com_O_log[detect], marker = '.')
     ax7.scatter(avg_mass[non_detect], com_O_log[non_detect], marker = '^')
+    if err_bars == True:
+        ax7.errorbar(avg_mass[detect], com_O_log[detect], yerr = metal_lowhigh_err, fmt = '.')
     mass = np.arange(8.2, 9.9, 0.05)
     y = 8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
     ax7.plot(mass, y, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
@@ -181,6 +221,9 @@ def bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_file,
     pdf_pages.savefig()
     
     pdf_pages.close()
+    if err_bars == True:
+        Te_err_npz.close()
+        metal_err_npz.close()
     
 
 
@@ -522,15 +565,13 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
     print('Number of mass-LHbeta bin individual sources plotted:', len(LHbbin_log_mass[LHb_indv_detect]))
     
     #Mass bin detections and non-detections
-    ax11[0].scatter(mass_avg_mass[mass_detect], mass_metal[mass_detect], s = 25, color = 'red',
-                   label = 'Bin Detections')
-    ax11[0].scatter(mass_avg_mass[mass_nondetect], mass_metal[mass_nondetect], s = 25, color = 'red',
-                   marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
+    ax11[0].scatter(mass_avg_mass[mass_detect], mass_metal[mass_detect], s = 25, color = 'red', label = 'Bin Detections')
+    ax11[0].scatter(mass_avg_mass[mass_nondetect], mass_metal[mass_nondetect], s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
+    #ax11[0].errorbar(mass_avg_mass[mass_detect], mass_metal[mass_detect], yerr = , s = 25, color = 'red', label = 'Bin Detections')
+    #ax11[0].errorbar(mass_avg_mass[mass_nondetect], mass_metal[mass_nondetect], yerr = , s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
     #HBeta bin detections and non-detections
-    ax11[1].scatter(LHb_avg_mass[LHb_detect], LHb_metal[LHb_detect], s = 25, color = 'red',
-                   label = 'Bin Detections')
-    ax11[1].scatter(LHb_avg_mass[LHb_nondetect], LHb_metal[LHb_nondetect], s = 25, color = 'red',
-                   marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
+    ax11[1].scatter(LHb_avg_mass[LHb_detect], LHb_metal[LHb_detect], s = 25, color = 'red', label = 'Bin Detections')
+    ax11[1].scatter(LHb_avg_mass[LHb_nondetect], LHb_metal[LHb_nondetect], s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
     
     
     ##Curve fit     
