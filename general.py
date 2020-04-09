@@ -133,8 +133,14 @@ def run_bin_analysis(err_prop = False, indiv = False):
     
     
     #Run validation table
-    valid_table.make_validation_table(fitspath)  #, bin_type_str)
-    valid_file = fitspath + filename_dict['bin_valid']
+    valid_table.make_validation_table(fitspath)
+    if bool_hbeta_bin == True:
+        vtbl_rev = asc.read(fitspath + filename_dict['bin_valid_rev'], format = 'fixed_width_two_line')
+        detect = vtbl_rev['Detection'].data
+        detect[11] = 0.5
+        vtbl_rev.replace_column('Detection', detect)
+        asc.write(vtbl_rev, fitspath + filename_dict['bin_valid_rev'], format = 'fixed_width_two_line', overwrite = True)
+    valid_file = fitspath + filename_dict['bin_valid_rev']
     
     
     #Run dust attenuation
@@ -162,7 +168,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     
     #Run plots
     out_fname = fitspath + filename_dict['bin_derived_prop'].replace('.tbl', '.pdf')
-    plots.bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_fname, bool_hbeta_bin)
+    plots.bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_fname, hbeta_bin = bool_hbeta_bin)
     
     
     #Run error propagation, histograms, and revised data plots
@@ -176,7 +182,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
         metal_file = fitspath + filename_dict['bin_derived_prop_rev']
         em_file = fitspath + filename_dict['bin_fit_rev']
         out_fname = fitspath + filename_dict['bin_derived_prop_rev'].replace('.tbl', '.pdf')
-        plots.bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_fname, bool_hbeta_bin)
+        plots.bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_fname, hbeta_bin = bool_hbeta_bin)
         
         
     if indiv == True:
