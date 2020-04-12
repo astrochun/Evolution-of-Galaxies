@@ -13,9 +13,9 @@ from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
 from Evolution_of_Galaxies import library, emission_line_fit, plots, indiv_gals
 from Evolution_of_Galaxies.R_temp_calcul import run_function
-from Zcalbase_gal.Analysis.DEEP2_R23_O32 import error_prop
-from Zcalbase_gal import histogram_plots
-from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict, k_dict, attenuation
+#from Zcalbase_gal.Analysis.DEEP2_R23_O32 import error_prop
+#from Zcalbase_gal import histogram_plots
+from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
 from Metallicity_Stack_Commons.column_names import filename_dict, indv_names0, bin_names0, temp_metal_names0
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
 from Metallicity_Stack_Commons import valid_table
@@ -149,19 +149,9 @@ def run_bin_analysis(err_prop = False, indiv = False):
     k_5007 = np.zeros(len(edge))
     bin_file = fitspath + filename_dict['bin_info']
     em_file = fitspath + filename_dict['bin_fit']
-    '''
-    combine_asc = asc.read(em_file)
-    attenuation.compute_EBV(fitspath[:-1], combine_asc)
-    '''
     
     
     #Run R, Te, and Metallicity calculations 
-    '''
-    k_4363 = k_dict['OIII_4363']
-    k_5007 = k_dict['OIII_5007']
-    EBV_file = asc.read(fitspath + 'dust_attenuation_values.tbl') 
-    EBV = EBV_file['E(B-V)'].data
-    '''
     metal_file = fitspath + filename_dict['bin_derived_prop']
     run_function(em_file, bin_file, metal_file, EBV, k_4363, k_5007)
     
@@ -183,7 +173,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
         em_file = fitspath + filename_dict['bin_fit_rev']
         out_fname = fitspath + filename_dict['bin_derived_prop_rev'].replace('.tbl', '.pdf')
         plots.bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_fname, hbeta_bin = bool_hbeta_bin)
-        
+      
         
     if indiv == True:
         #Create individual_bin_info table
