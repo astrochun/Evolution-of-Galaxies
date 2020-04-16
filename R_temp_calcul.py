@@ -1,7 +1,7 @@
 import numpy as np
 from astropy.io import ascii as asc
 from astropy.table import Table
-from Metallicity_Stack_Commons.temp_metallicity_calc import R_calculation, temp_calculation, metallicity_calculation 
+from Metallicity_Stack_Commons.analysis.temp_metallicity_calc import R_calculation, temp_calculation, metallicity_calculation 
 from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_ratios0, bin_names0
 from Metallicity_Stack_Commons import OIII_r
     
@@ -144,10 +144,10 @@ def run_function(line_file, bin_file, outfile, EBV, k_4363, k_5007):
         #R, Te, and metallicity calculations
         R_value = R_calculation(OIII4363, OIII5007, EBV)
         T_e = temp_calculation(R_value)
-        com_O_log, metal_dict = metallicity_calculation(T_e, two_beta, three_beta)
+        metal_dict = metallicity_calculation(T_e, two_beta, three_beta)
         
         n = tuple([bin_names0[0]] + bin_ratios0 + temp_metal_names0)
-        tab0 = Table([bin_IDs, logR23_comp, logO32_comp, two_beta, three_beta, T_e, com_O_log, 
+        tab0 = Table([bin_IDs, logR23_comp, logO32_comp, two_beta, three_beta, T_e, metal_dict['12+log(O/H)'], 
                       metal_dict['log(O+/H)'], metal_dict['log(O++/H)'], metal_dict['O+/H'],
                       metal_dict['O++/H']], names = n)        
 

@@ -11,13 +11,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
-from Evolution_of_Galaxies import library, emission_line_fit, valid_table, plots, indiv_gals
+from Evolution_of_Galaxies import library, emission_line_fit, plots, indiv_gals
 from Evolution_of_Galaxies.R_temp_calcul import run_function
-from Zcalbase_gal.Analysis.DEEP2_R23_O32 import error_prop
-from Zcalbase_gal import histogram_plots
-from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict, k_dict, attenuation
-from Metallicity_Stack_Commons.column_names import filename_dict
+#from Zcalbase_gal.Analysis.DEEP2_R23_O32 import error_prop
+#from Zcalbase_gal import histogram_plots
+from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
+from Metallicity_Stack_Commons.column_names import filename_dict, indv_names0, bin_names0, temp_metal_names0
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
+from Metallicity_Stack_Commons import valid_table
+from Metallicity_Stack_Commons import OIII_r
+from astropy.table import Table
 
 
 path = get_user()
@@ -130,8 +133,14 @@ def run_bin_analysis(err_prop = False, indiv = False):
     
     
     #Run validation table
-    valid_table.make_validation_table(fitspath, bin_type_str)
-    valid_file = fitspath + filename_dict['bin_valid']
+    valid_table.make_validation_table(fitspath)
+    if bool_hbeta_bin == True:
+        vtbl_rev = asc.read(fitspath + filename_dict['bin_valid_rev'], format = 'fixed_width_two_line')
+        detect = vtbl_rev['Detection'].data
+        detect[11] = 0.5
+        vtbl_rev.replace_column('Detection', detect)
+        asc.write(vtbl_rev, fitspath + filename_dict['bin_valid_rev'], format = 'fixed_width_two_line', overwrite = True)
+    valid_file = fitspath + filename_dict['bin_valid_rev']
     
     
     #Run dust attenuation
@@ -140,26 +149,16 @@ def run_bin_analysis(err_prop = False, indiv = False):
     k_5007 = np.zeros(len(edge))
     bin_file = fitspath + filename_dict['bin_info']
     em_file = fitspath + filename_dict['bin_fit']
-    '''
-    combine_asc = asc.read(em_file)
-    attenuation.compute_EBV(fitspath[:-1], combine_asc)
-    '''
     
     
     #Run R, Te, and Metallicity calculations 
-    '''
-    k_4363 = k_dict['OIII_4363']
-    k_5007 = k_dict['OIII_5007']
-    EBV_file = asc.read(fitspath + 'dust_attenuation_values.tbl') 
-    EBV = EBV_file['E(B-V)'].data
-    '''
     metal_file = fitspath + filename_dict['bin_derived_prop']
     run_function(em_file, bin_file, metal_file, EBV, k_4363, k_5007)
     
     
     #Run plots
     out_fname = fitspath + filename_dict['bin_derived_prop'].replace('.tbl', '.pdf')
-    plots.bin_derived_props_plots(metal_file, em_file, bin_file, valid_file, out_fname, bool_hbeta_bin)
+    plots.bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_fname, hbeta_bin = bool_hbeta_bin)
     
     
     #Run error propagation, histograms, and revised data plots
@@ -169,12 +168,12 @@ def run_bin_analysis(err_prop = False, indiv = False):
                         fitspath + 'metal_xpeaks.npz', fitspath + 'metallicity_pdf.npz', fitspath + 'Te_errors.npz']
         FR_dict_list = [fitspath + 'flux_propdist.npz', fitspath + 'flux_errors.npz', fitspath + 'flux_xpeak.npz']
         histogram_plots.run_histogram_TM(fitspath, metal_file, TM_dict_list, valid_file, sharex=False)
-        histogram_plots.run_histogram_FR(fitspath, metal_file, FR_dict_list, valid_file, sharex=False)
+        histogram_plots.run_histogram_FR(fitspath, em_file, FR_dict_list, valid_file, sharex=False)
         metal_file = fitspath + filename_dict['bin_derived_prop_rev']
         em_file = fitspath + filename_dict['bin_fit_rev']
         out_fname = fitspath + filename_dict['bin_derived_prop_rev'].replace('.tbl', '.pdf')
-        plots.bin_derived_props_plots(metal_file, em_file, out_fname, bool_hbeta_bin)
-        
+        plots.bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_fname, hbeta_bin = bool_hbeta_bin)
+      
         
     if indiv == True:
         #Create individual_bin_info table
@@ -186,70 +185,19 @@ def run_bin_analysis(err_prop = False, indiv = False):
         indiv_gals.indiv_em_table(fitspath, line_file, bin_npz_file)
         
         #Create individual_derived_properties table
-        main(fitspath, '', revised = False, det3 = False)
-        
-        #Make individual galaxy plots
+        main(fitspath, '', revised = False, det3 = True)
         
         
         
-        
-'''        
-def run_indiv_analysis(date_mass, date_HB):
-    
-    Purpose:
-        This function runs the entire individual galaxy analysis process, which is based off both binning
-        results. It calls codes to consolidate binning and individual data, to calculate individual 
-        metallicities based on bin temperatures, and to plot useful relationships.
-        
-    Usage:
-        general.run_indiv_analysis()
-        
-    Params:
-        *NOTE: date is a string of the date in MMDDYYYY format* 
-        date_mass --> a string of the date directory that the mass bin results are in.
-        date_HB --> a string of the date directory that the mass-LHbeta bin results are in.
-        
-    Returns:
-        None
-        
-    Outputs:
-        Calls other codes which produce output tables, pdfs, etc. (see function calls within code).     
-    
-    
-    fitspath = dir_date('individual', path_init, year = True)
 
-    
-    line_file = path_init2 + 'dataset/DEEP2_all_line_fit.fits'
-    mass_bin_npz = path_init + 'massbin/' + date_mass + '/75_112_113_300_600_1444_1444/binning.npz'
-    mass_bin_file = path_init + 'massbin/' + date_mass + '/75_112_113_300_600_1444_1444/binning.tbl'
-    mass_Te_file = path_init + 'massbin/' + date_mass + '/75_112_113_300_600_1444_1444/derived_properties_metallicityrevised.tbl'
-    HB_bin_npz = path_init + 'mass_LHbeta_bin/' + date_HB + '/75_112_113_300_600_1444_1444/binning.npz'  
-    HB_bin_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/75_112_113_300_600_1444_1444/binning.tbl'  
-    HB_Te_file = path_init + 'mass_LHbeta_bin/' + date_HB + '/75_112_113_300_600_1444_1444/derived_properties_metallicityrevised.tbl'
-    
-    #Create individual Te and lines table
-    indiv_gals.create_Te_line_table(fitspath, line_file, mass_bin_npz, HB_bin_npz, mass_Te_file, HB_Te_file)
-    
-    
-    #Calculate individual metallicities 
-    ##Need to add EBV values and k values to large table
-    EBV = np.zeros(4088)
-    k_4363 = np.zeros(4088)
-    k_5007 = np.zeros(4088)
-    em_file = fitspath + 'individual_Te_emLines.tbl'
-    metal_file = fitspath + 'individual_derived_properties_metallicity'
-    run_function(em_file, metal_file, EBV, k_4363, k_5007)
-    
-    
+def run_indiv_plots():
     #Make individual galaxy plots
-    MTO = ''
-    plots.indiv_derived_props_plots(fitspath, metal_file + '.tbl', mass_bin_file, HB_bin_file, mass_Te_file,
-                                    HB_Te_file, MTO)
-    MTO = '_constantMTO'
-    plots.indiv_derived_props_plots(fitspath, metal_file + '.tbl', mass_bin_file, HB_bin_file, mass_Te_file,
-                                    HB_Te_file, MTO, restrict_MTO = True)
+    #fitspath does not include bin type
+    #dataset is the number of galaxies in each bin folder and the date folder
     
- '''   
+    dataset = '03192020/75_112_113_300_600_1444_1443/'
+    
+    plots.indiv_derived_props_plots(path_init, dataset, restrict_MTO = True, revised = True)
     
     
     

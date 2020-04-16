@@ -5,7 +5,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from astropy.table import Table, hstack, Column
 from pylab import subplots_adjust
 from scipy.optimize import curve_fit 
-from Metallicity_Stack_Commons.fitting import movingaverage_box1D, gauss, double_gauss, oxy2_gauss, rms_func, con1
+from Metallicity_Stack_Commons.analysis.fitting import movingaverage_box1D, gauss, double_gauss, oxy2_gauss, rms_func, con1
 from Metallicity_Stack_Commons import scalefact
 from Metallicity_Stack_Commons.column_names import gauss_lines_names0, filename_dict, bin_names0
 
