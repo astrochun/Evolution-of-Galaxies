@@ -13,14 +13,11 @@ from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
 from Evolution_of_Galaxies import library, emission_line_fit, plots, indiv_gals
 from Evolution_of_Galaxies.R_temp_calcul import run_function
-#from Zcalbase_gal.Analysis.DEEP2_R23_O32 import error_prop
-#from Zcalbase_gal import histogram_plots
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
-from Metallicity_Stack_Commons.column_names import filename_dict, indv_names0, bin_names0, temp_metal_names0
+from Metallicity_Stack_Commons.column_names import filename_dict
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
 from Metallicity_Stack_Commons import valid_table
-from Metallicity_Stack_Commons import OIII_r
-from astropy.table import Table
+from Metallicity_Stack_Commons.analysis import error_prop
 
 
 path = get_user()
@@ -134,13 +131,14 @@ def run_bin_analysis(err_prop = False, indiv = False):
     
     #Run validation table
     valid_table.make_validation_table(fitspath)
+    valid_file = fitspath + filename_dict['bin_valid']
     if bool_hbeta_bin == True:
         vtbl_rev = asc.read(fitspath + filename_dict['bin_valid_rev'], format = 'fixed_width_two_line')
         detect = vtbl_rev['Detection'].data
         detect[11] = 0.5
         vtbl_rev.replace_column('Detection', detect)
         asc.write(vtbl_rev, fitspath + filename_dict['bin_valid_rev'], format = 'fixed_width_two_line', overwrite = True)
-    valid_file = fitspath + filename_dict['bin_valid_rev']
+        valid_file = fitspath + filename_dict['bin_valid_rev']
     
     
     #Run dust attenuation
@@ -163,12 +161,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     
     #Run error propagation, histograms, and revised data plots
     if err_prop == True:
-        error_prop.error_prop_chuncodes(fitspath, em_file, metal_file, valid_file)
-        TM_dict_list = [fitspath + 'Te_propdist_dict.npz', fitspath + 'Te_xpeaks.npz', fitspath + 'metal_errors.npz',
-                        fitspath + 'metal_xpeaks.npz', fitspath + 'metallicity_pdf.npz', fitspath + 'Te_errors.npz']
-        FR_dict_list = [fitspath + 'flux_propdist.npz', fitspath + 'flux_errors.npz', fitspath + 'flux_xpeak.npz']
-        histogram_plots.run_histogram_TM(fitspath, metal_file, TM_dict_list, valid_file, sharex=False)
-        histogram_plots.run_histogram_FR(fitspath, em_file, FR_dict_list, valid_file, sharex=False)
+        error_prop.fluxes_derived_prop(fitspath, binned_data = True)
         metal_file = fitspath + filename_dict['bin_derived_prop_rev']
         em_file = fitspath + filename_dict['bin_fit_rev']
         out_fname = fitspath + filename_dict['bin_derived_prop_rev'].replace('.tbl', '.pdf')
