@@ -4,11 +4,11 @@ from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.optimize import curve_fit 
 from Metallicity_Stack_Commons import OIII_r
-from Metallicity_Stack_Commons.column_names import indv_names0, temp_metal_names0, bin_ratios0, bin_mzevolve_names0, bin_names0, filename_dict
-      
+from Metallicity_Stack_Commons.column_names import indv_names0, temp_metal_names0, bin_ratios0, bin_mzevolve_names0
+from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict, npz_filename_dict   
     
 
-def bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_file, hbeta_bin = False):
+def bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_file, hbeta_bin = False, err_bars = False):
     '''
     Purpose: 
         This function creates plots for the stacked spectra (bins): OII/HBeta vs Stellar Mass,
@@ -51,33 +51,21 @@ def bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file,
     OIII5007 = em_table['OIII_5007_Flux_Observed'].data
     HBeta = em_table['HBETA_Flux_Observed'].data
     
-    #if err_bars == True:
-    try:
-        Te_err_npz = np.load(fitspath + 'Te_errors.npz')
-        metal_err_npz = np.load(fitspath + 'metal_errors.npz')
+    if err_bars == True:
+        der_prop_err = np.load(fitspath + npz_filename_dict['der_prop_errors'])
         
-        Te_err = np.log10(Te_err_npz['Te_lowhigh_error'])
-        metal_err = np.log10(metal_err_npz['com_O_log_lowhigh_error'])
+        Te_err = np.log10(der_prop_err['T_e_lowhigh_error'])
+        metal_err = der_prop_err['12+log(O/H)_lowhigh_error']
         
-        err_bars = True
-        Te_low_err = []
-        Te_high_err = []
-        metal_low_err = []
-        metal_high_err = []
-        for ii in range(len(Te_err)):
-            Te_low_err.append(Te_err[ii][0])
-            Te_high_err.append(Te_err[ii][1])
-            metal_low_err.append(metal_err[ii][0])
-            metal_high_err.append(metal_err[ii][1])
+        Te_low_err = [Te_err[ii][0] for ii in range(len(Te_err))]
+        Te_high_err = [Te_err[ii][1] for ii in range(len(Te_err))]
+        metal_low_err = [metal_err[ii][0] for ii in range(len(metal_err))]
+        metal_high_err = [metal_err[ii][1] for ii in range(len(metal_err))]
+        
         Te_lowhigh_err = [Te_low_err, Te_high_err]
         metal_lowhigh_err = [metal_low_err, metal_high_err]
         print(Te_lowhigh_err)
         print(metal_lowhigh_err)
-        print(err_bars)      
-        
-                
-    except:
-        err_bars = False
     
     detect = np.where(detection == 1)[0]
     non_detect = np.where(detection == 0.5)[0]   #non-detection with reliable 5007
@@ -222,15 +210,14 @@ def bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file,
     
     pdf_pages.close()
     if err_bars == True:
-        Te_err_npz.close()
-        metal_err_npz.close()
+        der_prop_err.close()
     
 
 
 
 
 
-def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised = False):    
+def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised = False, err_bars = False):    
     '''
     REDO DOCUMENTATION
     Purpose:
@@ -283,6 +270,22 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
     else:    
         mass_metal_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_derived_prop'])
         LHb_metal_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_derived_prop'])
+        
+    if err_bars == True:
+        der_prop_err = np.load(fitspath + npz_filename_dict['der_prop_errors'])
+        
+        Te_err = np.log10(der_prop_err['T_e_lowhigh_error'])
+        metal_err = der_prop_err['12+log(O/H)_lowhigh_error']
+        
+        Te_low_err = [Te_err[ii][0] for ii in range(len(Te_err))]
+        Te_high_err = [Te_err[ii][1] for ii in range(len(Te_err))]
+        metal_low_err = [metal_err[ii][0] for ii in range(len(metal_err))]
+        metal_high_err = [metal_err[ii][1] for ii in range(len(metal_err))]
+        
+        Te_lowhigh_err = [Te_low_err, Te_high_err]
+        metal_lowhigh_err = [metal_low_err, metal_high_err]
+        print(Te_lowhigh_err)
+        print(metal_lowhigh_err)
 
 
     ##individual galaxy data, i.e. comes from MT_ascii
@@ -431,6 +434,9 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
                    facecolors = 'None', edgecolors = 'blue', label = '$R_{23}$', alpha = 0.5)
     ax5[1].scatter(Mbin_indiv_O32[mass_indv_nondetect], Mbin_indiv_metal[mass_indv_nondetect], marker='^', 
                    facecolors = 'None', edgecolors = 'red', label = '$O_{32}$', alpha = 0.5)
+    if err_bars == True:
+        ax5[0].errorbar(Mbin_indiv_R23[mass_indv_detect], Mbin_indiv_metal[mass_indv_detect], yerr = metal_lowhigh_err, fmt = '.')
+        ax5[1].errorbar(Mbin_indiv_O32[mass_indv_detect], Mbin_indiv_metal[mass_indv_detect], yerr = metal_lowhigh_err, fmt = '.')
     ax5[0].legend(loc = 'best')
     ax5[1].legend(loc = 'best')
     ax5[0].set_ylabel('Metallicity')
@@ -449,6 +455,9 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
                    facecolors = 'None', edgecolors = 'blue', label = '$R_{23}$', alpha = 0.5)
     ax6[1].scatter(LHbbin_indiv_O32[LHb_indv_nondetect], LHbbin_indiv_metal[LHb_indv_nondetect], marker='^', 
                    facecolors = 'None', edgecolors = 'red', label = '$O_{32}$', alpha = 0.5)
+    if err_bars == True:
+        ax6[0].errorbar(LHbbin_indiv_R23[LHb_indv_detect], LHbbin_indiv_metal[LHb_indv_detect], yerr = metal_lowhigh_err, fmt = '.')
+        ax6[1].errorbar(LHbbin_indiv_O32[LHb_indv_detect], LHbbin_indiv_metal[LHb_indv_detect], yerr = metal_lowhigh_err, fmt = '.')
     ax6[0].legend(loc = 'best')
     ax6[1].legend(loc = 'best')
     ax6[0].set_ylabel('Metallicity')
