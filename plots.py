@@ -272,20 +272,21 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
         LHb_metal_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_derived_prop'])
         
     if err_bars == True:
-        der_prop_err = np.load(fitspath + npz_filename_dict['der_prop_errors'])
+        der_prop_err_M = np.load(fitspath + 'massbin/' + dataset + npz_filename_dict['der_prop_errors'])
+        der_prop_err_LHb = np.load(fitspath + 'massbin/' + dataset + npz_filename_dict['der_prop_errors'])
         
-        Te_err = np.log10(der_prop_err['T_e_lowhigh_error'])
-        metal_err = der_prop_err['12+log(O/H)_lowhigh_error']
+        metal_err_M = der_prop_err_M['12+log(O/H)_lowhigh_error']
+        metal_err_LHb = der_prop_err_LHb['12+log(O/H)_lowhigh_error']
         
-        Te_low_err = [Te_err[ii][0] for ii in range(len(Te_err))]
-        Te_high_err = [Te_err[ii][1] for ii in range(len(Te_err))]
-        metal_low_err = [metal_err[ii][0] for ii in range(len(metal_err))]
-        metal_high_err = [metal_err[ii][1] for ii in range(len(metal_err))]
+        metal_low_err_M = [metal_err_M[ii][0] for ii in range(len(metal_err_M))]
+        metal_high_err_M = [metal_err_M[ii][1] for ii in range(len(metal_err_M))]
+        metal_low_err_LHb = [metal_err_LHb[ii][0] for ii in range(len(metal_err_LHb))]
+        metal_high_err_LHb = [metal_err_LHb[ii][1] for ii in range(len(metal_err_LHb))]
         
-        Te_lowhigh_err = [Te_low_err, Te_high_err]
-        metal_lowhigh_err = [metal_low_err, metal_high_err]
-        print(Te_lowhigh_err)
-        print(metal_lowhigh_err)
+        metal_lowhigh_err_M = [metal_low_err_M, metal_high_err_M]
+        metal_lowhigh_err_LHb = [metal_low_err_LHb, metal_high_err_LHb]
+        print(metal_lowhigh_err_M)
+        print(metal_lowhigh_err_LHb)
 
 
     ##individual galaxy data, i.e. comes from MT_ascii
@@ -434,9 +435,6 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
                    facecolors = 'None', edgecolors = 'blue', label = '$R_{23}$', alpha = 0.5)
     ax5[1].scatter(Mbin_indiv_O32[mass_indv_nondetect], Mbin_indiv_metal[mass_indv_nondetect], marker='^', 
                    facecolors = 'None', edgecolors = 'red', label = '$O_{32}$', alpha = 0.5)
-    if err_bars == True:
-        ax5[0].errorbar(Mbin_indiv_R23[mass_indv_detect], Mbin_indiv_metal[mass_indv_detect], yerr = metal_lowhigh_err, fmt = '.')
-        ax5[1].errorbar(Mbin_indiv_O32[mass_indv_detect], Mbin_indiv_metal[mass_indv_detect], yerr = metal_lowhigh_err, fmt = '.')
     ax5[0].legend(loc = 'best')
     ax5[1].legend(loc = 'best')
     ax5[0].set_ylabel('Metallicity')
@@ -455,9 +453,6 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
                    facecolors = 'None', edgecolors = 'blue', label = '$R_{23}$', alpha = 0.5)
     ax6[1].scatter(LHbbin_indiv_O32[LHb_indv_nondetect], LHbbin_indiv_metal[LHb_indv_nondetect], marker='^', 
                    facecolors = 'None', edgecolors = 'red', label = '$O_{32}$', alpha = 0.5)
-    if err_bars == True:
-        ax6[0].errorbar(LHbbin_indiv_R23[LHb_indv_detect], LHbbin_indiv_metal[LHb_indv_detect], yerr = metal_lowhigh_err, fmt = '.')
-        ax6[1].errorbar(LHbbin_indiv_O32[LHb_indv_detect], LHbbin_indiv_metal[LHb_indv_detect], yerr = metal_lowhigh_err, fmt = '.')
     ax6[0].legend(loc = 'best')
     ax6[1].legend(loc = 'best')
     ax6[0].set_ylabel('Metallicity')
@@ -576,11 +571,12 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
     #Mass bin detections and non-detections
     ax11[0].scatter(mass_avg_mass[mass_detect], mass_metal[mass_detect], s = 25, color = 'red', label = 'Bin Detections')
     ax11[0].scatter(mass_avg_mass[mass_nondetect], mass_metal[mass_nondetect], s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
-    #ax11[0].errorbar(mass_avg_mass[mass_detect], mass_metal[mass_detect], yerr = , s = 25, color = 'red', label = 'Bin Detections')
-    #ax11[0].errorbar(mass_avg_mass[mass_nondetect], mass_metal[mass_nondetect], yerr = , s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
     #HBeta bin detections and non-detections
     ax11[1].scatter(LHb_avg_mass[LHb_detect], LHb_metal[LHb_detect], s = 25, color = 'red', label = 'Bin Detections')
     ax11[1].scatter(LHb_avg_mass[LHb_nondetect], LHb_metal[LHb_nondetect], s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
+    if err_bars == True:
+        ax11[0].errorbar(mass_avg_mass[mass_detect], mass_metal[mass_detect], yerr = metal_lowhigh_err_M, fmt = '.')
+        ax11[0].errorbar(LHb_avg_mass[LHb_detect], LHb_metal[LHb_detect], yerr = metal_lowhigh_err_LHb, fmt = '.')
     
     
     ##Curve fit     
