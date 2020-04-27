@@ -165,7 +165,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
         metal_file = fitspath + filename_dict['bin_derived_prop_rev']
         em_file = fitspath + filename_dict['bin_fit_rev']
         out_fname = fitspath + filename_dict['bin_derived_prop_rev'].replace('.tbl', '.pdf')
-        plots.bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_fname, hbeta_bin = bool_hbeta_bin)
+        plots.bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_fname, hbeta_bin = bool_hbeta_bin, err_bars = True)
       
         
     if indiv == True:
@@ -190,7 +190,7 @@ def run_indiv_plots():
     
     dataset = '03192020/75_112_113_300_600_1444_1443/'
     
-    plots.indiv_derived_props_plots(path_init, dataset, restrict_MTO = True, revised = True)
+    plots.indiv_derived_props_plots(path_init, dataset, restrict_MTO = True, revised = True, err_bars = True)
     
     
     
