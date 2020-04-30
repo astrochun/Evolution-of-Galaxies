@@ -51,10 +51,13 @@ def bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file,
     OIII5007 = em_table['OIII_5007_Flux_Observed'].data
     HBeta = em_table['HBETA_Flux_Observed'].data
     
+    detect = np.where(detection == 1)[0]
+    non_detect = np.where(detection == 0.5)[0]   #non-detection with reliable 5007
+    
     if err_bars == True:
         der_prop_err = np.load(fitspath + npz_filename_dict['der_prop_errors'])
         
-        Te_err = np.log10(der_prop_err['T_e_lowhigh_error'])
+        Te_err = der_prop_err['T_e_lowhigh_error']        
         metal_err = der_prop_err['12+log(O/H)_lowhigh_error']
         
         Te_low_err = [Te_err[ii][0] for ii in range(len(Te_err))]
@@ -62,13 +65,13 @@ def bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file,
         metal_low_err = [metal_err[ii][0] for ii in range(len(metal_err))]
         metal_high_err = [metal_err[ii][1] for ii in range(len(metal_err))]
         
+        Te_low_err = np.log10(1 + (Te_low_err)/T_e[detect])
+        Te_high_err = np.log10(1 + (Te_high_err)/T_e[detect])
+         
         Te_lowhigh_err = [Te_low_err, Te_high_err]
         metal_lowhigh_err = [metal_low_err, metal_high_err]
         print(Te_lowhigh_err)
         print(metal_lowhigh_err)
-    
-    detect = np.where(detection == 1)[0]
-    non_detect = np.where(detection == 0.5)[0]   #non-detection with reliable 5007
         
     #Line ratios        
     OII_HBeta = OII / HBeta
