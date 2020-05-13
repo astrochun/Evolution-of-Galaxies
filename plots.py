@@ -3,13 +3,12 @@ import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.optimize import curve_fit 
-from Metallicity_Stack_Commons import OIII_r
-from Metallicity_Stack_Commons.column_names import indv_names0, temp_metal_names0, bin_ratios0, bin_mzevolve_names0
+from Metallicity_Stack_Commons.column_names import indv_names0, temp_metal_names0, bin_mzevolve_names0
 from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict, npz_filename_dict
 
 
 
-def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised = False, err_bars = False):    
+def indiv_derived_props_plots(fitspath, restrict_MTO = False, revised = False, err_bars = False, hbeta_bin = False):    
     '''
     REDO DOCUMENTATION
     Purpose:
@@ -44,331 +43,205 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
             Metallicity vs R23 and O32, Metallicity vs Stellar Mass.
     '''
     
-    mass_indiv_MT_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['indv_derived_prop'])
-    LHb_indiv_MT_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['indv_derived_prop'])
-    mass_indiv_props_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['indv_prop'])
-    LHb_indiv_props_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['indv_prop'])
-    mass_indiv_bin_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['indv_bin_info'])
-    LHb_indiv_bin_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['indv_bin_info'])
+    indiv_derivedprops_tbl = asc.read(fitspath + filename_dict['indv_derived_prop'])
+    indiv_props_tbl = asc.read(fitspath + filename_dict['indv_prop'])
+    indiv_bininfo_tbl = asc.read(fitspath + filename_dict['indv_bin_info'])
     
-    mass_valid_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_valid'])
-    LHb_valid_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_valid'])
-    mass_bin_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_info'])
-    LHb_bin_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_info'])
-    
+    bin_valid_tbl = asc.read(fitspath + filename_dict['bin_valid'])
+    bininfo_tbl = asc.read(fitspath + filename_dict['bin_info'])
     if revised == True:
-         mass_metal_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_derived_prop_rev'])
-         LHb_metal_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_derived_prop_rev'])
+        bin_derivedprops_tbl = asc.read(fitspath + filename_dict['bin_derived_prop_rev'])
     else:    
-        mass_metal_tbl = asc.read(fitspath + 'massbin/' + dataset + filename_dict['bin_derived_prop'])
-        LHb_metal_tbl = asc.read(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['bin_derived_prop'])
+        bin_derivedprops_tbl = asc.read(fitspath + filename_dict['bin_derived_prop'])
         
     if err_bars == True:
-        der_prop_err_M = np.load(fitspath + 'massbin/' + dataset + npz_filename_dict['der_prop_errors'])
-        der_prop_err_LHb = np.load(fitspath + 'massbin/' + dataset + npz_filename_dict['der_prop_errors'])
+        derivedprops_errors = np.load(fitspath + npz_filename_dict['der_prop_errors'])
         
-        metal_err_M = der_prop_err_M['12+log(O/H)_lowhigh_error']
-        metal_err_LHb = der_prop_err_LHb['12+log(O/H)_lowhigh_error']
+        metal_errors = derivedprops_errors['12+log(O/H)_lowhigh_error']
         
-        metal_low_err_M = [metal_err_M[ii][0] for ii in range(len(metal_err_M))]
-        metal_high_err_M = [metal_err_M[ii][1] for ii in range(len(metal_err_M))]
-        metal_low_err_LHb = [metal_err_LHb[ii][0] for ii in range(len(metal_err_LHb))]
-        metal_high_err_LHb = [metal_err_LHb[ii][1] for ii in range(len(metal_err_LHb))]
+        metal_low_err = [metal_errors[ii][0] for ii in range(len(metal_errors))]
+        metal_high_err = [metal_errors[ii][1] for ii in range(len(metal_errors))]
         
-        metal_lowhigh_err_M = [metal_low_err_M, metal_high_err_M]
-        metal_lowhigh_err_LHb = [metal_low_err_LHb, metal_high_err_LHb]
-        print(metal_lowhigh_err_M)
-        print(metal_lowhigh_err_LHb)
+        metal_lowhigh_err = [metal_low_err, metal_high_err]
 
 
     ##individual galaxy data, i.e. comes from MT_ascii
-    Mbin_log_mass = mass_indiv_props_tbl[indv_names0[3]].data
-    Mbin_log_LHb = mass_indiv_props_tbl[indv_names0[4]].data
-    LHbbin_log_mass = LHb_indiv_props_tbl[indv_names0[3]].data
-    LHbbin_log_LHb = LHb_indiv_props_tbl[indv_names0[4]].data
+    indiv_logM = indiv_props_tbl[indv_names0[3]].data
+    indiv_logLHb = indiv_props_tbl[indv_names0[4]].data
     
-    mass_HBETA = mass_indiv_props_tbl['HBETA_Flux_Observed'].data
-    LHb_HBETA = LHb_indiv_props_tbl['HBETA_Flux_Observed'].data
-    mass_OII = mass_indiv_props_tbl['OII_3727_Flux_Observed'].data
-    LHb_OII = LHb_indiv_props_tbl['OII_3727_Flux_Observed'].data
-    mass_OIII5007 = mass_indiv_props_tbl['OIII_5007_Flux_Observed'].data
-    LHb_OIII5007 = LHb_indiv_props_tbl['OIII_5007_Flux_Observed'].data
+    indiv_HBETA = indiv_props_tbl['HBETA_Flux_Observed'].data
+    indiv_OII = indiv_props_tbl['OII_3727_Flux_Observed'].data
+    indiv_OIII5007 = indiv_props_tbl['OIII_5007_Flux_Observed'].data
     
-    Mbin_indiv_metal = mass_indiv_MT_tbl[temp_metal_names0[1]].data
-    LHbbin_indiv_metal = LHb_indiv_MT_tbl[temp_metal_names0[1]].data
-    Mbin_indiv_R23 = mass_indiv_MT_tbl[indv_names0[1]].data
-    Mbin_indiv_O32 = mass_indiv_MT_tbl[indv_names0[2]].data
-    LHbbin_indiv_R23 = LHb_indiv_MT_tbl[indv_names0[1]].data
-    LHbbin_indiv_O32 = LHb_indiv_MT_tbl[indv_names0[2]].data
-    Mbin_indiv_two_beta = mass_indiv_MT_tbl[indv_names0[5]].data
-    Mbin_indiv_three_beta = mass_indiv_MT_tbl[indv_names0[6]].data
-    LHbbin_indiv_two_beta = LHb_indiv_MT_tbl[indv_names0[5]].data
-    LHbbin_indiv_three_beta = LHb_indiv_MT_tbl[indv_names0[6]].data
-    
-    mass_indiv_bin_detect = mass_indiv_bin_tbl[bin_names0[2]].data
-    LHb_indiv_bin_detect = LHb_indiv_bin_tbl[bin_names0[2]].data 
+    indiv_metal = indiv_derivedprops_tbl[temp_metal_names0[1]].data
+    indiv_logR23 = indiv_derivedprops_tbl[indv_names0[1]].data
+    indiv_logO32 = indiv_derivedprops_tbl[indv_names0[2]].data
+    indiv_logTwoBeta = indiv_derivedprops_tbl[indv_names0[5]].data
+    indiv_logThreeBeta = indiv_derivedprops_tbl[indv_names0[6]].data
+    indiv_bin_detect = indiv_bininfo_tbl[bin_names0[2]].data
     
     
     ##bin data, i.e. comes from either mass or massLHb specific files
-    mass_avg_mass = mass_bin_tbl[bin_mzevolve_names0[2]].data
-    LHb_avg_mass = LHb_bin_tbl[bin_mzevolve_names0[2]].data 
-    mass_detect_col = mass_valid_tbl[bin_names0[2]].data
-    LHb_detect_col = LHb_valid_tbl[bin_names0[2]].data        
-    mass_metal = mass_metal_tbl[temp_metal_names0[1]].data
-    LHb_metal = LHb_metal_tbl[temp_metal_names0[1]].data 
+    bin_logM = bininfo_tbl[bin_mzevolve_names0[2]].data      
+    bin_metal = bin_derivedprops_tbl[temp_metal_names0[1]].data
+    bin_detect_col = bin_valid_tbl[bin_names0[2]].data
     
     
     ##detection determinations  
     #bins
-    mass_detect = np.where(mass_detect_col == 1.0)[0]
-    mass_nondetect = np.where(mass_detect_col == 0.5)[0]
-    LHb_detect = np.where(LHb_detect_col == 1.0)[0]
-    LHb_nondetect = np.where(LHb_detect_col == 0.5)[0]
+    bin_detect = np.where(bin_detect_col == 1.0)[0]
+    bin_nondetect = np.where(bin_detect_col == 0.5)[0]
     
     #individual    
-    mass_indv_detect = np.where((mass_indiv_bin_detect == 1.0) & (np.isfinite(mass_OIII5007) == True) &
-                                (mass_OIII5007 >= 1e-18) & (mass_OIII5007 <= 1e-15) & (np.isfinite(mass_OII) == True) & 
-                                (mass_OII >= 1e-18) & (mass_OII <= 1e-15) & (np.isfinite(mass_HBETA) == True) & 
-                                (mass_HBETA >= 1e-18) & (mass_HBETA <= 1e-15))[0]
-    LHb_indv_detect = np.where((LHb_indiv_bin_detect == 1.0) & (np.isfinite(LHb_OIII5007) == True) & 
-                               (LHb_OIII5007 >= 1e-18) & (LHb_OIII5007 <= 1e-15) & (np.isfinite(LHb_OII) == True) & 
-                               (LHb_OII >= 1e-18) & (LHb_OII <= 1e-15) & (np.isfinite(LHb_HBETA) == True) & 
-                               (LHb_HBETA >= 1e-18) & (LHb_HBETA <= 1e-15) & (LHbbin_log_LHb > 0))[0]
-    mass_indv_nondetect = np.where((mass_indiv_bin_detect == 0.5) & (np.isfinite(mass_OIII5007) == True) & 
-                                   (mass_OIII5007 >= 1e-18) & (mass_OIII5007 <= 1e-15) & (np.isfinite(mass_OII) == True) & 
-                                   (mass_OII >= 1e-18) & (mass_OII <= 1e-15) & (np.isfinite(mass_HBETA) == True) & 
-                                   (mass_HBETA >= 1e-18) & (mass_HBETA <= 1e-15))[0]
-    LHb_indv_nondetect = np.where((mass_indiv_bin_detect == 0.5) & (np.isfinite(LHb_OIII5007) == True) & 
-                                  (LHb_OIII5007 >= 1e-18) & (LHb_OIII5007 <= 1e-15) & (np.isfinite(LHb_OII) == True) & 
-                                  (LHb_OII >= 1e-18) & (LHb_OII <= 1e-15) & (np.isfinite(LHb_HBETA) == True) & 
-                                  (LHb_HBETA >= 1e-18) & (LHb_HBETA <= 1e-15) & (LHbbin_log_LHb > 0))[0]
+    if hbeta_bin == True:
+        indiv_detect = np.where((indiv_bin_detect == 1.0) & (np.isfinite(indiv_OIII5007) == True) & 
+                                (indiv_OIII5007 >= 1e-18) & (indiv_OIII5007 <= 1e-15) & (np.isfinite(indiv_OII) == True) & 
+                                (indiv_OII >= 1e-18) & (indiv_OII <= 1e-15) & (np.isfinite(indiv_HBETA) == True) & 
+                                (indiv_HBETA >= 1e-18) & (indiv_HBETA <= 1e-15) & (indiv_logLHb > 0))[0]
+        indiv_nondetect = np.where((indiv_bin_detect == 0.5) & (np.isfinite(indiv_OIII5007) == True) & 
+                                   (indiv_OIII5007 >= 1e-18) & (indiv_OIII5007 <= 1e-15) & (np.isfinite(indiv_OII) == True) & 
+                                   (indiv_OII >= 1e-18) & (indiv_OII <= 1e-15) & (np.isfinite(indiv_HBETA) == True) & 
+                                   (indiv_HBETA >= 1e-18) & (indiv_HBETA <= 1e-15) & (indiv_logLHb > 0))[0]
+    else:
+        indiv_detect = np.where((indiv_bin_detect == 1.0) & (np.isfinite(indiv_OIII5007) == True) &
+                                (indiv_OIII5007 >= 1e-18) & (indiv_OIII5007 <= 1e-15) & (np.isfinite(indiv_OII) == True) & 
+                                (indiv_OII>= 1e-18) & (indiv_OII<= 1e-15) & (np.isfinite(indiv_HBETA) == True) & 
+                                (indiv_HBETA >= 1e-18) & (indiv_HBETA <= 1e-15))[0]
+        indiv_nondetect = np.where((indiv_bin_detect == 0.5) & (np.isfinite(indiv_OIII5007) == True) & 
+                                   (indiv_OIII5007 >= 1e-18) & (indiv_OIII5007 <= 1e-15) & (np.isfinite(indiv_OII) == True) & 
+                                   (indiv_OII>= 1e-18) & (indiv_OII<= 1e-15) & (np.isfinite(indiv_HBETA) == True) & 
+                                   (indiv_HBETA >= 1e-18) & (indiv_HBETA <= 1e-15))[0]
 
 
     if restrict_MTO == True:
-        pdf_pages = PdfPages(fitspath + 'massbin/' + dataset + filename_dict['indv_derived_prop'].replace('.tbl', 'constMTO.pdf'))
-        pdf_pages = PdfPages(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['indv_derived_prop'].replace('.tbl', 'constMTO.pdf'))
+        pdf_pages = PdfPages(fitspath + filename_dict['indv_derived_prop'].replace('.tbl', 'constMTO.pdf'))
     else:
-        pdf_pages = PdfPages(fitspath + 'massbin/' + dataset + filename_dict['indv_derived_prop'].replace('.tbl', '.pdf'))
-        pdf_pages = PdfPages(fitspath + 'mass_LHbeta_bin/' + dataset + filename_dict['indv_derived_prop'].replace('.tbl', '.pdf'))
+        #pdf_pages = PdfPages(fitspath + filename_dict['indv_derived_prop'].replace('.tbl', '.pdf'))
+        pdf_pages = PdfPages(fitspath + 'indivTEST.pdf')
     
     
     ##HBeta Luminosity vs Mass ColorMap=Metallicity##
     fig1, ax1 = plt.subplots()
     cm = plt.cm.get_cmap('BuPu_r')
-    plot1 = ax1.scatter(Mbin_log_mass[mass_indv_detect], Mbin_log_LHb[mass_indv_detect], 5.0,
-                        c=Mbin_indiv_metal[mass_indv_detect], marker='*')
-    plot1 = ax1.scatter(Mbin_log_mass[mass_indv_nondetect], Mbin_log_LHb[mass_indv_nondetect], 5.0, 
-                        facecolors = 'None', c=Mbin_indiv_metal[mass_indv_nondetect], marker='^')
+    plot1 = ax1.scatter(indiv_logM[indiv_detect], indiv_logLHb[indiv_detect], 5.0, 
+                        c=indiv_metal[indiv_detect], marker='*')
+    plot1 = ax1.scatter(indiv_logM[indiv_nondetect], indiv_logLHb[indiv_nondetect], 5.0, 
+                        facecolors = 'None', c=indiv_metal[indiv_nondetect], marker='^')
     cb = fig1.colorbar(plot1)
     cb.set_label('Metallicity')
     ax1.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax1.set_ylabel('log(H$\\beta$ Luminosity)')
-    ax1.set_title('$M_\star$ Bins: H$\\beta$ Luminosity vs. Mass Colormap=Metallicity')
+    ax1.set_title('H$\\beta$ Luminosity vs. Mass Colormap=Metallicity')
     fig1.set_size_inches(8, 8)
     fig1.savefig(pdf_pages, format='pdf')
-    
-    fig2, ax2 = plt.subplots()
-    cm = plt.cm.get_cmap('BuPu_r')
-    plot2 = ax2.scatter(LHbbin_log_mass[LHb_indv_detect], LHbbin_log_LHb[LHb_indv_detect], 5.0, 
-                        c=LHbbin_indiv_metal[LHb_indv_detect], marker='*')
-    plot2 = ax2.scatter(LHbbin_log_mass[LHb_indv_nondetect], LHbbin_log_LHb[LHb_indv_nondetect], 5.0, 
-                        facecolors = 'None', c=LHbbin_indiv_metal[LHb_indv_nondetect], marker='^')
-    cb = fig2.colorbar(plot2)
-    cb.set_label('Metallicity')
-    ax2.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
-    ax2.set_ylabel('log(H$\\beta$ Luminosity)')
-    ax2.set_title('$M_\star$-LH$\\beta$ Bins: H$\\beta$ Luminosity vs. Mass Colormap=Metallicity')
-    fig2.set_size_inches(8, 8)
-    fig2.savefig(pdf_pages, format='pdf')
-    
     
     
     
     ##O32 vs R23 ColorMap=Metallicity##
     fig3, ax3 = plt.subplots()
     cm = plt.cm.get_cmap('BuPu_r')
-    plot3 = ax3.scatter(Mbin_indiv_R23[mass_indv_detect], Mbin_indiv_O32[mass_indv_detect], 5.0, 
-                        c=Mbin_indiv_metal[mass_indv_detect], marker='*')
-    plot3 = ax3.scatter(Mbin_indiv_R23[mass_indv_nondetect], Mbin_indiv_O32[mass_indv_nondetect], 5.0, 
-                        facecolors = 'None', c=Mbin_indiv_metal[mass_indv_nondetect], marker='^')
+    plot3 = ax3.scatter(indiv_logR23[indiv_detect], indiv_logO32[indiv_detect], 5.0, 
+                        c=indiv_metal[indiv_detect], marker='*')
+    plot3 = ax3.scatter(indiv_logR23[indiv_nondetect], indiv_logO32[indiv_nondetect], 5.0, 
+                        facecolors = 'None', c=indiv_metal[indiv_nondetect], marker='^')
     cb = fig3.colorbar(plot3)
     cb.set_label('Metallicity')
-    ax3.set_xlabel('$R_{23}$')
+    ax3.set_xlabel('log($R_{23}$)')
     ax3.set_ylabel('$O_{32}$')
-    ax3.set_title('$M_\star$ Bins: $O_{32}$ vs. $R_{23}$ Colormap=Metallicity')
+    ax3.set_title('$O_{32}$ vs. $R_{23}$ Colormap=Metallicity')
     fig3.set_size_inches(8, 8)
-    fig3.savefig(pdf_pages, format='pdf')
-    
-    fig4, ax4 = plt.subplots()
-    cm = plt.cm.get_cmap('BuPu_r')
-    plot4 = ax4.scatter(LHbbin_indiv_R23[LHb_indv_detect], LHbbin_indiv_O32[LHb_indv_detect], 5.0, 
-                        c=LHbbin_indiv_metal[LHb_indv_detect], marker='*')
-    plot4 = ax4.scatter(LHbbin_indiv_R23[LHb_indv_nondetect], LHbbin_indiv_O32[LHb_indv_nondetect], 5.0, 
-                        facecolors = 'None', c=LHbbin_indiv_metal[LHb_indv_nondetect], marker='^')
-    cb = fig4.colorbar(plot4)
-    cb.set_label('Metallicity')
-    ax4.set_xlabel('$R_{23}$')
-    ax4.set_ylabel('$O_{32}$')
-    ax4.set_title('$M_\star$-LH$\\beta$ Bins: $O_{32}$ vs. $R_{23}$ Colormap=Metallicity')
-    fig4.set_size_inches(8, 8)
-    fig4.savefig(pdf_pages, format='pdf')
-    
+    fig3.savefig(pdf_pages, format='pdf')    
     
     
     
     ##Metallicity vs R23 and O32##
     fig5, ax5 = plt.subplots(nrows = 1, ncols = 2, sharey = True)
     plt.subplots_adjust(left = 0.12, right = 0.98, bottom = 0.12, top = 0.95, wspace = 0.0)
-    ax5[0].scatter(Mbin_indiv_R23[mass_indv_detect], Mbin_indiv_metal[mass_indv_detect], facecolors = 'None',
-                   edgecolors = 'blue', label = '$R_{23}$')
-    ax5[1].scatter(Mbin_indiv_O32[mass_indv_detect], Mbin_indiv_metal[mass_indv_detect], facecolors = 'None', 
-                   edgecolors = 'red', label = '$O_{32}$')
-    ax5[0].scatter(Mbin_indiv_R23[mass_indv_nondetect], Mbin_indiv_metal[mass_indv_nondetect], marker='^', 
-                   facecolors = 'None', edgecolors = 'blue', label = '$R_{23}$', alpha = 0.5)
-    ax5[1].scatter(Mbin_indiv_O32[mass_indv_nondetect], Mbin_indiv_metal[mass_indv_nondetect], marker='^', 
-                   facecolors = 'None', edgecolors = 'red', label = '$O_{32}$', alpha = 0.5)
+    ax5[0].scatter(indiv_logR23[indiv_detect], indiv_metal[indiv_detect], facecolors = 'None',
+                   edgecolors = 'blue', label = 'log($R_{23}$)')
+    ax5[1].scatter(indiv_logO32[indiv_detect], indiv_metal[indiv_detect], facecolors = 'None', 
+                   edgecolors = 'red', label = 'log($O_{32}$)')
+    ax5[0].scatter(indiv_logR23[indiv_nondetect], indiv_metal[indiv_nondetect], marker='^', 
+                   facecolors = 'None', edgecolors = 'blue', label = 'log($R_{23}$)', alpha = 0.5)
+    ax5[1].scatter(indiv_logO32[indiv_nondetect], indiv_metal[indiv_nondetect], marker='^', 
+                   facecolors = 'None', edgecolors = 'red', label = 'log($O_{32}$)', alpha = 0.5)
     ax5[0].legend(loc = 'best')
     ax5[1].legend(loc = 'best')
     ax5[0].set_ylabel('Metallicity')
-    ax5[0].set_title('$M_\star$ Bins: Metallicity vs. $R_{23}$')
-    ax5[1].set_title('$M_\star$ Bins: Metallicity vs. $O_{32}$')
+    ax5[0].set_title('Metallicity vs. $R_{23}$')
+    ax5[1].set_title('Metallicity vs. $O_{32}$')
     fig5.set_size_inches(8, 8)
     fig5.savefig(pdf_pages, format='pdf')
-    
-    fig6, ax6 = plt.subplots(nrows = 1, ncols = 2, sharey = True)
-    plt.subplots_adjust(left = 0.12, right = 0.98, bottom = 0.12, top = 0.95, wspace = 0.0)
-    ax6[0].scatter(LHbbin_indiv_R23[LHb_indv_detect], LHbbin_indiv_metal[LHb_indv_detect], facecolors = 'None',
-                   edgecolors = 'blue', label = '$R_{23}$')
-    ax6[1].scatter(LHbbin_indiv_O32[LHb_indv_detect], LHbbin_indiv_metal[LHb_indv_detect], facecolors = 'None',
-                   edgecolors = 'red', label = '$O_{32}$')
-    ax6[0].scatter(LHbbin_indiv_R23[LHb_indv_nondetect], LHbbin_indiv_metal[LHb_indv_nondetect], marker='^', 
-                   facecolors = 'None', edgecolors = 'blue', label = '$R_{23}$', alpha = 0.5)
-    ax6[1].scatter(LHbbin_indiv_O32[LHb_indv_nondetect], LHbbin_indiv_metal[LHb_indv_nondetect], marker='^', 
-                   facecolors = 'None', edgecolors = 'red', label = '$O_{32}$', alpha = 0.5)
-    ax6[0].legend(loc = 'best')
-    ax6[1].legend(loc = 'best')
-    ax6[0].set_ylabel('Metallicity')
-    ax6[0].set_title('$M_\star$-LH$\\beta$ Bins: Metallicity vs. $R_{23}$')
-    ax6[1].set_title('$M_\star$-LH$\\beta$ Bins: Metallicity vs. $O_{32}$')
-    fig6.set_size_inches(8, 8)
-    fig6.savefig(pdf_pages, format='pdf')
     
     
     
     ##R23 and O32 vs Mass##
     fig7, ax7 = plt.subplots(nrows = 1, ncols = 2, sharey = True)
     plt.subplots_adjust(left = 0.12, right = 0.98, bottom = 0.12, top = 0.95, wspace = 0.0)
-    ax7[0].scatter(Mbin_log_mass[mass_indv_detect], Mbin_indiv_R23[mass_indv_detect], facecolors = 'None',
-                   edgecolors = 'blue', label = '$R_{23}$')    
-    ax7[1].scatter(Mbin_log_mass[mass_indv_detect], Mbin_indiv_O32[mass_indv_detect], facecolors = 'None', 
-                   edgecolors = 'red', label = '$O_{32}$')
-    ax7[0].scatter(Mbin_log_mass[mass_indv_nondetect], Mbin_indiv_R23[mass_indv_nondetect], marker='^', 
-                   facecolors = 'None', edgecolors = 'blue', label = '$R_{23}$')
-    ax7[1].scatter(Mbin_log_mass[mass_indv_nondetect], Mbin_indiv_O32[mass_indv_nondetect], marker='^', 
-                   facecolors = 'None', edgecolors = 'red', label = '$O_{32}$')
+    ax7[0].scatter(indiv_logM[indiv_detect], indiv_logR23[indiv_detect], facecolors = 'None',
+                   edgecolors = 'blue', label = 'log($R_{23}$)')    
+    ax7[1].scatter(indiv_logM[indiv_detect], indiv_logO32[indiv_detect], facecolors = 'None', 
+                   edgecolors = 'red', label = 'log($O_{32}$)')
+    ax7[0].scatter(indiv_logM[indiv_nondetect], indiv_logR23[indiv_nondetect], marker='^', 
+                   facecolors = 'None', edgecolors = 'blue', label = 'log($R_{23}$)')
+    ax7[1].scatter(indiv_logM[indiv_nondetect], indiv_logO32[indiv_nondetect], marker='^', 
+                   facecolors = 'None', edgecolors = 'red', label = 'log($O_{32}$)')
     ax7[0].legend(loc = 'best')
     ax7[1].legend(loc = 'best')
     ax7[0].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
-    ax7[0].set_title('$M_\star$ Bins: $R_{23}$ vs. Mass')
-    ax7[1].set_title('$M_\star$ Bins: $O_{32}$ vs. Mass')
+    ax7[0].set_title('$R_{23}$ vs. Mass')
+    ax7[1].set_title('$O_{32}$ vs. Mass')
     fig7.set_size_inches(8, 8)
     fig7.savefig(pdf_pages, format='pdf')
-    
-    fig8, ax8 = plt.subplots(nrows = 1, ncols = 2, sharey = True)
-    plt.subplots_adjust(left = 0.12, right = 0.98, bottom = 0.12, top = 0.95, wspace = 0.0)
-    ax8[0].scatter(LHbbin_log_mass[LHb_indv_detect], LHbbin_indiv_R23[LHb_indv_detect], facecolors = 'None', 
-                   edgecolors = 'blue', label = '$R_{23}$')    
-    ax8[1].scatter(LHbbin_log_mass[LHb_indv_detect], LHbbin_indiv_O32[LHb_indv_detect], facecolors = 'None', 
-                   edgecolors = 'red', label = '$O_{32}$')
-    ax8[0].scatter(LHbbin_log_mass[LHb_indv_nondetect], LHbbin_indiv_R23[LHb_indv_nondetect], marker='^', 
-                   facecolors = 'None', edgecolors = 'blue', label = '$R_{23}$')
-    ax8[1].scatter(LHbbin_log_mass[LHb_indv_nondetect], LHbbin_indiv_O32[LHb_indv_nondetect], marker='^', 
-                   facecolors = 'None', edgecolors = 'red', label = '$O_{32}$')
-    ax8[0].legend(loc = 'best')
-    ax8[1].legend(loc = 'best')
-    ax8[0].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
-    ax8[0].set_title('$M_\star$-LH$\\beta$ Bins: $R_{23}$ vs. Mass')
-    ax8[1].set_title('$M_\star$-LH$\\beta$ Bins: $O_{32}$ vs. Mass')
-    fig8.set_size_inches(8, 8)
-    fig8.savefig(pdf_pages, format='pdf')
     
     
     
     ##OII/HBeta and OIII/HBeta vs Mass##
     fig9, ax9 = plt.subplots(nrows = 1, ncols = 2, sharey = True)
     plt.subplots_adjust(left = 0.12, right = 0.98, bottom = 0.12, top = 0.95, wspace = 0.0)
-    ax9[0].scatter(Mbin_log_mass[mass_indv_detect], np.log10(Mbin_indiv_two_beta[mass_indv_detect]), 
-                   facecolors = 'None', edgecolors = 'cyan', label = '$\\frac{OII}{H\\beta}$')    
-    ax9[1].scatter(Mbin_log_mass[mass_indv_detect], np.log10(Mbin_indiv_three_beta[mass_indv_detect]), 
-                   facecolors = 'None', edgecolors = 'orange', label = '$\\frac{OIII}{H\\beta}$')
-    ax9[0].scatter(Mbin_log_mass[mass_indv_nondetect], np.log10(Mbin_indiv_two_beta[mass_indv_nondetect]), 
-                   marker='^', facecolors = 'None', edgecolors = 'cyan', label = '$\\frac{OII}{H\\beta}$')
-    ax9[1].scatter(Mbin_log_mass[mass_indv_nondetect], np.log10(Mbin_indiv_three_beta[mass_indv_nondetect]), 
-                   marker='^', facecolors = 'None', edgecolors = 'orange', label = '$\\frac{OIII}{H\\beta}$')
+    ax9[0].scatter(indiv_logM[indiv_detect], np.log10(indiv_logTwoBeta[indiv_detect]), 
+                   facecolors = 'None', edgecolors = 'cyan', label = 'log($\\frac{OII}{H\\beta}$)')    
+    ax9[1].scatter(indiv_logM[indiv_detect], np.log10(indiv_logThreeBeta[indiv_detect]), 
+                   facecolors = 'None', edgecolors = 'orange', label = 'log($\\frac{OIII}{H\\beta}$)')
+    ax9[0].scatter(indiv_logM[indiv_nondetect], np.log10(indiv_logTwoBeta[indiv_nondetect]), 
+                   marker='^', facecolors = 'None', edgecolors = 'cyan', label = 'log($\\frac{OII}{H\\beta}$)')
+    ax9[1].scatter(indiv_logM[indiv_nondetect], np.log10(indiv_logThreeBeta[indiv_nondetect]), 
+                   marker='^', facecolors = 'None', edgecolors = 'orange', label = 'log($\\frac{OIII}{H\\beta}$)')
     ax9[0].legend(loc = 'best')
     ax9[1].legend(loc = 'best')
     ax9[0].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
-    ax9[0].set_title('$M_\star$ Bins: $\\frac{OII}{H\\beta}$ vs. Mass')
-    ax9[1].set_title('$M_\star$ Bins: $\\frac{OIII}{H\\beta}$ vs. Mass')
+    ax9[0].set_title('$\\frac{OII}{H\\beta}$ vs. Mass')
+    ax9[1].set_title('$\\frac{OIII}{H\\beta}$ vs. Mass')
     fig9.set_size_inches(8, 8)
     fig9.savefig(pdf_pages, format='pdf')
-    
-    fig10, ax10 = plt.subplots(nrows = 1, ncols = 2, sharey = True)
-    plt.subplots_adjust(left = 0.12, right = 0.98, bottom = 0.12, top = 0.95, wspace = 0.0)
-    ax10[0].scatter(LHbbin_log_mass[LHb_indv_detect], np.log10(LHbbin_indiv_two_beta[LHb_indv_detect]), 
-                    facecolors = 'None', edgecolors = 'cyan', label = '$\\frac{OII}{H\\beta}$')    
-    ax10[1].scatter(LHbbin_log_mass[LHb_indv_detect], np.log10(LHbbin_indiv_three_beta[LHb_indv_detect]), 
-                    facecolors = 'None', edgecolors = 'orange', label = '$\\frac{OIII}{H\\beta}$')
-    ax10[0].scatter(LHbbin_log_mass[LHb_indv_nondetect], np.log10(LHbbin_indiv_two_beta[LHb_indv_nondetect]),
-                    marker='^', facecolors = 'None', edgecolors = 'cyan', label = '$\\frac{OII}{H\\beta}$')
-    ax10[1].scatter(LHbbin_log_mass[LHb_indv_nondetect], np.log10(LHbbin_indiv_three_beta[LHb_indv_nondetect]),
-                    marker='^', facecolors = 'None', edgecolors = 'orange', label = '$\\frac{OIII}{H\\beta}$')
-    ax10[0].legend(loc = 'best')
-    ax10[1].legend(loc = 'best')
-    ax10[0].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
-    ax10[0].set_title('$M_\star$-LH$\\beta$ Bins: $\\frac{OII}{H\\beta}$ vs. Mass')
-    ax10[1].set_title('$M_\star$-LH$\\beta$ Bins: $\\frac{OIII}{H\\beta}$ vs. Mass')
-    fig10.set_size_inches(8, 8)
-    fig10.savefig(pdf_pages, format='pdf')
     
     
     
     ##Metallcity vs Mass##
-    fig11, ax11 = plt.subplots(nrows = 1, ncols = 2, sharey = True)
-    plt.subplots_adjust(left = 0.12, right = 0.98, bottom = 0.12, top = 0.98, wspace = 0.0)
+    fig11, ax11 = plt.subplots()
+    plt.subplots_adjust(left = 0.12, right = 0.98, bottom = 0.14, top = 0.98, wspace = 0.0)
     
     
     #Andrews&Martini fit
-    mass = np.arange(7.5, 10, 0.05)
-    y = 8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
-    ax11[0].plot(mass, y, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
-    ax11[1].plot(mass, y, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
+    mass_range = np.arange(7.5, 10, 0.05)
+    AM_relation = 8.798 - np.log10(1 + ((10**8.901)/(10**mass_range))**0.640)
+    ax11.plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
     
     
     #Individual detections and non-detections
-    ax11[0].scatter(Mbin_log_mass[mass_indv_detect], Mbin_indiv_metal[mass_indv_detect], s = 15, 
-                    facecolors = 'None', edgecolors = 'blue', label = 'Individual Detections')
-    ax11[1].scatter(LHbbin_log_mass[LHb_indv_detect], LHbbin_indiv_metal[LHb_indv_detect], s = 15, 
-                    facecolors = 'None', edgecolors = 'blue', label = 'Individual Detections')
-    ax11[0].scatter(Mbin_log_mass[mass_indv_nondetect], Mbin_indiv_metal[mass_indv_nondetect], s = 15, 
-                    marker='^', facecolors = 'None', edgecolors = 'blue', label = 'Individual Non-Detections', 
-                    alpha = 0.5)
-    ax11[1].scatter(LHbbin_log_mass[LHb_indv_nondetect], LHbbin_indiv_metal[LHb_indv_nondetect], s = 15, 
-                    marker='^', facecolors = 'None', edgecolors = 'blue', label = 'Individual Non-Detections',
-                    alpha = 0.5)
+    ax11.scatter(indiv_logM[indiv_detect], indiv_metal[indiv_detect], s = 15, facecolors = 'None',
+                 edgecolors = 'blue', label = 'Individual Detections')
+    ax11.scatter(indiv_logM[indiv_nondetect], indiv_metal[indiv_nondetect], s = 15, marker='^', 
+                 facecolors = 'None', edgecolors = 'blue', label = 'Individual Non-Detections', alpha = 0.5)
     
-    print('Number of mass bin individual sources plotted:', len(Mbin_log_mass[mass_indv_detect]))
-    print('Number of mass-LHbeta bin individual sources plotted:', len(LHbbin_log_mass[LHb_indv_detect]))
+    print('Number of individual sources plotted:', len(indiv_logM[indiv_detect]))
     
-    #Mass bin detections and non-detections
-    ax11[0].scatter(mass_avg_mass[mass_detect], mass_metal[mass_detect], s = 25, color = 'red', label = 'Bin Detections')
-    ax11[0].scatter(mass_avg_mass[mass_nondetect], mass_metal[mass_nondetect], s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
-    #HBeta bin detections and non-detections
-    ax11[1].scatter(LHb_avg_mass[LHb_detect], LHb_metal[LHb_detect], s = 25, color = 'red', label = 'Bin Detections')
-    ax11[1].scatter(LHb_avg_mass[LHb_nondetect], LHb_metal[LHb_nondetect], s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
+    #Bin detections and non-detections
+    ax11.scatter(bin_logM[bin_detect], bin_metal[bin_detect], s = 25, color = 'red', label = 'Bin Detections')
+    ax11.scatter(bin_logM[bin_nondetect], bin_metal[bin_nondetect], s = 25, color = 'red', marker = '^', 
+                 label = 'Bin Non-Detections', alpha = 0.5)
     if err_bars == True:
-        ax11[0].errorbar(mass_avg_mass[mass_detect], mass_metal[mass_detect], yerr = metal_lowhigh_err_M, fmt = '.')
-        ax11[0].errorbar(LHb_avg_mass[LHb_detect], LHb_metal[LHb_detect], yerr = metal_lowhigh_err_LHb, fmt = '.')
+        ax11.errorbar(bin_logM[bin_detect], bin_metal[bin_detect], yerr = metal_lowhigh_err, fmt = '.')
     
     
     ##Curve fit     
@@ -383,31 +256,21 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
         fit = mass_metal_fit2
         
     try:
-        o11, o21 = curve_fit(fit, mass_avg_mass[mass_detect], mass_metal[mass_detect], p0 = p0, bounds = para_bounds)
+        o11, o21 = curve_fit(fit, bin_logM[bin_detect], bin_metal[bin_detect], p0 = p0, bounds = para_bounds)
         print(o11)
     except ValueError:
-        print('fail Mass Bins')
-        fail = True
-    try:
-        o12, o22 = curve_fit(fit, LHb_avg_mass[LHb_detect], LHb_metal[LHb_detect], p0 = p0, bounds = para_bounds)
-        print(o12)
-    except ValueError:
-        print('fail HBeta Bins')
+        print('Failed curve fitting')
         fail = True
         
     if not fail:
         if restrict_MTO == False:
-            ax11[0].plot(mass, mass_metal_fit(mass, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
-            ax11[1].plot(mass, mass_metal_fit(mass, *o12), alpha = 0.5, color = 'red', label = 'Our Fit')
+            ax11.plot(mass_range, mass_metal_fit(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
         else:
-            ax11[0].plot(mass, mass_metal_fit2(mass, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
-            ax11[1].plot(mass, mass_metal_fit2(mass, *o12), alpha = 0.5, color = 'red', label = 'Our Fit')
+            ax11.plot(mass_range, mass_metal_fit2(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
           
-    ax11[0].legend(title = '$M_\star$ Bins', fontsize = 5, loc = 'upper left')    
-    ax11[1].legend(title = '$M_\star$-LH$\\beta$ Bins', fontsize = 5, loc = 'upper left')
-    ax11[0].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
-    ax11[0].set_ylabel('12+log(O/H) $T_e$')
-    ax11[1].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
+    ax11.legend(fontsize = 5, loc = 'upper left')    
+    ax11.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
+    ax11.set_ylabel('12+log(O/H) $T_e$')
    
         
     pdf_pages.savefig()
