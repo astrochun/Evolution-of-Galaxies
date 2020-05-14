@@ -116,8 +116,7 @@ def indiv_derived_props_plots(fitspath, restrict_MTO = False, revised = False, e
     if restrict_MTO == True:
         pdf_pages = PdfPages(fitspath + filename_dict['indv_derived_prop'].replace('.tbl', 'constMTO.pdf'))
     else:
-        #pdf_pages = PdfPages(fitspath + filename_dict['indv_derived_prop'].replace('.tbl', '.pdf'))
-        pdf_pages = PdfPages(fitspath + 'indivTEST.pdf')
+        pdf_pages = PdfPages(fitspath + filename_dict['indv_derived_prop'].replace('.tbl', '.pdf'))
     
     
     ##HBeta Luminosity vs Mass ColorMap=Metallicity##
@@ -276,6 +275,108 @@ def indiv_derived_props_plots(fitspath, restrict_MTO = False, revised = False, e
     pdf_pages.savefig()
     
     pdf_pages.close()
+    
+    
+    
+def indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrict_MTO = False, revised = False, err_bars = False):
+    if restrict_MTO == True:
+        Mbin_pdf_pages = PdfPages(Mbin_dict['path'] + 'combined_' + filename_dict['indv_derived_prop'].replace('.tbl', 'constMTO.pdf'))
+        MLHbbin_pdf_pages = PdfPages(MLHbbin_dict['path'] + 'combined_' + filename_dict['indv_derived_prop'].replace('.tbl', 'constMTO.pdf'))
+    else:
+        Mbin_pdf_pages = PdfPages(Mbin_dict['path'] + 'combined_' + filename_dict['indv_derived_prop'].replace('.tbl', '.pdf'))
+        MLHbbin_pdf_pages = PdfPages(MLHbbin_dict['path'] + 'combined_' + filename_dict['indv_derived_prop'].replace('.tbl', '.pdf'))
+        
+        
+    ##Metallcity vs Mass##
+    fig1, ax1 = plt.subplots(nrows = 1, ncols = 2, sharey = True)
+    plt.subplots_adjust(left = 0.12, right = 0.98, bottom = 0.14, top = 0.98, wspace = 0.0)
+    
+    
+    #Andrews&Martini fit
+    mass_range = np.arange(7.5, 10, 0.05)
+    AM_relation = 8.798 - np.log10(1 + ((10**8.901)/(10**mass_range))**0.640)
+    ax1[0].plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
+    ax1[1].plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
+    
+    
+    #Individual detections and non-detections
+    ax1[0].scatter(Mbin_dict['indiv_logM'][Mbin_dict['indiv_detect']], Mbin_dict['indiv_metallicity'][Mbin_dict['indiv_detect']],
+                   s = 15, facecolors = 'None', edgecolors = 'blue', label = 'Individual Detections')
+    ax1[0].scatter(Mbin_dict['indiv_logM'][Mbin_dict['indiv_nondetect']], Mbin_dict['indiv_metallicity'][Mbin_dict['indiv_nondetect']], 
+                   s = 15, marker='^', facecolors = 'None', edgecolors = 'blue', label = 'Individual Non-Detections', alpha = 0.5)
+    ax1[1].scatter(MLHbbin_dict['indiv_logM'][MLHbbin_dict['indiv_detect']], MLHbbin_dict['indiv_metallicity'][MLHbbin_dict['indiv_detect']],
+                   s = 15, facecolors = 'None', edgecolors = 'blue', label = 'Individual Detections')
+    ax1[1].scatter(MLHbbin_dict['indiv_logM'][MLHbbin_dict['indiv_nondetect']], MLHbbin_dict['indiv_metallicity'][MLHbbin_dict['indiv_nondetect']],
+                   s = 15, marker='^', facecolors = 'None', edgecolors = 'blue', label = 'Individual Non-Detections', alpha = 0.5)
+    
+    print('Number of mass bin individual sources plotted:', len(Mbin_dict['indiv_logM'][Mbin_dict['indiv_detect']]))
+    print('Number of mass-LHbeta bin individual sources plotted:', len(MLHbbin_dict['indiv_logM'][MLHbbin_dict['indiv_detect']]))
+    
+    #Mass bin detections and non-detections
+    ax1[0].scatter(Mbin_dict['composite_logM'][Mbin_dict['composite_detect']], Mbin_dict['composite_metallicity'][Mbin_dict['composite_detect']],
+                   s = 25, color = 'red', label = 'Bin Detections')
+    ax1[0].scatter(Mbin_dict['composite_logM'][Mbin_dict['composite_nondetect']], Mbin_dict['composite_metallicity'][Mbin_dict['composite_nondetect']],
+                   s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
+    #HBeta bin detections and non-detections
+    ax1[1].scatter(MLHbbin_dict['composite_logM'][MLHbbin_dict['composite_detect']], MLHbbin_dict['composite_metallicity'][MLHbbin_dict['composite_detect']], 
+                   s = 25, color = 'red', label = 'Bin Detections')
+    ax1[1].scatter(MLHbbin_dict['composite_logM'][MLHbbin_dict['composite_nondetect']], MLHbbin_dict['composite_metallicity'][MLHbbin_dict['composite_nondetect']], 
+                   s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
+    if err_bars == True:
+        ax1[0].errorbar(Mbin_dict['composite_logM'][Mbin_dict['composite_detect']], Mbin_dict['composite_metallicity'][Mbin_dict['composite_detect']],
+                        yerr = Mbin_dict['composite_metal_errors'], fmt = '.')
+        ax1[1].errorbar(MLHbbin_dict['composite_logM'][MLHbbin_dict['composite_detect']], MLHbbin_dict['composite_metallicity'][MLHbbin_dict['composite_detect']],
+                        yerr = MLHbbin_dict['composite_metal_errors'], fmt = '.')
+        
+    o11, o21, Mbin_fail = curve_fitting(Mbin_dict['composite_logM'][Mbin_dict['composite_detect']], 
+                                        Mbin_dict['composite_metallicity'][Mbin_dict['composite_detect']], 
+                                        restrict_MTO = False)
+    o12, o22, MLHbbin_fail = curve_fitting(MLHbbin_dict['composite_logM'][MLHbbin_dict['composite_detect']], 
+                                           MLHbbin_dict['composite_metallicity'][MLHbbin_dict['composite_detect']], 
+                                           restrict_MTO = False)
+        
+    if Mbin_fail == False and MLHbbin_fail == False:
+        if restrict_MTO == False:
+            ax1[0].plot(mass_range, mass_metal_fit(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
+            ax1[1].plot(mass_range, mass_metal_fit(mass_range, *o12), alpha = 0.5, color = 'red', label = 'Our Fit')
+        else:
+            ax1[0].plot(mass_range, mass_metal_fit2(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
+            ax1[1].plot(mass_range, mass_metal_fit2(mass_range, *o12), alpha = 0.5, color = 'red', label = 'Our Fit')
+          
+    ax1[0].legend(title = '$M_\star$ Bins', fontsize = 5, loc = 'upper left')    
+    ax1[1].legend(title = '$M_\star$-LH$\\beta$ Bins', fontsize = 5, loc = 'upper left')
+    ax1[0].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
+    ax1[0].set_ylabel('12+log(O/H) $T_e$')
+    ax1[1].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
+   
+    Mbin_pdf_pages.savefig()
+    MLHbbin_pdf_pages.savefig()
+    
+    Mbin_pdf_pages.close()
+    MLHbbin_pdf_pages.close()
+    
+    
+    
+def curve_fitting(x_array, y_array, restrict_MTO = False):
+    ##Curve fit     
+    fail = False
+    if restrict_MTO == False:
+        p0 = [8.798, 8.901, 0.640]
+        para_bounds = ((8.0, 8.0, 0.0), (9.0, 9.5, 1.0))
+        fit = mass_metal_fit
+    else:
+        p0 = [8.798, 0.640]
+        para_bounds = ((8.0, 0.0), (9.0, 1.0))
+        fit = mass_metal_fit2
+        
+    try:
+        o11, o21 = curve_fit(fit, x_array, y_array, p0 = p0, bounds = para_bounds)
+        print(o11)
+    except ValueError:
+        print('Failed curve fitting!')
+        fail = True
+        
+    return o11, o21, fail
     
     
     
