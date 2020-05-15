@@ -11,9 +11,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
-from Evolution_of_Galaxies import library, emission_line_fit, plots, indiv_gals
+from Evolution_of_Galaxies import library, emission_line_fit, indiv_gals
 from Evolution_of_Galaxies.R_temp_calcul import run_function
 from Evolution_of_Galaxies.Plotting.composite_plots import bin_derived_props_plots
+from Evolution_of_Galaxies.Plotting.individual_plots import indiv_derived_props_plots, indiv_metal_mass_plot
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
 from Metallicity_Stack_Commons.column_names import filename_dict, npz_filename_dict, indv_names0
 from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_mzevolve_names0, bin_names0
@@ -179,7 +180,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
         main(fitspath, '', revised = False, det3 = True)
         
         #Run individual plots
-        plots.indiv_derived_props_plots(fitspath, restrict_MTO = True, revised = False, err_bars = False, hbeta_bin = bool_hbeta_bin)
+        indiv_derived_props_plots(fitspath, restrict_MTO = True, revised = False, err_bars = False, hbeta_bin = bool_hbeta_bin)
         
         
         
@@ -297,7 +298,7 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
         MLHbbin_dict['composite_metal_errors'] = MLHbbin_metal_lowhigh_err
     
     
-    plots.indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrict_MTO = restrictMTO, revised = revised_files, err_bars = error_bars)
+    indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrict_MTO = restrictMTO, revised = revised_files, err_bars = error_bars)
     
     
     
