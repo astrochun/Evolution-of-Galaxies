@@ -16,44 +16,32 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
         OIII/HBeta vs Stellar Mass, OIII4363/OIII5007 vs Stellar Mass, R23 vs Temperature, O32 vs Temperature,
         Metallicity vs R23, Metallicity vs O32, Temperature vs Stellar Mass, and Metallicity vs Stellar Mass.
         
-    Usage:
-        plots.bin_derived_props_plots(metal_file, em_file, out_file)
-        
     Params:
-        metal_file --> file containing bin metallicities, electron temperatures, R23, and O32 values.
-        em_file --> file containing each bin's average stellar mass, detection marking, OII observed flux,
-            OIII4363 observed flux, OIII5007 observed flux, and HBeta observed flux values.
+        fitspath --> string of the file path where data files are located. 
+        hbeta_bin (OPTIONAL) --> if the binning type is mass-LHbeta bins, then hbeta_bin = True.
+        err_bars (OPTIONAL) --> if error bars for metallicity and temperature should be plotted, then 
+                                err_bars = True.
+        revised (OPTIONAL) --> if the revised data tables should be used, then revised = True.
         
     Returns:
         None
         
     Outputs:
-        out_file --> a pdf containing plots for the stacked spectra: R23 vs Mass, O32 vs Mass,
-            OII/HBeta vs Mass, OIII/HBeta vs Mass, OIII4363/OIII5007 vs Mass, R23 vs Temperature,
-            O32 vs Temperature, Metallicity vs R23, Metallicity vs O32, Temperature vs Mass, 
-            and Metallicity vs Mass.
+        pdf_pages --> a pdf containing all of the plots for the stacked spectra on separate pages.
     '''
     
-    #Define file names
-    if revised:
-        out_fname = fitspath + filename_dict['bin_derived_prop_rev'].replace('.tbl', '.pdf')
-        metal_file = fitspath + filename_dict['bin_derived_prop_rev']
-        em_file = fitspath + filename_dict['bin_fit_rev']
-        valid_file = fitspath + filename_dict['bin_valid_rev']
-    else:
-        out_fname = fitspath + filename_dict['bin_derived_prop'].replace('.tbl', '.pdf')
-        metal_file = fitspath + filename_dict['bin_derived_prop']
-        em_file = fitspath + filename_dict['bin_fit']
-        valid_file = fitspath + filename_dict['bin_valid']
-    bin_file = fitspath + filename_dict['bin_info']
-        
-    
     #Read in data tables
-    metal_table = asc.read(metal_file)
-    em_table = asc.read(em_file)
-    bin_table = asc.read(bin_file)
-    valid_table = asc.read(valid_file)
-    pdf_pages = PdfPages(out_fname)
+    if revised:
+        pdf_pages = PdfPages(fitspath + filename_dict['bin_derived_prop_rev'].replace('.tbl', '.pdf'))
+        metal_table = asc.read(fitspath + filename_dict['bin_derived_prop_rev'])
+        em_table = asc.read(fitspath + filename_dict['bin_fit_rev'])
+        valid_table = asc.read(fitspath + filename_dict['bin_valid_rev'])
+    else:
+        pdf_pages = PdfPages(fitspath + filename_dict['bin_derived_prop'].replace('.tbl', '.pdf'))
+        metal_table = asc.read(fitspath + filename_dict['bin_derived_prop'])
+        em_table = asc.read(fitspath + filename_dict['bin_fit'])
+        valid_table = asc.read(fitspath + filename_dict['bin_valid'])
+    bin_table = asc.read(fitspath + filename_dict['bin_info'])
     
     #Read in composite values
     com_O_log = metal_table[temp_metal_names0[1]].data
