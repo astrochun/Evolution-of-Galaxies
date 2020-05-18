@@ -27,27 +27,13 @@ def curve_fitting(x_array, y_array, restrict_MTO = False):
     
     
     
-def mass_metal_fit(mass, a, b, g):
-    '''
-    MTO is NOT held constant.
-    
+def mass_metal_fit(mass, a, g, b = 8.901):
+    '''    
     Andrews & Martini Mass-Metallicity Relation:
     8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
     '''
     
-    return a - np.log10(1 + ((10**b)/(10**mass))**g)   
-
-
-
-def mass_metal_fit_constMTO(mass, a, g):
-    '''
-    MTO is held constant.
-    
-    Andrews & Martini Mass-Metallicity Relation:
-    8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
-    '''
-    
-    return a - np.log10(1 + ((10**8.901)/(10**mass))**g) 
+    return a - np.log10(1 + ((10**b)/(10**mass))**g)
 
 
 
@@ -65,6 +51,8 @@ def extract_error_bars(fitspath):
     Te_high_err = np.log10(1 + Te_err[:,1]/T_e[detect])
     
     err_dict = {'T_e_lowhigh_error': [Te_low_err, Te_high_err], '12+log(O/H)_lowhigh_error': [metal_err[:,0], metal_err[:,1]]}
+    
+    der_prop_err.close()
     
     return err_dict
 
