@@ -11,10 +11,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
-from Evolution_of_Galaxies import library, emission_line_fit, plots, indiv_gals
+from Evolution_of_Galaxies import library, emission_line_fit, indiv_gals
 from Evolution_of_Galaxies.R_temp_calcul import run_function
+from Evolution_of_Galaxies.Plotting.composite_plots import bin_derived_props_plots
+from Evolution_of_Galaxies.Plotting.individual_plots import indiv_derived_props_plots, indiv_metal_mass_plot
+from Evolution_of_Galaxies.Plotting.relation_fitting import extract_error_bars
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
-from Metallicity_Stack_Commons.column_names import filename_dict
+from Metallicity_Stack_Commons.column_names import filename_dict, npz_filename_dict, indv_names0
+from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_mzevolve_names0, bin_names0
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
 from Metallicity_Stack_Commons import valid_table
 from Metallicity_Stack_Commons.analysis import error_prop
@@ -155,17 +159,13 @@ def run_bin_analysis(err_prop = False, indiv = False):
     
     
     #Run plots
-    out_fname = fitspath + filename_dict['bin_derived_prop'].replace('.tbl', '.pdf')
-    plots.bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_fname, hbeta_bin = bool_hbeta_bin)
+    bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin)
     
     
     #Run error propagation, histograms, and revised data plots
     if err_prop == True:
         error_prop.fluxes_derived_prop(fitspath, binned_data = True)
-        metal_file = fitspath + filename_dict['bin_derived_prop_rev']
-        em_file = fitspath + filename_dict['bin_fit_rev']
-        out_fname = fitspath + filename_dict['bin_derived_prop_rev'].replace('.tbl', '.pdf')
-        plots.bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file, out_fname, hbeta_bin = bool_hbeta_bin, err_bars = True)
+        bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin, err_bars = True, revised = True)
       
         
     if indiv == True:
@@ -180,19 +180,131 @@ def run_bin_analysis(err_prop = False, indiv = False):
         #Create individual_derived_properties table
         main(fitspath, '', revised = False, det3 = True)
         
+        #Run individual plots
+        indiv_derived_props_plots(fitspath, restrict_MTO = True, revised = False, err_bars = False, hbeta_bin = bool_hbeta_bin)
+        
         
         
 
-def run_indiv_plots():
-    #Make individual galaxy plots
-    #fitspath does not include bin type
-    #dataset is the number of galaxies in each bin folder and the date folder
+def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revised_files = False, error_bars = False):
+    '''
+    Purpose:
+        This function extracts the necessary data from files and runs the individual Metallicity vs Mass
+        plotting function, which produces a two-paneled Metallicity vs Mass plot containing data from mass
+        bins and mass-LHbeta bins.
+           
+    Params:
+        fitspathM --> a string containing the partial path of the location of the mass bin data.
+                      (e.g., 'massbin/05182020/75_112_113_300_600_1444_1443/')
+        fitspathMLHb --> a string containing the partial path of the location of the mass-LHbeta bin data.
+                         (e.g., 'mass_LHbeta_bin/05182020/75_112_113_300_600_1444_1443/')
+        restrictMTO (OPTIONAL) --> if the mass turnover value should be held constant in the curve fit of
+                                   Metallicity vs Mass, then restrictMTO = True.
+        revised_files (OPTIONAL) --> if the revised data tables should be used, then revised_files = True.
+        error_bars (OPTIONAL) --> if error bars for metallicity and temperature should be plotted, then 
+                                  error_bars = True.
+        
+    Returns:
+        None
+    '''
     
-    dataset = '03192020/75_112_113_300_600_1444_1443/'
+    #Read in individual data tables
+    Mbin_indiv_derivedprops_tbl = asc.read(path_init + fitspathM + filename_dict['indv_derived_prop'])
+    Mbin_indiv_props_tbl = asc.read(path_init + fitspathM + filename_dict['indv_prop'])
+    Mbin_indiv_bininfo_tbl = asc.read(path_init + fitspathM + filename_dict['indv_bin_info'])
     
-    plots.indiv_derived_props_plots(path_init, dataset, restrict_MTO = True, revised = True, err_bars = True)
+    MLHbbin_indiv_derivedprops_tbl = asc.read(path_init + fitspathMLHb + filename_dict['indv_derived_prop'])
+    MLHbbin_indiv_props_tbl = asc.read(path_init + fitspathMLHb + filename_dict['indv_prop'])
+    MLHbbin_indiv_bininfo_tbl = asc.read(path_init + fitspathMLHb + filename_dict['indv_bin_info'])
     
     
+    #Read in composite data tables
+    Mbin_valid_tbl = asc.read(path_init + fitspathM + filename_dict['bin_valid'])
+    Mbininfo_tbl = asc.read(path_init + fitspathM + filename_dict['bin_info'])
+    
+    MLHbbin_valid_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_valid'])
+    MLHbbininfo_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_info'])
+    if revised_files == True:
+        Mbin_derivedprops_tbl = asc.read(path_init + fitspathM + filename_dict['bin_derived_prop_rev'])
+        MLHbbin_derivedprops_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_derived_prop_rev'])
+    else:    
+        Mbin_derivedprops_tbl = asc.read(path_init + fitspathM + filename_dict['bin_derived_prop'])
+        MLHbbin_derivedprops_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_derived_prop'])
+
+
+    #Read in individual data
+    Mbin_indiv_logM = Mbin_indiv_props_tbl[indv_names0[3]].data
+    MLHbbin_indiv_logM = MLHbbin_indiv_props_tbl[indv_names0[3]].data
+    MLHbbin_indiv_logLHb = MLHbbin_indiv_props_tbl[indv_names0[4]].data
+    
+    Mbin_indiv_HBETA = Mbin_indiv_props_tbl['HBETA_Flux_Observed'].data
+    Mbin_indiv_OII = Mbin_indiv_props_tbl['OII_3727_Flux_Observed'].data
+    Mbin_indiv_OIII5007 = Mbin_indiv_props_tbl['OIII_5007_Flux_Observed'].data
+    
+    MLHbbin_indiv_HBETA = MLHbbin_indiv_props_tbl['HBETA_Flux_Observed'].data
+    MLHbbin_indiv_OII = MLHbbin_indiv_props_tbl['OII_3727_Flux_Observed'].data
+    MLHbbin_indiv_OIII5007 = MLHbbin_indiv_props_tbl['OIII_5007_Flux_Observed'].data
+    
+    Mbin_indiv_metal = Mbin_indiv_derivedprops_tbl[temp_metal_names0[1]].data
+    Mbin_indiv_bin_detect = Mbin_indiv_bininfo_tbl[bin_names0[2]].data
+    
+    MLHbbin_indiv_metal = MLHbbin_indiv_derivedprops_tbl[temp_metal_names0[1]].data
+    MLHbbin_indiv_bin_detect = MLHbbin_indiv_bininfo_tbl[bin_names0[2]].data
+    
+    
+    #Read in composite data
+    Mbin_logM = Mbininfo_tbl[bin_mzevolve_names0[2]].data      
+    Mbin_metal = Mbin_derivedprops_tbl[temp_metal_names0[1]].data
+    Mbin_detect_col = Mbin_valid_tbl[bin_names0[2]].data
+    
+    MLHbbin_logM = MLHbbininfo_tbl[bin_mzevolve_names0[2]].data      
+    MLHbbin_metal = MLHbbin_derivedprops_tbl[temp_metal_names0[1]].data
+    MLHbbin_detect_col = MLHbbin_valid_tbl[bin_names0[2]].data
+    
+    
+    #Define detection and non-detection (with reliable 5007) arrays for bins
+    Mbin_detect = np.where(Mbin_detect_col == 1.0)[0]
+    Mbin_nondetect = np.where(Mbin_detect_col == 0.5)[0]
+    
+    MLHbbin_detect = np.where(MLHbbin_detect_col == 1.0)[0]
+    MLHbbin_nondetect = np.where(MLHbbin_detect_col == 0.5)[0]
+    
+    #Define detection and non-detection (with reliable 5007) arrays for individual galaxies
+    Mbin_indiv_detect = np.where((Mbin_indiv_bin_detect == 1.0) & (np.isfinite(Mbin_indiv_OIII5007) == True) &
+                                 (Mbin_indiv_OIII5007 >= 1e-18) & (Mbin_indiv_OIII5007 <= 1e-15) & (np.isfinite(Mbin_indiv_OII) == True) & 
+                                 (Mbin_indiv_OII>= 1e-18) & (Mbin_indiv_OII<= 1e-15) & (np.isfinite(Mbin_indiv_HBETA) == True) & 
+                                 (Mbin_indiv_HBETA >= 1e-18) & (Mbin_indiv_HBETA <= 1e-15))[0]
+    Mbin_indiv_nondetect = np.where((Mbin_indiv_bin_detect == 0.5) & (np.isfinite(Mbin_indiv_OIII5007) == True) & 
+                                    (Mbin_indiv_OIII5007 >= 1e-18) & (Mbin_indiv_OIII5007 <= 1e-15) & (np.isfinite(Mbin_indiv_OII) == True) & 
+                                    (Mbin_indiv_OII>= 1e-18) & (Mbin_indiv_OII<= 1e-15) & (np.isfinite(Mbin_indiv_HBETA) == True) & 
+                                    (Mbin_indiv_HBETA >= 1e-18) & (Mbin_indiv_HBETA <= 1e-15))[0]
+    MLHbbin_indiv_detect = np.where((MLHbbin_indiv_bin_detect == 1.0) & (np.isfinite(MLHbbin_indiv_OIII5007) == True) & 
+                            (MLHbbin_indiv_OIII5007 >= 1e-18) & (MLHbbin_indiv_OIII5007 <= 1e-15) & (np.isfinite(MLHbbin_indiv_OII) == True) & 
+                            (MLHbbin_indiv_OII >= 1e-18) & (MLHbbin_indiv_OII <= 1e-15) & (np.isfinite(MLHbbin_indiv_HBETA) == True) & 
+                            (MLHbbin_indiv_HBETA >= 1e-18) & (MLHbbin_indiv_HBETA <= 1e-15) & (MLHbbin_indiv_logLHb > 0))[0]
+    MLHbbin_indiv_nondetect = np.where((MLHbbin_indiv_bin_detect == 0.5) & (np.isfinite(MLHbbin_indiv_OIII5007) == True) & 
+                               (MLHbbin_indiv_OIII5007 >= 1e-18) & (MLHbbin_indiv_OIII5007 <= 1e-15) & (np.isfinite(MLHbbin_indiv_OII) == True) & 
+                               (MLHbbin_indiv_OII >= 1e-18) & (MLHbbin_indiv_OII <= 1e-15) & (np.isfinite(MLHbbin_indiv_HBETA) == True) & 
+                               (MLHbbin_indiv_HBETA >= 1e-18) & (MLHbbin_indiv_HBETA <= 1e-15) & (MLHbbin_indiv_logLHb > 0))[0]
+    
+    
+    #Define mass bin and mass-LHbeta bin dictionaries
+    Mbin_dict = {'path': path_init + fitspathM, 'composite_logM': Mbin_logM, 'composite_detect': Mbin_detect, 
+                 'composite_nondetect': Mbin_nondetect, 'composite_metallicity': Mbin_metal, 
+                 'indiv_logM': Mbin_indiv_logM, 'indiv_detect': Mbin_indiv_detect, 'indiv_nondetect': Mbin_indiv_nondetect, 
+                 'indiv_metallicity': Mbin_indiv_metal}
+    MLHbbin_dict = {'path': path_init + fitspathMLHb, 'composite_logM': MLHbbin_logM, 'composite_detect': MLHbbin_detect, 
+                    'composite_nondetect': MLHbbin_nondetect, 'composite_metallicity': MLHbbin_metal, 
+                    'indiv_logM': MLHbbin_indiv_logM, 'indiv_detect': MLHbbin_indiv_detect, 
+                    'indiv_nondetect': MLHbbin_indiv_nondetect, 'indiv_metallicity': MLHbbin_indiv_metal}
+    if error_bars == True:
+        err_dictM = extract_error_bars(fitspathM)
+        err_dictMLHb = extract_error_bars(fitspathM)
+        Mbin_dict['composite_metal_errors'] = err_dictM['12+log(O/H)_lowhigh_error']
+        MLHbbin_dict['composite_metal_errors'] = err_dictMLHb['12+log(O/H)_lowhigh_error']
+    
+    
+    indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrict_MTO = restrictMTO, revised = revised_files, err_bars = error_bars)
     
     
     
