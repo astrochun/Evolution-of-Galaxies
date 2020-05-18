@@ -65,7 +65,7 @@ def bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file,
         metal_low_err = [metal_err[ii][0] for ii in range(len(metal_err))]
         metal_high_err = [metal_err[ii][1] for ii in range(len(metal_err))]
         
-        Te_low_err = np.log10(1 + (Te_low_err)/T_e[detect])
+        Te_low_err = -1*np.log10(1 - (Te_low_err)/T_e[detect])
         Te_high_err = np.log10(1 + (Te_high_err)/T_e[detect])
          
         Te_lowhigh_err = [Te_low_err, Te_high_err]
@@ -579,7 +579,7 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
     ax11[1].scatter(LHb_avg_mass[LHb_nondetect], LHb_metal[LHb_nondetect], s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
     if err_bars == True:
         ax11[0].errorbar(mass_avg_mass[mass_detect], mass_metal[mass_detect], yerr = metal_lowhigh_err_M, fmt = '.')
-        ax11[0].errorbar(LHb_avg_mass[LHb_detect], LHb_metal[LHb_detect], yerr = metal_lowhigh_err_LHb, fmt = '.')
+        ax11[1].errorbar(LHb_avg_mass[LHb_detect], LHb_metal[LHb_detect], yerr = metal_lowhigh_err_LHb, fmt = '.')
     
     
     ##Curve fit     
