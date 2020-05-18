@@ -60,10 +60,7 @@ def indiv_derived_props_plots(fitspath, restrict_MTO = False, revised = False, e
         
         metal_errors = derivedprops_errors['12+log(O/H)_lowhigh_error']
         
-        metal_low_err = [metal_errors[ii][0] for ii in range(len(metal_errors))]
-        metal_high_err = [metal_errors[ii][1] for ii in range(len(metal_errors))]
-        
-        metal_lowhigh_err = [metal_low_err, metal_high_err]
+        metal_lowhigh_err = [metal_errors[:,0], metal_errors[:,1]]
 
 
     ##individual galaxy data, i.e. comes from MT_ascii
