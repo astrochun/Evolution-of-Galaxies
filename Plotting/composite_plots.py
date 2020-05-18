@@ -4,7 +4,8 @@ from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from Metallicity_Stack_Commons import OIII_r
 from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_ratios0, bin_mzevolve_names0
-from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict, npz_filename_dict
+from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict
+from .relation_fitting import extract_error_bars
 
 
 
@@ -75,16 +76,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     non_detect = np.where(detection == 0.5)[0]
     
     if err_bars == True:
-        der_prop_err = np.load(fitspath + npz_filename_dict['der_prop_errors'])
-        
-        Te_err = der_prop_err['T_e_lowhigh_error']        
-        metal_err = der_prop_err['12+log(O/H)_lowhigh_error']
-        
-        Te_low_err = -1*np.log10(1 - Te_err[:,0]/T_e[detect])
-        Te_high_err = np.log10(1 + Te_err[:,1]/T_e[detect])
-         
-        Te_lowhigh_err = [Te_low_err, Te_high_err]
-        metal_lowhigh_err = [metal_err[:,0], metal_err[:,1]]
+        err_dict = extract_error_bars(fitspath)
     
     #Line Ratios vs Mass
     fig1, ax1 = plt.subplots(2, 3, sharex = True)
@@ -139,7 +131,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     ax2.scatter(np.log10(T_e[detect]), logR23[detect], marker = '.')
     ax2.scatter(np.log10(T_e[non_detect]), logR23[non_detect], marker = '<')
     if err_bars == True:
-        ax2.errorbar(np.log10(T_e[detect]), logR23[detect], xerr = Te_lowhigh_err, fmt = '.')
+        ax2.errorbar(np.log10(T_e[detect]), logR23[detect], xerr = err_dict['T_e_lowhigh_error'], fmt = '.')
     ax2.set_xlabel('log($T_e$) (K)')
     ax2.set_ylabel('log($R_{23}$)')
     ax2.set_title('$R_{23}$ vs. Temperature')
@@ -151,7 +143,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     ax3.scatter(np.log10(T_e[detect]), logO32[detect], marker = '.')
     ax3.scatter(np.log10(T_e[non_detect]), logO32[non_detect], marker = '<')
     if err_bars == True:
-        ax3.errorbar(np.log10(T_e[detect]), logO32[detect], xerr = Te_lowhigh_err, fmt = '.')
+        ax3.errorbar(np.log10(T_e[detect]), logO32[detect], xerr = err_dict['T_e_lowhigh_error'], fmt = '.')
     ax3.set_xlabel('log($T_e$) (K)')
     ax3.set_ylabel('log($O_{32}$)')
     ax3.set_title('$O_{32}$ vs. Temperature')
@@ -163,7 +155,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     ax4.scatter(logR23[detect], com_O_log[detect], marker = '.')
     ax4.scatter(logR23[non_detect], com_O_log[non_detect], marker = '^')
     if err_bars == True:
-        ax4.errorbar(logR23[detect], com_O_log[detect], yerr = metal_lowhigh_err, fmt = '.')
+        ax4.errorbar(logR23[detect], com_O_log[detect], yerr = err_dict['12+log(O/H)_lowhigh_error'], fmt = '.')
     ax4.set_xlabel('log($R_{23}$)')
     ax4.set_ylabel('12+log(O/H) $T_e$')
     ax4.set_title('Composite Metallicity vs. $R_{23}$')
@@ -175,7 +167,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     ax5.scatter(logO32[detect], com_O_log[detect], marker = '.')
     ax5.scatter(logO32[non_detect], com_O_log[non_detect], marker = '^')
     if err_bars == True:
-        ax5.errorbar(logO32[detect], com_O_log[detect], yerr = metal_lowhigh_err, fmt = '.')
+        ax5.errorbar(logO32[detect], com_O_log[detect], yerr = err_dict['12+log(O/H)_lowhigh_error'], fmt = '.')
     ax5.set_xlabel('log($O_{32}$)')
     ax5.set_ylabel('12+log(O/H) $T_e$')
     ax5.set_title('Composite Metallicity vs. $O_{32}$')
@@ -187,7 +179,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     ax6.scatter(logM_avg[detect], np.log10(T_e[detect]), marker = '.')
     ax6.scatter(logM_avg[non_detect], np.log10(T_e[non_detect]), marker = 'v')
     if err_bars == True:
-        ax6.errorbar(logM_avg[detect], np.log10(T_e[detect]), yerr = Te_lowhigh_err, fmt = '.')
+        ax6.errorbar(logM_avg[detect], np.log10(T_e[detect]), yerr = err_dict['T_e_lowhigh_error'], fmt = '.')
     ax6.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax6.set_ylabel('log($T_e$) (K)')
     ax6.set_title('Temperature vs. Avg Mass')
@@ -199,7 +191,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     ax7.scatter(logM_avg[detect], com_O_log[detect], marker = '.')
     ax7.scatter(logM_avg[non_detect], com_O_log[non_detect], marker = '^')
     if err_bars == True:
-        ax7.errorbar(logM_avg[detect], com_O_log[detect], yerr = metal_lowhigh_err, fmt = '.')
+        ax7.errorbar(logM_avg[detect], com_O_log[detect], yerr = err_dict['12+log(O/H)_lowhigh_error'], fmt = '.')
     mass_range = np.arange(8.2, 9.9, 0.05)
     AM_relation = 8.798 - np.log10(1 + ((10**8.901)/(10**mass_range))**0.640)
     ax7.plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
@@ -210,8 +202,6 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     
     
     pdf_pages.close()
-    if err_bars == True:
-        der_prop_err.close()
         
         
         
