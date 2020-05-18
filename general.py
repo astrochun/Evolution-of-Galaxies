@@ -15,6 +15,7 @@ from Evolution_of_Galaxies import library, emission_line_fit, indiv_gals
 from Evolution_of_Galaxies.R_temp_calcul import run_function
 from Evolution_of_Galaxies.Plotting.composite_plots import bin_derived_props_plots
 from Evolution_of_Galaxies.Plotting.individual_plots import indiv_derived_props_plots, indiv_metal_mass_plot
+from Evolution_of_Galaxies.Plotting.relation_fitting import extract_error_bars
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
 from Metallicity_Stack_Commons.column_names import filename_dict, npz_filename_dict, indv_names0
 from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_mzevolve_names0, bin_names0
@@ -209,17 +210,6 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
     else:    
         Mbin_derivedprops_tbl = asc.read(path_init + fitspathM + filename_dict['bin_derived_prop'])
         MLHbbin_derivedprops_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_derived_prop'])
-        
-        
-    if error_bars == True:
-        Mbin_derivedprops_errors = np.load(path_init + fitspathM + npz_filename_dict['der_prop_errors'])
-        MLHbbin_derivedprops_errors = np.load(path_init + fitspathMLHb + npz_filename_dict['der_prop_errors'])
-        
-        Mbin_metal_errors = Mbin_derivedprops_errors['12+log(O/H)_lowhigh_error']
-        MLHbbin_metal_errors = MLHbbin_derivedprops_errors['12+log(O/H)_lowhigh_error']
-        
-        Mbin_metal_lowhigh_err = [Mbin_metal_errors[:,0], Mbin_metal_errors[:,1]]
-        MLHbbin_metal_lowhigh_err = [MLHbbin_metal_errors[:,0], MLHbbin_metal_errors[:,1]]
 
 
     ##individual galaxy data, i.e. comes from MT_ascii
@@ -288,8 +278,10 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
                     'indiv_logM': MLHbbin_indiv_logM, 'indiv_detect': MLHbbin_indiv_detect, 
                     'indiv_nondetect': MLHbbin_indiv_nondetect, 'indiv_metallicity': MLHbbin_indiv_metal}
     if error_bars == True:
-        Mbin_dict['composite_metal_errors'] = Mbin_metal_lowhigh_err
-        MLHbbin_dict['composite_metal_errors'] = MLHbbin_metal_lowhigh_err
+        err_dictM = extract_error_bars(fitspathM)
+        err_dictMLHb = extract_error_bars(fitspathM)
+        Mbin_dict['composite_metal_errors'] = err_dictM['12+log(O/H)_lowhigh_error']
+        MLHbbin_dict['composite_metal_errors'] = err_dictMLHb['12+log(O/H)_lowhigh_error']
     
     
     indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrict_MTO = restrictMTO, revised = revised_files, err_bars = error_bars)
