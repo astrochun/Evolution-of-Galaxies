@@ -187,9 +187,28 @@ def run_bin_analysis(err_prop = False, indiv = False):
         
 
 def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revised_files = False, error_bars = False):
-    #fitspath is path starting at bin type folder
+    '''
+    Purpose:
+        This function extracts the necessary data from files and runs the individual Metallicity vs Mass
+        plotting function, which produces a two-paneled Metallicity vs Mass plot containing data from mass
+        bins and mass-LHbeta bins.
+           
+    Params:
+        fitspathM --> a string containing the partial path of the location of the mass bin data.
+                      (e.g., 'massbin/05182020/75_112_113_300_600_1444_1443/')
+        fitspathMLHb --> a string containing the partial path of the location of the mass-LHbeta bin data.
+                         (e.g., 'mass_LHbeta_bin/05182020/75_112_113_300_600_1444_1443/')
+        restrictMTO (OPTIONAL) --> if the mass turnover value should be held constant in the curve fit of
+                                   Metallicity vs Mass, then restrictMTO = True.
+        revised_files (OPTIONAL) --> if the revised data tables should be used, then revised_files = True.
+        error_bars (OPTIONAL) --> if error bars for metallicity and temperature should be plotted, then 
+                                  error_bars = True.
+        
+    Returns:
+        None
+    '''
     
-    #individual files
+    #Read in individual data tables
     Mbin_indiv_derivedprops_tbl = asc.read(path_init + fitspathM + filename_dict['indv_derived_prop'])
     Mbin_indiv_props_tbl = asc.read(path_init + fitspathM + filename_dict['indv_prop'])
     Mbin_indiv_bininfo_tbl = asc.read(path_init + fitspathM + filename_dict['indv_bin_info'])
@@ -198,7 +217,8 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
     MLHbbin_indiv_props_tbl = asc.read(path_init + fitspathMLHb + filename_dict['indv_prop'])
     MLHbbin_indiv_bininfo_tbl = asc.read(path_init + fitspathMLHb + filename_dict['indv_bin_info'])
     
-    #bin files
+    
+    #Read in composite data tables
     Mbin_valid_tbl = asc.read(path_init + fitspathM + filename_dict['bin_valid'])
     Mbininfo_tbl = asc.read(path_init + fitspathM + filename_dict['bin_info'])
     
@@ -212,7 +232,7 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
         MLHbbin_derivedprops_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_derived_prop'])
 
 
-    ##individual galaxy data, i.e. comes from MT_ascii
+    #Read in individual data
     Mbin_indiv_logM = Mbin_indiv_props_tbl[indv_names0[3]].data
     MLHbbin_indiv_logM = MLHbbin_indiv_props_tbl[indv_names0[3]].data
     MLHbbin_indiv_logLHb = MLHbbin_indiv_props_tbl[indv_names0[4]].data
@@ -232,7 +252,7 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
     MLHbbin_indiv_bin_detect = MLHbbin_indiv_bininfo_tbl[bin_names0[2]].data
     
     
-    ##bin data, i.e. comes from either mass or massLHb specific files
+    #Read in composite data
     Mbin_logM = Mbininfo_tbl[bin_mzevolve_names0[2]].data      
     Mbin_metal = Mbin_derivedprops_tbl[temp_metal_names0[1]].data
     Mbin_detect_col = Mbin_valid_tbl[bin_names0[2]].data
@@ -242,15 +262,14 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
     MLHbbin_detect_col = MLHbbin_valid_tbl[bin_names0[2]].data
     
     
-    ##detection determinations  
-    #bins
+    #Define detection and non-detection (with reliable 5007) arrays for bins
     Mbin_detect = np.where(Mbin_detect_col == 1.0)[0]
     Mbin_nondetect = np.where(Mbin_detect_col == 0.5)[0]
     
     MLHbbin_detect = np.where(MLHbbin_detect_col == 1.0)[0]
     MLHbbin_nondetect = np.where(MLHbbin_detect_col == 0.5)[0]
     
-    #individual
+    #Define detection and non-detection (with reliable 5007) arrays for individual galaxies
     Mbin_indiv_detect = np.where((Mbin_indiv_bin_detect == 1.0) & (np.isfinite(Mbin_indiv_OIII5007) == True) &
                                  (Mbin_indiv_OIII5007 >= 1e-18) & (Mbin_indiv_OIII5007 <= 1e-15) & (np.isfinite(Mbin_indiv_OII) == True) & 
                                  (Mbin_indiv_OII>= 1e-18) & (Mbin_indiv_OII<= 1e-15) & (np.isfinite(Mbin_indiv_HBETA) == True) & 
@@ -269,6 +288,7 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
                                (MLHbbin_indiv_HBETA >= 1e-18) & (MLHbbin_indiv_HBETA <= 1e-15) & (MLHbbin_indiv_logLHb > 0))[0]
     
     
+    #Define mass bin and mass-LHbeta bin dictionaries
     Mbin_dict = {'path': path_init + fitspathM, 'composite_logM': Mbin_logM, 'composite_detect': Mbin_detect, 
                  'composite_nondetect': Mbin_nondetect, 'composite_metallicity': Mbin_metal, 
                  'indiv_logM': Mbin_indiv_logM, 'indiv_detect': Mbin_indiv_detect, 'indiv_nondetect': Mbin_indiv_nondetect, 
