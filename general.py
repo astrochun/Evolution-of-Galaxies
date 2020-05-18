@@ -218,14 +218,8 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
         Mbin_metal_errors = Mbin_derivedprops_errors['12+log(O/H)_lowhigh_error']
         MLHbbin_metal_errors = MLHbbin_derivedprops_errors['12+log(O/H)_lowhigh_error']
         
-        Mbin_metal_low_err = [Mbin_metal_errors[ii][0] for ii in range(len(Mbin_metal_errors))]
-        Mbin_metal_high_err = [Mbin_metal_errors[ii][1] for ii in range(len(Mbin_metal_errors))]
-        
-        MLHbbin_metal_low_err = [MLHbbin_metal_errors[ii][0] for ii in range(len(MLHbbin_metal_errors))]
-        MLHbbin_metal_high_err = [MLHbbin_metal_errors[ii][1] for ii in range(len(MLHbbin_metal_errors))]
-        
-        Mbin_metal_lowhigh_err = [Mbin_metal_low_err, Mbin_metal_high_err]
-        MLHbbin_metal_lowhigh_err = [MLHbbin_metal_low_err, MLHbbin_metal_high_err]
+        Mbin_metal_lowhigh_err = [Mbin_metal_errors[:,0], Mbin_metal_errors[:,1]]
+        MLHbbin_metal_lowhigh_err = [MLHbbin_metal_errors[:,0], MLHbbin_metal_errors[:,1]]
 
 
     ##individual galaxy data, i.e. comes from MT_ascii
