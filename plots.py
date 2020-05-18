@@ -60,16 +60,11 @@ def bin_derived_props_plots(fitspath, metal_file, em_file, bin_file, valid_file,
         Te_err = der_prop_err['T_e_lowhigh_error']        
         metal_err = der_prop_err['12+log(O/H)_lowhigh_error']
         
-        Te_low_err = [Te_err[ii][0] for ii in range(len(Te_err))]
-        Te_high_err = [Te_err[ii][1] for ii in range(len(Te_err))]
-        metal_low_err = [metal_err[ii][0] for ii in range(len(metal_err))]
-        metal_high_err = [metal_err[ii][1] for ii in range(len(metal_err))]
-        
-        Te_low_err = np.log10(1 + (Te_low_err)/T_e[detect])
-        Te_high_err = np.log10(1 + (Te_high_err)/T_e[detect])
+        Te_low_err = -1*np.log10(1 - Te_err[:, 0]/T_e[detect])
+        Te_high_err = np.log10(1 + Te_err[:, 1]/T_e[detect])
          
         Te_lowhigh_err = [Te_low_err, Te_high_err]
-        metal_lowhigh_err = [metal_low_err, metal_high_err]
+        metal_lowhigh_err = [metal_err[:, 0], metal_err[:, 1]]
         print(Te_lowhigh_err)
         print(metal_lowhigh_err)
         
@@ -281,13 +276,8 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
         metal_err_M = der_prop_err_M['12+log(O/H)_lowhigh_error']
         metal_err_LHb = der_prop_err_LHb['12+log(O/H)_lowhigh_error']
         
-        metal_low_err_M = [metal_err_M[ii][0] for ii in range(len(metal_err_M))]
-        metal_high_err_M = [metal_err_M[ii][1] for ii in range(len(metal_err_M))]
-        metal_low_err_LHb = [metal_err_LHb[ii][0] for ii in range(len(metal_err_LHb))]
-        metal_high_err_LHb = [metal_err_LHb[ii][1] for ii in range(len(metal_err_LHb))]
-        
-        metal_lowhigh_err_M = [metal_low_err_M, metal_high_err_M]
-        metal_lowhigh_err_LHb = [metal_low_err_LHb, metal_high_err_LHb]
+        metal_lowhigh_err_M = [metal_err_M[:,0], metal_err_M[:,1]]
+        metal_lowhigh_err_LHb = [metal_err_LHb[:,0], metal_err_LHb[:,1]]
         print(metal_lowhigh_err_M)
         print(metal_lowhigh_err_LHb)
 
@@ -579,7 +569,7 @@ def indiv_derived_props_plots(fitspath, dataset, restrict_MTO = False, revised =
     ax11[1].scatter(LHb_avg_mass[LHb_nondetect], LHb_metal[LHb_nondetect], s = 25, color = 'red', marker = '^', label = 'Bin Non-Detections', alpha = 0.5)
     if err_bars == True:
         ax11[0].errorbar(mass_avg_mass[mass_detect], mass_metal[mass_detect], yerr = metal_lowhigh_err_M, fmt = '.')
-        ax11[0].errorbar(LHb_avg_mass[LHb_detect], LHb_metal[LHb_detect], yerr = metal_lowhigh_err_LHb, fmt = '.')
+        ax11[1].errorbar(LHb_avg_mass[LHb_detect], LHb_metal[LHb_detect], yerr = metal_lowhigh_err_LHb, fmt = '.')
     
     
     ##Curve fit     
