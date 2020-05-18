@@ -4,7 +4,7 @@ from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from Metallicity_Stack_Commons.column_names import indv_names0, temp_metal_names0, bin_mzevolve_names0
 from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict, npz_filename_dict
-from .relation_fitting import curve_fitting, mass_metal_fit, mass_metal_fit_constMTO
+from .relation_fitting import curve_fitting, mass_metal_fit, mass_metal_fit_constMTO, extract_error_bars
 
 
 
@@ -54,13 +54,6 @@ def indiv_derived_props_plots(fitspath, restrict_MTO = False, revised = False, e
         bin_derivedprops_tbl = asc.read(fitspath + filename_dict['bin_derived_prop_rev'])
     else:    
         bin_derivedprops_tbl = asc.read(fitspath + filename_dict['bin_derived_prop'])
-        
-    if err_bars == True:
-        derivedprops_errors = np.load(fitspath + npz_filename_dict['der_prop_errors'])
-        
-        metal_errors = derivedprops_errors['12+log(O/H)_lowhigh_error']
-        
-        metal_lowhigh_err = [metal_errors[:,0], metal_errors[:,1]]
 
 
     ##individual galaxy data, i.e. comes from MT_ascii
@@ -238,7 +231,8 @@ def indiv_derived_props_plots(fitspath, restrict_MTO = False, revised = False, e
     ax11.scatter(bin_logM[bin_nondetect], bin_metal[bin_nondetect], s = 25, color = 'red', marker = '^', 
                  label = 'Bin Non-Detections', alpha = 0.5)
     if err_bars == True:
-        ax11.errorbar(bin_logM[bin_detect], bin_metal[bin_detect], yerr = metal_lowhigh_err, fmt = '.')
+        err_dict = extract_error_bars(fitspath)
+        ax11.errorbar(bin_logM[bin_detect], bin_metal[bin_detect], yerr = err_dict['12+log(O/H)_lowhigh_error'], fmt = '.')
     
     
     o11, o21, fail = curve_fitting(bin_logM[bin_detect], bin_metal[bin_detect], restrict_MTO = False)
