@@ -80,16 +80,11 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
         Te_err = der_prop_err['T_e_lowhigh_error']        
         metal_err = der_prop_err['12+log(O/H)_lowhigh_error']
         
-        Te_low_err = [Te_err[ii][0] for ii in range(len(Te_err))]
-        Te_high_err = [Te_err[ii][1] for ii in range(len(Te_err))]
-        metal_low_err = [metal_err[ii][0] for ii in range(len(metal_err))]
-        metal_high_err = [metal_err[ii][1] for ii in range(len(metal_err))]
-        
-        Te_low_err = np.log10(1 + (Te_low_err)/T_e[detect])
-        Te_high_err = np.log10(1 + (Te_high_err)/T_e[detect])
+        Te_low_err = -1*np.log10(1 - Te_err[:,0]/T_e[detect])
+        Te_high_err = np.log10(1 + Te_err[:,1]/T_e[detect])
          
         Te_lowhigh_err = [Te_low_err, Te_high_err]
-        metal_lowhigh_err = [metal_low_err, metal_high_err]
+        metal_lowhigh_err = [metal_err[:,0], metal_err[:,1]]
     
     #Line Ratios vs Mass
     fig1, ax1 = plt.subplots(2, 3, sharex = True)
