@@ -9,7 +9,7 @@ from .relation_fitting import curve_fitting, mass_metal_fit, extract_error_bars
 
 
 
-def indiv_derived_props_plots(fitspath, restrict_MTO = False, revised = False, err_bars = False, hbeta_bin = False):    
+def indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, err_bars = False, hbeta_bin = False):    
     '''
     Purpose:
         This function creates plots for the individual measurements within each bin: HBeta Luminosity vs
@@ -18,8 +18,8 @@ def indiv_derived_props_plots(fitspath, restrict_MTO = False, revised = False, e
            
     Params:
         fitspath --> string of the file path where data files are located.
-        restrict_MTO (OPTIONAL) --> if the mass turnover value should be held constant in the curve fit of
-                                    Metallicity vs Mass, then restrict_MTO = True.
+        restrictMTO (OPTIONAL) --> if the mass turnover value should be held constant in the curve fit of
+                                    Metallicity vs Mass, then restrictMTO = True.
         revised (OPTIONAL) --> if the revised data tables should be used, then revised = True.
         err_bars (OPTIONAL) --> if error bars for metallicity and temperature should be plotted, then 
                                 err_bars = True.
@@ -91,7 +91,7 @@ def indiv_derived_props_plots(fitspath, restrict_MTO = False, revised = False, e
 
     
     #Define output file name
-    if restrict_MTO == True:
+    if restrictMTO == True:
         pdf_pages = PdfPages(fitspath + filename_dict['indv_derived_prop'].replace('.tbl', 'constMTO.pdf'))
     else:
         pdf_pages = PdfPages(fitspath + filename_dict['indv_derived_prop'].replace('.tbl', '.pdf'))
@@ -215,7 +215,7 @@ def indiv_derived_props_plots(fitspath, restrict_MTO = False, revised = False, e
         ax11.errorbar(bin_logM[bin_detect], bin_metal[bin_detect], yerr = err_dict['12+log(O/H)_lowhigh_error'], fmt = '.')
     
     #Fit bin detections and plot relation
-    o11, o21, fail = curve_fitting(bin_logM[bin_detect], bin_metal[bin_detect], restrict_MTO = False)   
+    o11, o21, fail = curve_fitting(bin_logM[bin_detect], bin_metal[bin_detect], restrict_MTO = restrictMTO)   
     if not fail:
         ax11.plot(mass_range, mass_metal_fit(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
           
