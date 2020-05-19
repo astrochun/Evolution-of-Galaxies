@@ -70,24 +70,7 @@ def indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, er
     bin_nondetect = np.where(bin_detect_col == 0.5)[0]
     
     #Define detection and non-detection (with reliable 5007) arrays for individual galaxies  
-    if hbeta_bin == True:
-        indiv_detect = np.where((indiv_bin_detect == 1.0) & (np.isfinite(indiv_OIII5007) == True) & 
-                                (indiv_OIII5007 >= 1e-18) & (indiv_OIII5007 <= 1e-15) & (np.isfinite(indiv_OII) == True) & 
-                                (indiv_OII >= 1e-18) & (indiv_OII <= 1e-15) & (np.isfinite(indiv_HBETA) == True) & 
-                                (indiv_HBETA >= 1e-18) & (indiv_HBETA <= 1e-15) & (indiv_logLHb > 0))[0]
-        indiv_nondetect = np.where((indiv_bin_detect == 0.5) & (np.isfinite(indiv_OIII5007) == True) & 
-                                   (indiv_OIII5007 >= 1e-18) & (indiv_OIII5007 <= 1e-15) & (np.isfinite(indiv_OII) == True) & 
-                                   (indiv_OII >= 1e-18) & (indiv_OII <= 1e-15) & (np.isfinite(indiv_HBETA) == True) & 
-                                   (indiv_HBETA >= 1e-18) & (indiv_HBETA <= 1e-15) & (indiv_logLHb > 0))[0]
-    else:
-        indiv_detect = np.where((indiv_bin_detect == 1.0) & (np.isfinite(indiv_OIII5007) == True) &
-                                (indiv_OIII5007 >= 1e-18) & (indiv_OIII5007 <= 1e-15) & (np.isfinite(indiv_OII) == True) & 
-                                (indiv_OII>= 1e-18) & (indiv_OII<= 1e-15) & (np.isfinite(indiv_HBETA) == True) & 
-                                (indiv_HBETA >= 1e-18) & (indiv_HBETA <= 1e-15))[0]
-        indiv_nondetect = np.where((indiv_bin_detect == 0.5) & (np.isfinite(indiv_OIII5007) == True) & 
-                                   (indiv_OIII5007 >= 1e-18) & (indiv_OIII5007 <= 1e-15) & (np.isfinite(indiv_OII) == True) & 
-                                   (indiv_OII>= 1e-18) & (indiv_OII<= 1e-15) & (np.isfinite(indiv_HBETA) == True) & 
-                                   (indiv_HBETA >= 1e-18) & (indiv_HBETA <= 1e-15))[0]
+    indiv_detect, indiv_nondetect = get_indiv_detect(indiv_OIII5007, indiv_OII, indiv_HBETA, indiv_bin_detect, indiv_logLHb, LHbeta_bins = hbeta_bin)
 
     
     #Define output file name
@@ -333,11 +316,41 @@ def indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrict_MTO = False, revised
     
     
     
+def get_indiv_detect(OIII5007, OII, HBETA, bin_detect, logLHb, LHbeta_bins = False):
+    '''
+    Purpose:
+        This function creates index arrays of the individual detections and non-detections based on
+        valid individual emission lines (OIII5007, OII, and HBETA) and bin detections and non-detections.
+           
+    Params:
+        OIII5007 --> an array containing individual galaxies' OIII5007 flux values (length = # of galaxies).
+        OII --> an array containing individual galaxies' OII flux values (length = # of galaxies).
+        HBETA --> an array containing individual galaxies' HBETA flux values (length = # of galaxies).
+        logLHb --> an array containing individual galaxies' HBeta Luminosity values (length = # of galaxies).
+        LHbeta_bins (OPTIONAL) --> if the binning type is mass-LHbeta bins, then LHbeta_bins = True.
+        
+    Returns:
+        combined_detect --> a numpy array of detection indices that pass all detection conditions.
+        combined_nondetect --> a numpy array of non-detection indices that pass all non-detection conditions.
+    '''
     
+    OIII5007_idx = np.where((np.isfinite(OIII5007) == True) & (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15))[0]
+    OII_idx = np.where((np.isfinite(OII) == True) & (OII >= 1e-18) & (OII <= 1e-15))[0]
+    HBETA_idx = np.where((np.isfinite(HBETA) == True) & (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
+    detect_idx = np.where(bin_detect == 1.0)[0]
+    non_detect_idx = np.where(bin_detect == 0.5)[0]
     
-    
-    
-    
+    combined_detect = set(OIII5007_idx) & set(OII_idx) & set(HBETA_idx) & set(detect_idx)
+    combined_nondetect = set(OIII5007_idx) & set(OII_idx) & set(HBETA_idx) & set(non_detect_idx)
+    if LHbeta_bins == True:
+        LHb_idx = np.where(logLHb > 0)[0]
+        combined_detect &= set(LHb_idx)
+        combined_nondetect &= set(LHb_idx)
+        
+    print('combined_detect:', len(combined_detect))
+    print('combined_nondetect:', len(combined_nondetect))
+        
+    return np.array(list(combined_detect)), np.array(list(combined_nondetect))
     
     
     
