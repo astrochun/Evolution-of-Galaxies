@@ -181,7 +181,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
         main(fitspath, '', revised = False, det3 = True)
         
         #Run individual plots
-        indiv_derived_props_plots(fitspath, restrict_MTO = True, revised = False, err_bars = False, hbeta_bin = bool_hbeta_bin)
+        indiv_derived_props_plots(fitspath, restrictMTO = True, revised = False, err_bars = False, hbeta_bin = bool_hbeta_bin)
         
         
         
