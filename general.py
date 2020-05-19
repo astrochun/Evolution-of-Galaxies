@@ -14,7 +14,7 @@ import astropy.units as u
 from Evolution_of_Galaxies import library, emission_line_fit, indiv_gals
 from Evolution_of_Galaxies.R_temp_calcul import run_function
 from Evolution_of_Galaxies.Plotting.composite_plots import bin_derived_props_plots
-from Evolution_of_Galaxies.Plotting.individual_plots import indiv_derived_props_plots, indiv_metal_mass_plot
+from Evolution_of_Galaxies.Plotting.individual_plots import indiv_derived_props_plots, indiv_metal_mass_plot, get_indiv_detect
 from Evolution_of_Galaxies.Plotting.relation_fitting import extract_error_bars
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
 from Metallicity_Stack_Commons.column_names import filename_dict, npz_filename_dict, indv_names0
@@ -234,6 +234,8 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
 
     #Read in individual data
     Mbin_indiv_logM = Mbin_indiv_props_tbl[indv_names0[3]].data
+    Mbin_indiv_logLHb = Mbin_indiv_props_tbl[indv_names0[4]].data
+    
     MLHbbin_indiv_logM = MLHbbin_indiv_props_tbl[indv_names0[3]].data
     MLHbbin_indiv_logLHb = MLHbbin_indiv_props_tbl[indv_names0[4]].data
     
@@ -270,22 +272,8 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
     MLHbbin_nondetect = np.where(MLHbbin_detect_col == 0.5)[0]
     
     #Define detection and non-detection (with reliable 5007) arrays for individual galaxies
-    Mbin_indiv_detect = np.where((Mbin_indiv_bin_detect == 1.0) & (np.isfinite(Mbin_indiv_OIII5007) == True) &
-                                 (Mbin_indiv_OIII5007 >= 1e-18) & (Mbin_indiv_OIII5007 <= 1e-15) & (np.isfinite(Mbin_indiv_OII) == True) & 
-                                 (Mbin_indiv_OII>= 1e-18) & (Mbin_indiv_OII<= 1e-15) & (np.isfinite(Mbin_indiv_HBETA) == True) & 
-                                 (Mbin_indiv_HBETA >= 1e-18) & (Mbin_indiv_HBETA <= 1e-15))[0]
-    Mbin_indiv_nondetect = np.where((Mbin_indiv_bin_detect == 0.5) & (np.isfinite(Mbin_indiv_OIII5007) == True) & 
-                                    (Mbin_indiv_OIII5007 >= 1e-18) & (Mbin_indiv_OIII5007 <= 1e-15) & (np.isfinite(Mbin_indiv_OII) == True) & 
-                                    (Mbin_indiv_OII>= 1e-18) & (Mbin_indiv_OII<= 1e-15) & (np.isfinite(Mbin_indiv_HBETA) == True) & 
-                                    (Mbin_indiv_HBETA >= 1e-18) & (Mbin_indiv_HBETA <= 1e-15))[0]
-    MLHbbin_indiv_detect = np.where((MLHbbin_indiv_bin_detect == 1.0) & (np.isfinite(MLHbbin_indiv_OIII5007) == True) & 
-                            (MLHbbin_indiv_OIII5007 >= 1e-18) & (MLHbbin_indiv_OIII5007 <= 1e-15) & (np.isfinite(MLHbbin_indiv_OII) == True) & 
-                            (MLHbbin_indiv_OII >= 1e-18) & (MLHbbin_indiv_OII <= 1e-15) & (np.isfinite(MLHbbin_indiv_HBETA) == True) & 
-                            (MLHbbin_indiv_HBETA >= 1e-18) & (MLHbbin_indiv_HBETA <= 1e-15) & (MLHbbin_indiv_logLHb > 0))[0]
-    MLHbbin_indiv_nondetect = np.where((MLHbbin_indiv_bin_detect == 0.5) & (np.isfinite(MLHbbin_indiv_OIII5007) == True) & 
-                               (MLHbbin_indiv_OIII5007 >= 1e-18) & (MLHbbin_indiv_OIII5007 <= 1e-15) & (np.isfinite(MLHbbin_indiv_OII) == True) & 
-                               (MLHbbin_indiv_OII >= 1e-18) & (MLHbbin_indiv_OII <= 1e-15) & (np.isfinite(MLHbbin_indiv_HBETA) == True) & 
-                               (MLHbbin_indiv_HBETA >= 1e-18) & (MLHbbin_indiv_HBETA <= 1e-15) & (MLHbbin_indiv_logLHb > 0))[0]
+    Mbin_indiv_detect, Mbin_indiv_nondetect = get_indiv_detect(Mbin_indiv_OIII5007, Mbin_indiv_OII, Mbin_indiv_HBETA, Mbin_indiv_bin_detect, Mbin_indiv_logLHb)
+    MLHbbin_indiv_detect, MLHbbin_indiv_nondetect = get_indiv_detect(MLHbbin_indiv_OIII5007, MLHbbin_indiv_OII, MLHbbin_indiv_HBETA, MLHbbin_indiv_bin_detect, MLHbbin_indiv_logLHb, LHbeta_bins = True)
     
     
     #Define mass bin and mass-LHbeta bin dictionaries
