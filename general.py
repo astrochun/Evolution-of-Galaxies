@@ -11,17 +11,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
-from Evolution_of_Galaxies import library, emission_line_fit, indiv_gals
-from Evolution_of_Galaxies.R_temp_calcul import run_function
+from Evolution_of_Galaxies.Analysis import library, emission_line_fit, indiv_gals, R_temp_calcul
 from Evolution_of_Galaxies.Plotting.composite_plots import bin_derived_props_plots
 from Evolution_of_Galaxies.Plotting.individual_plots import indiv_derived_props_plots, indiv_metal_mass_plot, get_indiv_detect
 from Evolution_of_Galaxies.Plotting.relation_fitting import extract_error_bars
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
-from Metallicity_Stack_Commons.column_names import filename_dict, npz_filename_dict, indv_names0
-from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_mzevolve_names0, bin_names0
+from Metallicity_Stack_Commons.column_names import filename_dict, indv_names0, temp_metal_names0, bin_mzevolve_names0, bin_names0
+from Metallicity_Stack_Commons.analysis import error_prop
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
 from Metallicity_Stack_Commons import valid_table
-from Metallicity_Stack_Commons.analysis import error_prop
 
 
 path = get_user()
@@ -155,7 +153,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     
     #Run R, Te, and Metallicity calculations 
     metal_file = fitspath + filename_dict['bin_derived_prop']
-    run_function(em_file, bin_file, metal_file, EBV, k_4363, k_5007)
+    R_temp_calcul.run_function(em_file, bin_file, metal_file, EBV, k_4363, k_5007)
     
     
     #Run plots
