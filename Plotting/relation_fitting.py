@@ -41,6 +41,23 @@ def curve_fitting(x_array, y_array, restrict_MTO = False):
     return o11, o21, fail
     
     
+
+def AM13(mass):
+    '''
+    Purpose:
+        This function returns a curve calculated from the parameters from Andrews & Martini (2013):
+            8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
+           
+    Params:
+        mass --> array of log values of stellar masses.
+        
+    Returns:
+        The curve fit equation from Andrews & Martini (2013).
+    '''
+    
+    return 8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
+
+
     
 def mass_metal_fit(mass, a, b, g):
     '''
