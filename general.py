@@ -182,6 +182,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
         
         #Run individual plots
         indiv_derived_props_plots(fitspath, restrictMTO = True, revised = False, err_bars = False, hbeta_bin = bool_hbeta_bin)
+        indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, err_bars = False, hbeta_bin = bool_hbeta_bin)
         
         
         
@@ -292,7 +293,7 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
         MLHbbin_dict['composite_metal_errors'] = err_dictMLHb['12+log(O/H)_lowhigh_error']
     
     
-    indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrict_MTO = restrictMTO, revised = revised_files, err_bars = error_bars)
+    indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrictMTO = restrictMTO, revised = revised_files, err_bars = error_bars)
     
     
     
