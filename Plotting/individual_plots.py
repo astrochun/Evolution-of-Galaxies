@@ -4,7 +4,7 @@ from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from Metallicity_Stack_Commons.column_names import indv_names0, temp_metal_names0, bin_mzevolve_names0
 from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict
-from .relation_fitting import curve_fitting, mass_metal_fit, extract_error_bars, mass_metal_fit_constMTO
+from .relation_fitting import curve_fitting, mass_metal_fit, extract_error_bars, mass_metal_fit_constMTO, AM13
 
 
 
@@ -178,7 +178,7 @@ def indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, er
     
     #Andrews & Martini fit
     mass_range = np.arange(7.5, 10, 0.05)
-    AM_relation = 8.798 - np.log10(1 + ((10**8.901)/(10**mass_range))**0.640)
+    AM_relation = AM13(mass_range)
     ax11.plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
     
     #Plot individual detections and non-detections
@@ -259,7 +259,7 @@ def indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrictMTO = False, revised 
     
     #Andrews & Martini fit
     mass_range = np.arange(7.5, 10, 0.05)
-    AM_relation = 8.798 - np.log10(1 + ((10**8.901)/(10**mass_range))**0.640)
+    AM_relation = AM13(mass_range)
     ax1[0].plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
     ax1[1].plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
     
