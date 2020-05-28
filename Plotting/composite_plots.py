@@ -6,7 +6,7 @@ from Metallicity_Stack_Commons import line_name_short
 from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_ratios0, bin_mzevolve_names0
 from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict
 from Metallicity_Stack_Commons.analysis.ratios import flux_ratios
-from .relation_fitting import extract_error_bars
+from .relation_fitting import extract_error_bars, AM13
 
 
 
@@ -185,7 +185,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     if err_bars == True:
         ax7.errorbar(logM_avg[detect], com_O_log[detect], yerr = err_dict['12+log(O/H)_lowhigh_error'], fmt = '.')
     mass_range = np.arange(8.2, 9.9, 0.05)
-    AM_relation = 8.798 - np.log10(1 + ((10**8.901)/(10**mass_range))**0.640)
+    AM_relation = AM13(mass_range)
     ax7.plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
     ax7.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax7.set_ylabel('12+log(O/H) $T_e$')
