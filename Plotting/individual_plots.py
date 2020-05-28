@@ -2,8 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
-from Metallicity_Stack_Commons.column_names import indv_names0, temp_metal_names0, bin_mzevolve_names0
-from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict
+from Metallicity_Stack_Commons.column_names import indv_names0, temp_metal_names0, bin_mzevolve_names0, bin_names0, filename_dict
 from .relation_fitting import curve_fitting, mass_metal_fit, extract_error_bars, mass_metal_fit_constMTO
 
 
