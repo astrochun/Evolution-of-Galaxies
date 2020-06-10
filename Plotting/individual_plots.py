@@ -4,7 +4,7 @@ from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from Metallicity_Stack_Commons.column_names import indv_names0, temp_metal_names0, bin_mzevolve_names0
 from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict
-from .relation_fitting import curve_fitting, mass_metal_fit, extract_error_bars, mass_metal_fit_constMTO
+from .relation_fitting import curve_fitting, mass_metal_fit, extract_error_bars, AM13
 
 
 
@@ -49,9 +49,6 @@ def indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, er
     #Read in individual data
     indiv_logM = indiv_props_tbl[indv_names0[3]].data
     indiv_logLHb = indiv_props_tbl[indv_names0[4]].data
-    indiv_HBETA = indiv_props_tbl['HBETA_Flux_Observed'].data
-    indiv_OII = indiv_props_tbl['OII_3727_Flux_Observed'].data
-    indiv_OIII5007 = indiv_props_tbl['OIII_5007_Flux_Observed'].data
     indiv_metal = indiv_derivedprops_tbl[temp_metal_names0[1]].data
     indiv_logR23 = indiv_derivedprops_tbl[indv_names0[1]].data
     indiv_logO32 = indiv_derivedprops_tbl[indv_names0[2]].data
@@ -70,7 +67,7 @@ def indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, er
     bin_nondetect = np.where(bin_detect_col == 0.5)[0]
     
     #Define detection and non-detection (with reliable 5007) arrays for individual galaxies  
-    indiv_detect, indiv_nondetect = get_indiv_detect(indiv_OIII5007, indiv_OII, indiv_HBETA, indiv_bin_detect, indiv_logLHb, LHbeta_bins = hbeta_bin)
+    indiv_detect, indiv_nondetect = get_indiv_detect(indiv_props_tbl, indiv_bin_detect, LHbeta_bins = hbeta_bin)
 
     
     #Define output file name
@@ -178,7 +175,7 @@ def indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, er
     
     #Andrews & Martini fit
     mass_range = np.arange(7.5, 10, 0.05)
-    AM_relation = 8.798 - np.log10(1 + ((10**8.901)/(10**mass_range))**0.640)
+    AM_relation = AM13(mass_range)
     ax11.plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
     
     #Plot individual detections and non-detections
@@ -200,10 +197,7 @@ def indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, er
     #Fit bin detections and plot relation
     o11, o21, fail = curve_fitting(bin_logM[bin_detect], bin_metal[bin_detect], restrict_MTO = restrictMTO)
     if not fail:
-        if restrictMTO:
-            ax11.plot(mass_range, mass_metal_fit_constMTO(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
-        else:
-            ax11.plot(mass_range, mass_metal_fit(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
+        ax11.plot(mass_range, mass_metal_fit(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
           
     ax11.legend(fontsize = 5, loc = 'upper left')    
     ax11.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
@@ -259,7 +253,7 @@ def indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrictMTO = False, revised 
     
     #Andrews & Martini fit
     mass_range = np.arange(7.5, 10, 0.05)
-    AM_relation = 8.798 - np.log10(1 + ((10**8.901)/(10**mass_range))**0.640)
+    AM_relation = AM13(mass_range)
     ax1[0].plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
     ax1[1].plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
     
@@ -296,20 +290,14 @@ def indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrictMTO = False, revised 
     #Fit bin detections and plot relation    
     o11, o21, Mbin_fail = curve_fitting(Mbin_dict['composite_logM'][Mbin_dict['composite_detect']], 
                                         Mbin_dict['composite_metallicity'][Mbin_dict['composite_detect']], 
-                                        restrict_MTO = False)
+                                        restrict_MTO = restrictMTO)
     o12, o22, MLHbbin_fail = curve_fitting(MLHbbin_dict['composite_logM'][MLHbbin_dict['composite_detect']], 
                                            MLHbbin_dict['composite_metallicity'][MLHbbin_dict['composite_detect']], 
-                                           restrict_MTO = False)
+                                           restrict_MTO = restrictMTO)
     if Mbin_fail == False:
-        if restrictMTO:
-            ax1[0].plot(mass_range, mass_metal_fit_constMTO(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
-        else:
-            ax1[0].plot(mass_range, mass_metal_fit(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
+        ax1[0].plot(mass_range, mass_metal_fit(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
     if MLHbbin_fail == False:
-        if restrictMTO:
-            ax1[1].plot(mass_range, mass_metal_fit_constMTO(mass_range, *o12), alpha = 0.5, color = 'red', label = 'Our Fit')
-        else:
-            ax1[1].plot(mass_range, mass_metal_fit(mass_range, *o12), alpha = 0.5, color = 'red', label = 'Our Fit')
+        ax1[1].plot(mass_range, mass_metal_fit(mass_range, *o12), alpha = 0.5, color = 'red', label = 'Our Fit')
           
     ax1[0].legend(title = '$M_\star$ Bins', fontsize = 5, loc = 'upper left')    
     ax1[1].legend(title = '$M_\star$-LH$\\beta$ Bins', fontsize = 5, loc = 'upper left')
@@ -325,7 +313,7 @@ def indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrictMTO = False, revised 
     
     
     
-def get_indiv_detect(OIII5007, OII, HBETA, bin_detect, logLHb, LHbeta_bins = False):
+def get_indiv_detect(indiv_props_tbl, bin_detect, LHbeta_bins = False):
     '''
     Purpose:
         This function creates index arrays of the individual detections and non-detections based on
@@ -343,6 +331,13 @@ def get_indiv_detect(OIII5007, OII, HBETA, bin_detect, logLHb, LHbeta_bins = Fal
         combined_nondetect --> a numpy array of non-detection indices that pass all non-detection conditions.
     '''
     
+    #Read in individual emission lines and 
+    logLHb = indiv_props_tbl[indv_names0[4]].data
+    HBETA = indiv_props_tbl['HBETA_Flux_Observed'].data
+    OII = indiv_props_tbl['OII_3727_Flux_Observed'].data
+    OIII5007 = indiv_props_tbl['OIII_5007_Flux_Observed'].data
+    
+    #Get detection and non-detection indices
     OIII5007_idx = np.where((np.isfinite(OIII5007) == True) & (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15))[0]
     OII_idx = np.where((np.isfinite(OII) == True) & (OII >= 1e-18) & (OII <= 1e-15))[0]
     HBETA_idx = np.where((np.isfinite(HBETA) == True) & (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]

@@ -2,10 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
-from Metallicity_Stack_Commons import OIII_r
+from Metallicity_Stack_Commons import line_name_short
 from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_ratios0, bin_mzevolve_names0
 from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict
-from .relation_fitting import extract_error_bars
+from Metallicity_Stack_Commons.analysis.ratios import flux_ratios
+from .relation_fitting import extract_error_bars, AM13
 
 
 
@@ -50,14 +51,17 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     logO32 = metal_table[bin_ratios0[1]].data
     log_twoBeta = np.log10(metal_table[bin_ratios0[2]].data)
     log_threeBeta = np.log10(metal_table[bin_ratios0[3]].data)
-    OIII4363 = em_table['OIII_4363_Flux_Observed'].data
-    OIII5007 = em_table['OIII_5007_Flux_Observed'].data
     logM_avg = bin_table[bin_mzevolve_names0[2]].data
     logLHb_avg = bin_table[bin_mzevolve_names0[6]].data
     detection = valid_table[bin_names0[2]].data
     
-    #OIII ratio                
-    log_OIIIratio = np.log10(OIII4363 / (OIII5007 * (1 + 1/OIII_r)))
+    #Get flux ratios 
+    flux_dict = {line_name_short['HB']:em_table['HBETA_Flux_Observed'].data,
+                 line_name_short['OII']:em_table['OII_3727_Flux_Observed'].data,
+                 line_name_short['OIII']:em_table['OIII_5007_Flux_Observed'].data,
+                 line_name_short['4363']:em_table['OIII_4363_Flux_Observed'].data}  
+    flux_ratios_dict = flux_ratios(flux_dict)
+    logR = np.log10(flux_ratios_dict['R'])
     
     #Define detection and non-detection (with reliable 5007) arrays
     detect = np.where(detection == 1)[0]
@@ -82,7 +86,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
         ax1[0, 1].scatter(logM_avg[detect[ii]], logO32[detect[ii]], marker = '.', color = pt_color)
         ax1[0, 2].scatter(logM_avg[detect[ii]], log_twoBeta[detect[ii]], marker = '.', color = pt_color)
         ax1[1, 0].scatter(logM_avg[detect[ii]], log_threeBeta[detect[ii]], marker = '.', color = pt_color)
-        ax1[1, 1].scatter(logM_avg[detect[ii]], log_OIIIratio[detect[ii]], marker = '.', color = pt_color)
+        ax1[1, 1].scatter(logM_avg[detect[ii]], logR[detect[ii]], marker = '.', color = pt_color)
     for ii in range(len(non_detect)):
         if hbeta_bin == True:
             if non_detect[ii] % 2 == 0:
@@ -96,14 +100,14 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
         ax1[0, 1].scatter(logM_avg[non_detect[ii]], logO32[non_detect[ii]], marker = '^', color = pt_color)
         ax1[0, 2].scatter(logM_avg[non_detect[ii]], log_twoBeta[non_detect[ii]], marker = '^', color = pt_color)
         ax1[1, 0].scatter(logM_avg[non_detect[ii]], log_threeBeta[non_detect[ii]], marker = '^', color = pt_color)
-        ax1[1, 1].scatter(logM_avg[non_detect[ii]], log_OIIIratio[non_detect[ii]], marker = '^', color = pt_color)
+        ax1[1, 1].scatter(logM_avg[non_detect[ii]], logR[non_detect[ii]], marker = '^', color = pt_color)
     
     ax1[0, 0].annotate('$R_{23}$', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
     ax1[0, 1].annotate('$O_{32}$', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
-    ax1[0, 2].annotate('OII/HBeta', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
-    ax1[1, 0].annotate('OIII/HBeta', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
-    ax1[1, 1].annotate('4363/(5007 * (1 + 1/3.1))', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
-    ax1[1, 2].annotate('HBeta Luminosity', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')  
+    ax1[0, 2].annotate('[OII]/H$\\beta$', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
+    ax1[1, 0].annotate('[OIII]/H$\\beta$', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
+    ax1[1, 1].annotate('R', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
+    ax1[1, 2].annotate('H$\\beta$ Luminosity', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')  
     
     for ii in range(0, 3):    
         ax1[1, ii].set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')     
@@ -181,7 +185,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     if err_bars == True:
         ax7.errorbar(logM_avg[detect], com_O_log[detect], yerr = err_dict['12+log(O/H)_lowhigh_error'], fmt = '.')
     mass_range = np.arange(8.2, 9.9, 0.05)
-    AM_relation = 8.798 - np.log10(1 + ((10**8.901)/(10**mass_range))**0.640)
+    AM_relation = AM13(mass_range)
     ax7.plot(mass_range, AM_relation, color='g', linestyle = '-', alpha = 0.5, label = 'Andrews & Martini (2013)')
     ax7.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax7.set_ylabel('12+log(O/H) $T_e$')
@@ -190,22 +194,3 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     
     
     pdf_pages.close()
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
