@@ -238,18 +238,7 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
 
     #Read in individual data
     Mbin_indiv_logM = Mbin_indiv_props_tbl[indv_names0[3]].data
-    Mbin_indiv_logLHb = Mbin_indiv_props_tbl[indv_names0[4]].data
-    
     MLHbbin_indiv_logM = MLHbbin_indiv_props_tbl[indv_names0[3]].data
-    MLHbbin_indiv_logLHb = MLHbbin_indiv_props_tbl[indv_names0[4]].data
-    
-    Mbin_indiv_HBETA = Mbin_indiv_props_tbl['HBETA_Flux_Observed'].data
-    Mbin_indiv_OII = Mbin_indiv_props_tbl['OII_3727_Flux_Observed'].data
-    Mbin_indiv_OIII5007 = Mbin_indiv_props_tbl['OIII_5007_Flux_Observed'].data
-    
-    MLHbbin_indiv_HBETA = MLHbbin_indiv_props_tbl['HBETA_Flux_Observed'].data
-    MLHbbin_indiv_OII = MLHbbin_indiv_props_tbl['OII_3727_Flux_Observed'].data
-    MLHbbin_indiv_OIII5007 = MLHbbin_indiv_props_tbl['OIII_5007_Flux_Observed'].data
     
     Mbin_indiv_metal = Mbin_indiv_derivedprops_tbl[temp_metal_names0[1]].data
     Mbin_indiv_bin_detect = Mbin_indiv_bininfo_tbl[bin_names0[2]].data
@@ -276,8 +265,8 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
     MLHbbin_nondetect = np.where(MLHbbin_detect_col == 0.5)[0]
     
     #Define detection and non-detection (with reliable 5007) arrays for individual galaxies
-    Mbin_indiv_detect, Mbin_indiv_nondetect = get_indiv_detect(Mbin_indiv_OIII5007, Mbin_indiv_OII, Mbin_indiv_HBETA, Mbin_indiv_bin_detect, Mbin_indiv_logLHb)
-    MLHbbin_indiv_detect, MLHbbin_indiv_nondetect = get_indiv_detect(MLHbbin_indiv_OIII5007, MLHbbin_indiv_OII, MLHbbin_indiv_HBETA, MLHbbin_indiv_bin_detect, MLHbbin_indiv_logLHb, LHbeta_bins = True)
+    Mbin_indiv_detect, Mbin_indiv_nondetect = get_indiv_detect(Mbin_indiv_props_tbl, Mbin_indiv_bin_detect)
+    MLHbbin_indiv_detect, MLHbbin_indiv_nondetect = get_indiv_detect(MLHbbin_indiv_props_tbl, MLHbbin_indiv_bin_detect, LHbeta_bins = True)
     
     
     #Define mass bin and mass-LHbeta bin dictionaries
