@@ -20,6 +20,7 @@ from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
 from Metallicity_Stack_Commons.column_names import filename_dict, npz_filename_dict, indv_names0
 from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_mzevolve_names0, bin_names0
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
+from Metallicity_Stack_Commons.plotting.balmer import HbHgHd_fits
 from Metallicity_Stack_Commons import valid_table
 from Metallicity_Stack_Commons.analysis import error_prop
 
@@ -108,7 +109,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     plt.savefig(fitspath + 'composite_spectra_OHmasked_interp.pdf', bbox_inches = 'tight', pad_inches = 0)
     
     hdr = fits.getheader(master_grid)
-    flux_fits_file = fitspath + 'flux.fits'
+    flux_fits_file = fitspath + filename_dict['comp_spec']
     fits.writeto(flux_fits_file, flux, hdr)
     
     
@@ -151,6 +152,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     k_5007 = np.zeros(len(edge))
     bin_file = fitspath + filename_dict['bin_info']
     em_file = fitspath + filename_dict['bin_fit']
+    HbHgHd_fits(fitspath)
     
     
     #Run R, Te, and Metallicity calculations 
@@ -166,6 +168,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     if err_prop == True:
         error_prop.fluxes_derived_prop(fitspath, binned_data = True)
         bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin, err_bars = True, revised = True)
+        HbHgHd_fits(fitspath, use_revised = True)
       
         
     if indiv == True:
