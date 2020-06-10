@@ -49,9 +49,6 @@ def indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, er
     #Read in individual data
     indiv_logM = indiv_props_tbl[indv_names0[3]].data
     indiv_logLHb = indiv_props_tbl[indv_names0[4]].data
-    indiv_HBETA = indiv_props_tbl['HBETA_Flux_Observed'].data
-    indiv_OII = indiv_props_tbl['OII_3727_Flux_Observed'].data
-    indiv_OIII5007 = indiv_props_tbl['OIII_5007_Flux_Observed'].data
     indiv_metal = indiv_derivedprops_tbl[temp_metal_names0[1]].data
     indiv_logR23 = indiv_derivedprops_tbl[indv_names0[1]].data
     indiv_logO32 = indiv_derivedprops_tbl[indv_names0[2]].data
@@ -70,7 +67,7 @@ def indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, er
     bin_nondetect = np.where(bin_detect_col == 0.5)[0]
     
     #Define detection and non-detection (with reliable 5007) arrays for individual galaxies  
-    indiv_detect, indiv_nondetect = get_indiv_detect(indiv_OIII5007, indiv_OII, indiv_HBETA, indiv_bin_detect, indiv_logLHb, LHbeta_bins = hbeta_bin)
+    indiv_detect, indiv_nondetect = get_indiv_detect(indiv_props_tbl, indiv_bin_detect, LHbeta_bins = hbeta_bin)
 
     
     #Define output file name
@@ -325,7 +322,7 @@ def indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrictMTO = False, revised 
     
     
     
-def get_indiv_detect(OIII5007, OII, HBETA, bin_detect, logLHb, LHbeta_bins = False):
+def get_indiv_detect(indiv_props_tbl, bin_detect, LHbeta_bins = False):
     '''
     Purpose:
         This function creates index arrays of the individual detections and non-detections based on
@@ -343,6 +340,13 @@ def get_indiv_detect(OIII5007, OII, HBETA, bin_detect, logLHb, LHbeta_bins = Fal
         combined_nondetect --> a numpy array of non-detection indices that pass all non-detection conditions.
     '''
     
+    #Read in individual emission lines and 
+    logLHb = indiv_props_tbl[indv_names0[4]].data
+    HBETA = indiv_props_tbl['HBETA_Flux_Observed'].data
+    OII = indiv_props_tbl['OII_3727_Flux_Observed'].data
+    OIII5007 = indiv_props_tbl['OIII_5007_Flux_Observed'].data
+    
+    #Get detection and non-detection indices
     OIII5007_idx = np.where((np.isfinite(OIII5007) == True) & (OIII5007 >= 1e-18) & (OIII5007 <= 1e-15))[0]
     OII_idx = np.where((np.isfinite(OII) == True) & (OII >= 1e-18) & (OII <= 1e-15))[0]
     HBETA_idx = np.where((np.isfinite(HBETA) == True) & (HBETA >= 1e-18) & (HBETA <= 1e-15))[0]
