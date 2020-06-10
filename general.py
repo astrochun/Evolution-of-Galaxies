@@ -19,6 +19,7 @@ from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
 from Metallicity_Stack_Commons.column_names import filename_dict, indv_names0, temp_metal_names0, bin_mzevolve_names0, bin_names0
 from Metallicity_Stack_Commons.analysis import error_prop
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
+from Metallicity_Stack_Commons.plotting.balmer import HbHgHd_fits
 from Metallicity_Stack_Commons import valid_table
 
 
@@ -106,7 +107,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     plt.savefig(fitspath + 'composite_spectra_OHmasked_interp.pdf', bbox_inches = 'tight', pad_inches = 0)
     
     hdr = fits.getheader(master_grid)
-    flux_fits_file = fitspath + 'flux.fits'
+    flux_fits_file = fitspath + filename_dict['comp_spec']
     fits.writeto(flux_fits_file, flux, hdr)
     
     
@@ -149,6 +150,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     k_5007 = np.zeros(len(edge))
     bin_file = fitspath + filename_dict['bin_info']
     em_file = fitspath + filename_dict['bin_fit']
+    HbHgHd_fits(fitspath)
     
     
     #Run R, Te, and Metallicity calculations 
@@ -164,6 +166,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     if err_prop == True:
         error_prop.fluxes_derived_prop(fitspath, binned_data = True)
         bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin, err_bars = True, revised = True)
+        HbHgHd_fits(fitspath, use_revised = True)
       
         
     if indiv == True:
@@ -233,18 +236,7 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
 
     #Read in individual data
     Mbin_indiv_logM = Mbin_indiv_props_tbl[indv_names0[3]].data
-    Mbin_indiv_logLHb = Mbin_indiv_props_tbl[indv_names0[4]].data
-    
     MLHbbin_indiv_logM = MLHbbin_indiv_props_tbl[indv_names0[3]].data
-    MLHbbin_indiv_logLHb = MLHbbin_indiv_props_tbl[indv_names0[4]].data
-    
-    Mbin_indiv_HBETA = Mbin_indiv_props_tbl['HBETA_Flux_Observed'].data
-    Mbin_indiv_OII = Mbin_indiv_props_tbl['OII_3727_Flux_Observed'].data
-    Mbin_indiv_OIII5007 = Mbin_indiv_props_tbl['OIII_5007_Flux_Observed'].data
-    
-    MLHbbin_indiv_HBETA = MLHbbin_indiv_props_tbl['HBETA_Flux_Observed'].data
-    MLHbbin_indiv_OII = MLHbbin_indiv_props_tbl['OII_3727_Flux_Observed'].data
-    MLHbbin_indiv_OIII5007 = MLHbbin_indiv_props_tbl['OIII_5007_Flux_Observed'].data
     
     Mbin_indiv_metal = Mbin_indiv_derivedprops_tbl[temp_metal_names0[1]].data
     Mbin_indiv_bin_detect = Mbin_indiv_bininfo_tbl[bin_names0[2]].data
@@ -271,8 +263,8 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
     MLHbbin_nondetect = np.where(MLHbbin_detect_col == 0.5)[0]
     
     #Define detection and non-detection (with reliable 5007) arrays for individual galaxies
-    Mbin_indiv_detect, Mbin_indiv_nondetect = get_indiv_detect(Mbin_indiv_OIII5007, Mbin_indiv_OII, Mbin_indiv_HBETA, Mbin_indiv_bin_detect, Mbin_indiv_logLHb)
-    MLHbbin_indiv_detect, MLHbbin_indiv_nondetect = get_indiv_detect(MLHbbin_indiv_OIII5007, MLHbbin_indiv_OII, MLHbbin_indiv_HBETA, MLHbbin_indiv_bin_detect, MLHbbin_indiv_logLHb, LHbeta_bins = True)
+    Mbin_indiv_detect, Mbin_indiv_nondetect = get_indiv_detect(Mbin_indiv_props_tbl, Mbin_indiv_bin_detect)
+    MLHbbin_indiv_detect, MLHbbin_indiv_nondetect = get_indiv_detect(MLHbbin_indiv_props_tbl, MLHbbin_indiv_bin_detect, LHbeta_bins = True)
     
     
     #Define mass bin and mass-LHbeta bin dictionaries

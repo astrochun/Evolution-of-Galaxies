@@ -24,25 +24,40 @@ def curve_fitting(x_array, y_array, restrict_MTO = False):
         
     fail = False
     if restrict_MTO == False:
-        p0 = [8.798, 8.901, 0.640]
-        para_bounds = ((8.0, 8.0, 0.0), (9.0, 9.5, 1.0))
-        fit = mass_metal_fit
+        p0 = [8.798, 0.640, 8.901]
+        para_bounds = ((8.0, 0.0, 8.0), (9.0, 1.0, 9.5))
     else:
         p0 = [8.798, 0.640]
         para_bounds = ((8.0, 0.0), (9.0, 1.0))
-        fit = mass_metal_fit_constMTO
     try:
-        o11, o21 = curve_fit(fit, x_array, y_array, p0 = p0, bounds = para_bounds)
-        print(o11)
+        o11, o21 = curve_fit(mass_metal_fit, x_array, y_array, p0 = p0, bounds = para_bounds)
     except ValueError:
         print('Failed curve fitting!')
         fail = True
-        
+    print(o11)
+    
     return o11, o21, fail
     
     
+
+def AM13(mass):
+    '''
+    Purpose:
+        This function returns a curve calculated from the parameters from Andrews & Martini (2013):
+            8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
+           
+    Params:
+        mass --> array of log values of stellar masses.
+        
+    Returns:
+        The curve fit equation from Andrews & Martini (2013).
+    '''
     
-def mass_metal_fit(mass, a, b, g):
+    return 8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
+
+
+    
+def mass_metal_fit(mass, a, g, b = 8.901):
     '''
     Purpose:
         This function returns a curve calculated from best fit parameters from curve_fitting. The curve
@@ -60,26 +75,6 @@ def mass_metal_fit(mass, a, b, g):
     '''
     
     return a - np.log10(1 + ((10**b)/(10**mass))**g)
-
-
-
-def mass_metal_fit_constMTO(mass, a, g):
-    '''
-    Purpose:
-        This function returns a curve calculated from best fit parameters from curve_fitting while holding
-        the mass turnover parameter constant. The curve equation comes from Andrews & Martini (2013):
-            8.798 - np.log10(1 + ((10**8.901)/(10**mass))**0.640)
-           
-    Params:
-        mass --> array of log values of stellar masses.
-        a --> log(O/H) asymptotic value.
-        g --> gamma value.
-        
-    Returns:
-        An equation for the best fit curve that fits the measurements.
-    '''
-    
-    return a - np.log10(1 + ((10**8.901)/(10**mass))**g)
 
 
 
