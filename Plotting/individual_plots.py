@@ -38,12 +38,13 @@ def indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, er
     indiv_bininfo_tbl = asc.read(fitspath + filename_dict['indv_bin_info'])
     
     #Read in composite data tables
-    bin_valid_tbl = asc.read(fitspath + filename_dict['bin_valid'])
     bininfo_tbl = asc.read(fitspath + filename_dict['bin_info'])
     if revised == True:
         bin_derivedprops_tbl = asc.read(fitspath + filename_dict['bin_derived_prop_rev'])
+        bin_valid_tbl = asc.read(fitspath + filename_dict['bin_valid_rev'])
     else:    
         bin_derivedprops_tbl = asc.read(fitspath + filename_dict['bin_derived_prop'])
+        bin_valid_tbl = asc.read(fitspath + filename_dict['bin_valid'])
 
 
     #Read in individual data
