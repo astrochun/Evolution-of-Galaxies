@@ -4,7 +4,7 @@ from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from Metallicity_Stack_Commons.column_names import indv_names0, temp_metal_names0, bin_mzevolve_names0
 from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict
-from .relation_fitting import curve_fitting, mass_metal_fit, extract_error_bars, mass_metal_fit_constMTO, AM13
+from .relation_fitting import curve_fitting, mass_metal_fit, extract_error_bars, AM13
 
 
 
@@ -197,10 +197,7 @@ def indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, er
     #Fit bin detections and plot relation
     o11, o21, fail = curve_fitting(bin_logM[bin_detect], bin_metal[bin_detect], restrict_MTO = restrictMTO)
     if not fail:
-        if restrictMTO:
-            ax11.plot(mass_range, mass_metal_fit_constMTO(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
-        else:
-            ax11.plot(mass_range, mass_metal_fit(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
+        ax11.plot(mass_range, mass_metal_fit(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
           
     ax11.legend(fontsize = 5, loc = 'upper left')    
     ax11.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
@@ -293,20 +290,14 @@ def indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrictMTO = False, revised 
     #Fit bin detections and plot relation    
     o11, o21, Mbin_fail = curve_fitting(Mbin_dict['composite_logM'][Mbin_dict['composite_detect']], 
                                         Mbin_dict['composite_metallicity'][Mbin_dict['composite_detect']], 
-                                        restrict_MTO = False)
+                                        restrict_MTO = restrictMTO)
     o12, o22, MLHbbin_fail = curve_fitting(MLHbbin_dict['composite_logM'][MLHbbin_dict['composite_detect']], 
                                            MLHbbin_dict['composite_metallicity'][MLHbbin_dict['composite_detect']], 
-                                           restrict_MTO = False)
+                                           restrict_MTO = restrictMTO)
     if Mbin_fail == False:
-        if restrictMTO:
-            ax1[0].plot(mass_range, mass_metal_fit_constMTO(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
-        else:
-            ax1[0].plot(mass_range, mass_metal_fit(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
+        ax1[0].plot(mass_range, mass_metal_fit(mass_range, *o11), alpha = 0.5, color = 'red', label = 'Our Fit')
     if MLHbbin_fail == False:
-        if restrictMTO:
-            ax1[1].plot(mass_range, mass_metal_fit_constMTO(mass_range, *o12), alpha = 0.5, color = 'red', label = 'Our Fit')
-        else:
-            ax1[1].plot(mass_range, mass_metal_fit(mass_range, *o12), alpha = 0.5, color = 'red', label = 'Our Fit')
+        ax1[1].plot(mass_range, mass_metal_fit(mass_range, *o12), alpha = 0.5, color = 'red', label = 'Our Fit')
           
     ax1[0].legend(title = '$M_\star$ Bins', fontsize = 5, loc = 'upper left')    
     ax1[1].legend(title = '$M_\star$-LH$\\beta$ Bins', fontsize = 5, loc = 'upper left')
