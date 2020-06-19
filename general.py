@@ -155,7 +155,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     
     #Run R, Te, and Metallicity calculations 
     metal_file = fitspath + filename_dict['bin_derived_prop']
-    R_temp_calcul.run_function(em_file, bin_file, metal_file, EBV, k_4363, k_5007)
+    R_temp_calcul.run_function(em_file, bin_file, metal_file)
     
     
     #Run plots
