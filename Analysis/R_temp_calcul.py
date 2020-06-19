@@ -6,30 +6,27 @@ from Metallicity_Stack_Commons.analysis.ratios import flux_ratios
 from Metallicity_Stack_Commons import line_name_short
     
     
-def run_function(line_file, bin_file, outfile):
+def run_function(line_file, bin_file, outfile, EBV = None):
     '''
     Purpose:
-        This function runs the R calculation, temperature calculation, and metallicity calculation
-        functions for the case of individual and stacked spectra.
+        This function gets line ratios and runs the temperature and metallicity calculation functions
+        for the case of stacked spectra.
         
     Usage:
-        R_temp_calcul.run_function(line_file, outfile, EBV, k_4363, k_5007)
+        R_temp_calcul.run_function(line_file, outfile)
         
     Params:
-        line_file --> ascii table that has all the data for each emission line.
-        outfile --> a string naming the tables that are produced by this function.
-        EBV --> an array of E(B - V) values. The array is the size of the number of sources (or bins).
-        k_4363 --> an array of dust extinction values at the OIII4363 emission line for each bin/individual source.
-        k_5007 --> an array of dust extinction values at the OIII5007 emission line for each bin/individual source.
+        line_file --> ascii table that has emission line measurements.
+        bin_file --> ascii table that contains bin information (e.g., bin IDs).
+        outfile --> a string naming the temp/metal table produced by this function.
+        EBV (OPTIONAL) --> an array of E(B-V) values.
         
     Returns:
         None
         
     Outputs:
-        out_ascii --> an ascii table containing the bin temperatures, bin or individual metallicities,
-            and bin or individual line fluxes and S/N.
-        out_fits --> a fits table containing the bin temperatures, bin or individual metallicities,
-            and bin or individual line fluxes and S/N.
+        out_ascii --> ascii table containing bin line ratios, temperatures, and metallicities.
+        out_fits --> fits table containing bin line ratioes, temperatures, and metallicities.
     '''
     
     line_table = asc.read(line_file)
@@ -61,11 +58,3 @@ def run_function(line_file, bin_file, outfile):
     
     asc.write(tab0, outfile, format = 'fixed_width_two_line', overwrite = True)
     tab0.write(outfile.replace('.tbl', '.fits'), format = 'fits', overwrite = True) 
-    
-    
-    
-    
-    
-    
-    
-    
