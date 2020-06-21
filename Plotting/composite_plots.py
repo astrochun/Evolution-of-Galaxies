@@ -2,10 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
-from Metallicity_Stack_Commons import line_name_short
 from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_ratios0, bin_mzevolve_names0
 from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict
-from Metallicity_Stack_Commons.analysis.ratios import flux_ratios
 from .relation_fitting import extract_error_bars, AM13
 
 
@@ -35,12 +33,10 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     if revised:
         pdf_pages = PdfPages(fitspath + filename_dict['bin_derived_prop_rev'].replace('.tbl', '.pdf'))
         metal_table = asc.read(fitspath + filename_dict['bin_derived_prop_rev'])
-        em_table = asc.read(fitspath + filename_dict['bin_fit_rev'])
         valid_table = asc.read(fitspath + filename_dict['bin_valid_rev'])
     else:
         pdf_pages = PdfPages(fitspath + filename_dict['bin_derived_prop'].replace('.tbl', '.pdf'))
         metal_table = asc.read(fitspath + filename_dict['bin_derived_prop'])
-        em_table = asc.read(fitspath + filename_dict['bin_fit'])
         valid_table = asc.read(fitspath + filename_dict['bin_valid'])
     bin_table = asc.read(fitspath + filename_dict['bin_info'])
     
@@ -51,17 +47,10 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     logO32 = metal_table[bin_ratios0[1]].data
     log_twoBeta = np.log10(metal_table[bin_ratios0[2]].data)
     log_threeBeta = np.log10(metal_table[bin_ratios0[3]].data)
+    logR = np.log10(metal_table[bin_ratios0[4]])
     logM_avg = bin_table[bin_mzevolve_names0[2]].data
     logLHb_avg = bin_table[bin_mzevolve_names0[6]].data
     detection = valid_table[bin_names0[2]].data
-    
-    #Get flux ratios 
-    flux_dict = {line_name_short['HB']:em_table['HBETA_Flux_Observed'].data,
-                 line_name_short['OII']:em_table['OII_3727_Flux_Observed'].data,
-                 line_name_short['OIII']:em_table['OIII_5007_Flux_Observed'].data,
-                 line_name_short['4363']:em_table['OIII_4363_Flux_Observed'].data}  
-    flux_ratios_dict = flux_ratios(flux_dict)
-    logR = np.log10(flux_ratios_dict['R'])
     
     #Define detection and non-detection (with reliable 5007) arrays
     detect = np.where(detection == 1)[0]
