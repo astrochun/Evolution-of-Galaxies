@@ -51,7 +51,7 @@ def run_function(line_file, bin_file, outfile, EBV = None):
     metal_dict = metallicity_calculation(T_e, two_beta, three_beta)
     
     n = tuple([bin_names0[0]] + bin_ratios0 + temp_metal_names0)
-    tab0 = Table([bin_IDs, logR23, logO32, two_beta, three_beta, T_e, metal_dict['12+log(O/H)'], 
+    tab0 = Table([bin_IDs, logR23, logO32, two_beta, three_beta, R, T_e, metal_dict['12+log(O/H)'], 
                   metal_dict['log(O+/H)'], metal_dict['log(O++/H)'], metal_dict['O+/H'],
                   metal_dict['O++/H']], names = n) 
 
