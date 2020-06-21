@@ -21,6 +21,7 @@ from Metallicity_Stack_Commons.analysis import error_prop
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
 from Metallicity_Stack_Commons.plotting.balmer import HbHgHd_fits
 from Metallicity_Stack_Commons import valid_table
+from Metallicity_Stack_Commons.analysis.attenuation import EBV_table_update
 
 
 path = get_user()
@@ -44,7 +45,7 @@ def get_HB_luminosity():
 
 
 
-def run_bin_analysis(err_prop = False, indiv = False):
+def run_bin_analysis(dust_atten = False, err_prop = False, indiv = False):
     '''
     Purpose:
         This function runs the entire binning process: binning, emission line fitting, validation table,
@@ -144,16 +145,9 @@ def run_bin_analysis(err_prop = False, indiv = False):
         valid_file = fitspath + filename_dict['bin_valid_rev']
     
     
-    #Run dust attenuation
-    EBV = np.zeros(len(edge))
-    k_4363 = np.zeros(len(edge))
-    k_5007 = np.zeros(len(edge))
+    #Run R, Te, and Metallicity calculations 
     bin_file = fitspath + filename_dict['bin_info']
     em_file = fitspath + filename_dict['bin_fit']
-    HbHgHd_fits(fitspath)
-    
-    
-    #Run R, Te, and Metallicity calculations 
     metal_file = fitspath + filename_dict['bin_derived_prop']
     R_temp_calcul.run_function(em_file, bin_file, metal_file)
     
@@ -162,10 +156,17 @@ def run_bin_analysis(err_prop = False, indiv = False):
     bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin)
     
     
-    #Run error propagation, histograms, and revised data plots
+    #Run dust attenuation
+    if dust_atten == True:
+        EBV_table_update(fitspath)
+        HbHgHd_fits(fitspath)
+    
+    
+    #Run error propagation and revised data plots
     if err_prop == True:
         error_prop.fluxes_derived_prop(fitspath, binned_data = True)
         bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin, err_bars = True, revised = True)
+        EBV_table_update(fitspath, use_revised = True)
         HbHgHd_fits(fitspath, use_revised = True)
       
         
