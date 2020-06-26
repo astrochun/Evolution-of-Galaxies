@@ -156,18 +156,18 @@ def run_bin_analysis(dust_atten = False, err_prop = False, indiv = False):
     bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin)
     
     
+    #Run error propagation and revised data plots
+    if err_prop == True:
+        error_prop.fluxes_derived_prop(fitspath, binned_data = True, revised = False)
+        bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin, err_bars = True, revised = True)        
+        EBV_table_update(fitspath, use_revised = True)
+        HbHgHd_fits(fitspath, use_revised = True)
+        
+        
     #Run dust attenuation
     if dust_atten == True:
         EBV_table_update(fitspath)
         HbHgHd_fits(fitspath)
-    
-    
-    #Run error propagation and revised data plots
-    if err_prop == True:
-        error_prop.fluxes_derived_prop(fitspath, binned_data = True, revised = False)
-        bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin, err_bars = True, revised = True)
-        EBV_table_update(fitspath, use_revised = True)
-        HbHgHd_fits(fitspath, use_revised = True)
       
         
     if indiv == True:
