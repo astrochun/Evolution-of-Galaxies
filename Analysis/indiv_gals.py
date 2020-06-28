@@ -101,7 +101,7 @@ def indiv_bin_info_table(fitspath, line_file, LHb_bin = False, use_revised = Fal
     
     
     
-def indiv_em_table(fitspath, line_file, bin_npz_file): 
+def indiv_em_table(fitspath, line_file): 
     #This function makes individual_properties.tbl
     
     hdu = fits.open(line_file)
