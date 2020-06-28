@@ -8,7 +8,7 @@ from Metallicity_Stack_Commons import line_name
 
 
 
-def indiv_bin_info_table(fitspath, line_file, bin_npz_file, valid_file, LHb_bin = False):
+def indiv_bin_info_table(fitspath, line_file, LHb_bin = False, use_revised = False):
     #This function makes individual_bin_info.tbl   
 
     '''
@@ -47,10 +47,13 @@ def indiv_bin_info_table(fitspath, line_file, bin_npz_file, valid_file, LHb_bin 
     else:
         bin_type = 'logM'
     
-    bin_npz = np.load(bin_npz_file)
+    bin_npz = np.load(fitspath + filename_dict['bin_info'].replace('.tbl', '.npz'))
     bin_tbl = asc.read(fitspath + filename_dict['bin_info'])
-    valid_tbl = asc.read(fitspath + filename_dict['bin_valid'])
     hdu = fits.open(line_file)
+    if use_revised == True:
+        valid_tbl = asc.read(fitspath + filename_dict['bin_valid_rev'])
+    else:
+        valid_tbl = asc.read(fitspath + filename_dict['bin_valid'])
     
     
     line_table = hdu[1].data
@@ -102,7 +105,7 @@ def indiv_em_table(fitspath, line_file, bin_npz_file):
     #This function makes individual_properties.tbl
     
     hdu = fits.open(line_file)
-    bin_npz = np.load(bin_npz_file)
+    bin_npz = np.load(fitspath + filename_dict['bin_info'].replace('.tbl', '.npz'))
     
     #Get logMass and logLHbeta
     all_logM = bin_npz['mass']
