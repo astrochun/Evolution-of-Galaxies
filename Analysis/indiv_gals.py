@@ -9,37 +9,23 @@ from Metallicity_Stack_Commons import line_name, line_type
 
 
 def indiv_bin_info_table(fitspath, line_file, LHb_bin = False, use_revised = False):
-    #This function makes individual_bin_info.tbl   
-
     '''
-    REDO DOCUMENTATION
     Purpose:
-        This function creates a table the size of the number of individual galaxies with valid mass, 
-        and it holds individual galaxy line measurements, bin temperatures (for both cases) applied to the
-        galaxies within each bin, detection markings, and individual and bin ID numbers.
-        
-    Usage:
-        indiv_gals.create_Te_line_table(fitspath, line_file, mass_bin_file, HB_bin_file, mass_Te_file, HB_Te_file)
+        This function creates a table containing bin information such as bin ID numbers, minimum, 
+        maximum, median, and average mass and/or HBeta luminosity measurements, bin detection markings,
+        and indiviudal galaxy ID numbers.
         
     Params:
-        fitspath --> a string of the file path where the input file is and where the output file will be placed.
-        line_file --> a fits table containing the individual line measurements.
-        mass_bin_file --> an npz file containing the indices of galaxies, relative to line_file, contained in 
-            each mass bin. It also contains the mass values of all sources (indexed the same as line_file).
-        HB_bin_file --> an npz file containing the indices of galaxies, relative to line_file, contained in 
-            each mass-LHbeta bin. It also contains the log of the HBeta luminosity values of all sources.
-        mass_Te_file --> an ascii table containing the electron temperatures and detection markings for each
-            mass bin.
-        HB_Te_file --> an ascii table containing the electron temperatures and detection markings for each
-            mass-LHbeta bin.
+        fitspath --> file path where bin files are located and where the output file will be located
+        line_file --> a fits table containing individual galaxy ID numbers
+        LHb_bin (OPTIONAL) --> boolean to determine which binning type was used (default is False)
+        use_revised (OPTIONAL) --> boolean to use the revised validation table or not (default is False)
         
     Returns:
         None
         
     Outputs:
-        fitspath + 'individual_Te_emLines.tbl' --> an ascii table containing individual and bin ID numbers,
-            bin temperatures correlated to individual galaxies in each bin, detection markings, and individual
-            line fluxes and signal to noise.
+        'individual_bin_info.tbl'
     '''
     
     if LHb_bin == True:
