@@ -102,29 +102,41 @@ def indiv_bin_info_table(fitspath, line_file, LHb_bin = False, use_revised = Fal
     
     
 def indiv_em_table(fitspath, line_file): 
-    #This function makes individual_properties.tbl
+    '''
+    Purpose:
+        This function creates a table containing individual galaxy ID numbers, masses, HBeta luminosities,
+        and line measurements for OII_3727, HBeta, and OIII_5007.
     
+    Params:
+        fitspath --> file path where bin files are located and where the output file will be located
+        line_file --> a fits table containing the individual line measurements
+        
+    Returns:
+        None
+        
+    Outputs:
+        'individual_properties.tbl'
+    '''
+    
+    #Read in individual line measurement file and bin information file
     hdu = fits.open(line_file)
     bin_npz = np.load(fitspath + filename_dict['bin_info'].replace('.tbl', '.npz'))
     
-    #Get valid indices
+    #Get indices valid for binning
     valid_idx = []
     for ii in range(len(bin_npz['bin_ind'])):
         valid_idx += list(bin_npz['bin_ind'][ii])
     idx_array = np.array(valid_idx)
     
-    #Get individual lines fluxes and S/N 
-    line_table = hdu[1].data 
-    line_table = line_table[idx_array]
-    
+    #Get column names from individual line measurement file
     line_tbl_names = ['_FLUX_MOD', '_FLUX_DATA', '_SNR', '_LAMBDA', '_PEAK', '_Y0', '_SIGMA', '_NOISE']
     line_tbl_prefixes = ['OIIB', 'HB', 'OIIIR']
-    
     line_tbl_col = []
     for mm in range(len(line_tbl_prefixes)):
         for nn in range(len(line_tbl_names)):
             line_tbl_col += [line_tbl_prefixes[mm] + line_tbl_names[nn]]
     
+    #Get column names for output table
     cols = []
     line_names = [line_name[0], line_name[4], line_name[-1]]
     line_types = [line_type[0], line_type[4], line_type[-1]]
@@ -133,6 +145,9 @@ def indiv_em_table(fitspath, line_file):
     cols.remove('HBETA_Abs_Norm')
     cols.remove('HBETA_Abs_Sigma')
     
+    #Collect data in dictionary and write to output table
+    line_table = hdu[1].data 
+    line_table = line_table[idx_array]
     data = {indv_names0[0]:line_table['OBJNO'], indv_names0[3]:bin_npz['mass'][idx_array], 
             indv_names0[4]:bin_npz['lum'][idx_array]}
     for jj in range(len(cols)):
