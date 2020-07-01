@@ -2,8 +2,8 @@ import numpy as np
 from astropy.io import fits
 from astropy.io import ascii as asc
 from astropy.table import Table
-from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0, indv_names0, gauss_names0
-from Metallicity_Stack_Commons import line_name
+from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0, indv_names0, line_fit_suffix_add
+from Metallicity_Stack_Commons import line_name, line_type
     
 
 
@@ -107,73 +107,37 @@ def indiv_em_table(fitspath, line_file):
     hdu = fits.open(line_file)
     bin_npz = np.load(fitspath + filename_dict['bin_info'].replace('.tbl', '.npz'))
     
-    #Get logMass and logLHbeta
-    all_logM = bin_npz['mass']
-    all_logLHb = bin_npz['lum']
-    bin_idx = bin_npz['bin_ind']
+    #Get valid indices
     valid_idx = []
-    for ii in range(len(bin_idx)):
-        valid_idx += list(bin_idx[ii])
+    for ii in range(len(bin_npz['bin_ind'])):
+        valid_idx += list(bin_npz['bin_ind'][ii])
     idx_array = np.array(valid_idx)
-    logM = all_logM[idx_array]
-    logLHb = all_logLHb[idx_array]
     
     #Get individual lines fluxes and S/N 
     line_table = hdu[1].data 
     line_table = line_table[idx_array]
-    ID = line_table['OBJNO']      
-    OII_FluxG = line_table['OIIB_FLUX_MOD']
-    OII_FluxO = line_table['OIIB_FLUX_DATA']
-    OII_RMS = line_table['OIIB_NOISE']
-    OII_SN = line_table['OIIB_SNR']
-    OII_Center = line_table['OIIB_LAMBDA']
-    OII_Norm = line_table['OIIB_PEAK']
-    OII_Med = line_table['OIIB_Y0']
-    OII_Sigma = line_table['OIIB_SIGMA']
-    HBETA_FluxG = line_table['HB_FLUX_MOD']
-    HBETA_FluxO = line_table['HB_FLUX_DATA']
-    HBETA_RMS = line_table['HB_NOISE']
-    HBETA_SN = line_table['HB_SNR']
-    HBETA_Center = line_table['HB_LAMBDA']
-    HBETA_Norm = line_table['HB_PEAK']
-    HBETA_Med = line_table['HB_Y0']
-    HBETA_Sigma = line_table['HB_SIGMA']
-    OIII5007_FluxG = line_table['OIIIR_FLUX_MOD']
-    OIII5007_FluxO = line_table['OIIIR_FLUX_DATA']
-    OIII5007_RMS = line_table['OIIIR_NOISE']
-    OIII5007_SN = line_table['OIIIR_SNR']
-    OIII5007_Center = line_table['OIIIR_LAMBDA']
-    OIII5007_Norm = line_table['OIIIR_PEAK']
-    OIII5007_Med = line_table['OIIIR_Y0']
-    OIII5007_Sigma = line_table['OIIIR_SIGMA']
+    
+    line_tbl_names = ['_FLUX_MOD', '_FLUX_DATA', '_SNR', '_LAMBDA', '_PEAK', '_Y0', '_SIGMA', '_NOISE']
+    line_tbl_prefixes = ['OIIB', 'HB', 'OIIIR']
+    
+    line_tbl_col = []
+    for mm in range(len(line_tbl_prefixes)):
+        for nn in range(len(line_tbl_names)):
+            line_tbl_col += [line_tbl_prefixes[mm] + line_tbl_names[nn]]
     
     cols = []
     line_names = [line_name[0], line_name[4], line_name[-1]]
+    line_types = [line_type[0], line_type[4], line_type[-1]]
     for ii in range(len(line_names)):
-        for jj in range(len(gauss_names0)):
-            cols += [line_names[ii] + '_' + gauss_names0[jj]]
+        cols += line_fit_suffix_add(line_names[ii], line_types[ii])
+    cols.remove('HBETA_Abs_Norm')
+    cols.remove('HBETA_Abs_Sigma')
+    
+    data = {indv_names0[0]:line_table['OBJNO'], indv_names0[3]:bin_npz['mass'][idx_array], 
+            indv_names0[4]:bin_npz['lum'][idx_array]}
+    for jj in range(len(cols)):
+        data[cols[jj]] = line_table[line_tbl_col[jj]]
 
     out_ascii = fitspath + filename_dict['indv_prop']
-    n = [indv_names0[0]] + indv_names0[3:5] + cols 
-    indiv_props_tbl = Table([ID, logM, logLHb, OII_FluxG, OII_FluxO, OII_SN, OII_Center, OII_Norm, OII_Med,
-                             OII_Sigma, OII_RMS, HBETA_FluxG, HBETA_FluxO, HBETA_SN, HBETA_Center, HBETA_Norm, 
-                             HBETA_Med, HBETA_Sigma, HBETA_RMS, OIII5007_FluxG, OIII5007_FluxO, OIII5007_SN, 
-                             OIII5007_Center, OIII5007_Norm, OIII5007_Med, OIII5007_Sigma, OIII5007_RMS], names = tuple(n))
-    asc.write(indiv_props_tbl, out_ascii, format = 'fixed_width_two_line', overwrite = True)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    indiv_props_tbl = Table(data, names = tuple([indv_names0[0]] + indv_names0[3:5] + cols))
+    asc.write(indiv_props_tbl, out_ascii, format = 'fixed_width_two_line', overwrite = True) 
