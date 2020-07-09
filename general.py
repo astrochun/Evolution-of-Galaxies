@@ -135,14 +135,16 @@ def run_bin_analysis(dust_atten = False, err_prop = False, indiv = False):
     
     #Run validation table
     valid_table.make_validation_table(fitspath)
-    valid_file = fitspath + filename_dict['bin_valid']
     if bool_hbeta_bin == True:
         vtbl_rev = asc.read(fitspath + filename_dict['bin_valid_rev'], format = 'fixed_width_two_line')
         detect = vtbl_rev['Detection'].data
         detect[11] = 0.5
         vtbl_rev.replace_column('Detection', detect)
         asc.write(vtbl_rev, fitspath + filename_dict['bin_valid_rev'], format = 'fixed_width_two_line', overwrite = True)
-        valid_file = fitspath + filename_dict['bin_valid_rev']
+    else:
+        vtbl = asc.read(fitspath + filename_dict['bin_valid'], format = 'fixed_width_two_line')
+        asc.write(vtbl, fitspath + filename_dict['bin_valid_rev'], format = 'fixed_width_two_line', overwrite = True)
+    valid_file = fitspath + filename_dict['bin_valid_rev']
     
     
     #Run R, Te, and Metallicity calculations 
