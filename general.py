@@ -174,7 +174,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     if indiv == True:
         #Create individual_bin_info table
         line_file = path_init2 + 'All Datasets/DEEP2_all_line_fit.fits'
-        indiv_gals.indiv_bin_info_table(fitspath, line_file, LHb_bin = bool_hbeta_bin, use_revised = True)
+        indiv_gals.indiv_bin_info_table(fitspath, line_file, use_revised = True)
  
         #Create individual_properties table
         indiv_gals.indiv_em_table(fitspath, line_file)
