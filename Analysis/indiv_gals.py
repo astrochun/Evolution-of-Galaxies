@@ -58,18 +58,18 @@ def indiv_bin_info_table(fitspath, line_file, use_revised = False):
     for ii in range(len(bin_idx)):
         valid_idx += list(bin_idx[ii])
         for jj in range(len(bin_idx[ii])):
-            indiv_dict['bin_ID'] += [bin_dict['bin_ID'][ii]] 
-            indiv_dict['Detection'] += [detect[ii]]
-            indiv_dict['logM_min'] += [bin_dict['logM_min'][ii]]
-            indiv_dict['logM_max'] += [bin_dict['logM_max'][ii]]
-            indiv_dict['logM_avg'] += [bin_dict['logM_avg'][ii]]
-            indiv_dict['logM_median'] += [bin_dict['logM_median'][ii]]
-            indiv_dict['logLHb_min'] += [bin_dict['logLHb_min'][ii]]
-            indiv_dict['logLHb_max'] += [bin_dict['logLHb_max'][ii]]
-            indiv_dict['logLHb_avg'] += [bin_dict['logLHb_avg'][ii]]
-            indiv_dict['logLHb_median'] += [bin_dict['logLHb_median'][ii]]
+            indiv_dict[bin_names0[0]] += [bin_dict[bin_names0[0]][ii]]   #bin_ID
+            indiv_dict[bin_names0[2]] += [detect[ii]]                    #Detection
+            indiv_dict[bin_mzevolve_names0[0]] += [bin_dict[bin_mzevolve_names0[0]][ii]]   #logM_min
+            indiv_dict[bin_mzevolve_names0[1]] += [bin_dict[bin_mzevolve_names0[1]][ii]]   #logM_max
+            indiv_dict[bin_mzevolve_names0[2]] += [bin_dict[bin_mzevolve_names0[2]][ii]]   #logM_avg
+            indiv_dict[bin_mzevolve_names0[3]] += [bin_dict[bin_mzevolve_names0[3]][ii]]   #logM_median
+            indiv_dict[bin_mzevolve_names0[4]] += [bin_dict[bin_mzevolve_names0[4]][ii]]   #logLHb_min
+            indiv_dict[bin_mzevolve_names0[5]] += [bin_dict[bin_mzevolve_names0[5]][ii]]   #logLHb_max
+            indiv_dict[bin_mzevolve_names0[6]] += [bin_dict[bin_mzevolve_names0[6]][ii]]   #logLHb_avg
+            indiv_dict[bin_mzevolve_names0[7]] += [bin_dict[bin_mzevolve_names0[7]][ii]]   #logLHb_median
     idx_array = np.array(valid_idx)
-    indiv_dict['ID'] = objno[idx_array]          
+    indiv_dict[indv_names0[0]] = objno[idx_array]      #ID     
 
     
     out_ascii = fitspath + filename_dict['indv_bin_info']
