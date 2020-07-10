@@ -173,12 +173,11 @@ def run_bin_analysis(err_prop = False, indiv = False):
         
     if indiv == True:
         #Create individual_bin_info table
-        line_file = path_init2 + 'dataset/DEEP2_all_line_fit.fits'
-        bin_npz_file = fitspath + filename_dict['bin_info'].replace('.tbl', '.npz')
-        indiv_gals.indiv_bin_info_table(fitspath, line_file, bin_npz_file, valid_file, LHb_bin = bool_hbeta_bin)
+        line_file = path_init2 + 'All Datasets/DEEP2_all_line_fit.fits'
+        indiv_gals.indiv_bin_info_table(fitspath, line_file, use_revised = True)
  
         #Create individual_properties table
-        indiv_gals.indiv_em_table(fitspath, line_file, bin_npz_file)
+        indiv_gals.indiv_em_table(fitspath, line_file)
         
         #Create individual_derived_properties table
         main(fitspath, '', revised = False, det3 = True)
