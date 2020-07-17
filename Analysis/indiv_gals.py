@@ -3,6 +3,7 @@ from astropy.io import fits
 from astropy.io import ascii as asc
 from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0, indv_names0, line_fit_suffix_add
 from Metallicity_Stack_Commons import line_name, line_type
+from Evolution_of_Galaxies.general import table_to_dict
     
 
 
@@ -27,7 +28,6 @@ def indiv_bin_info_table(fitspath, line_file, use_revised = False):
     '''
     
     bin_npz = np.load(fitspath + filename_dict['bin_info'].replace('.tbl', '.npz'))
-    tbl = asc.read(fitspath + filename_dict['bin_info'])
     hdu = fits.open(line_file)
     if use_revised == True:
         valid_tbl = asc.read(fitspath + filename_dict['bin_valid_rev'])
@@ -35,12 +35,7 @@ def indiv_bin_info_table(fitspath, line_file, use_revised = False):
         valid_tbl = asc.read(fitspath + filename_dict['bin_valid'])
         
     #Convert bin info table into a dictionary
-    cols = tbl.colnames
-    bin_dict = {}
-    for col in cols:
-        if col not in bin_dict:
-            bin_dict[col] = tbl[col].data
-    
+    bin_dict = table_to_dict(fitspath + filename_dict['bin_info'])
     
     line_table = hdu[1].data
     objno = line_table['OBJNO']
