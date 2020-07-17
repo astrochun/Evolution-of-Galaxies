@@ -52,17 +52,16 @@ def indiv_bin_info_table(fitspath, line_file, use_revised = False):
     valid_idx = []
     for ii in range(len(bin_idx)):
         valid_idx += list(bin_idx[ii])
-        for jj in range(len(bin_idx[ii])):
-            indiv_dict[bin_names0[0]] += [bin_dict[bin_names0[0]][ii]]   #bin_ID
-            indiv_dict[bin_names0[2]] += [detect[ii]]                    #Detection
-            indiv_dict[bin_mzevolve_names0[0]] += [bin_dict[bin_mzevolve_names0[0]][ii]]   #logM_min
-            indiv_dict[bin_mzevolve_names0[1]] += [bin_dict[bin_mzevolve_names0[1]][ii]]   #logM_max
-            indiv_dict[bin_mzevolve_names0[2]] += [bin_dict[bin_mzevolve_names0[2]][ii]]   #logM_avg
-            indiv_dict[bin_mzevolve_names0[3]] += [bin_dict[bin_mzevolve_names0[3]][ii]]   #logM_median
-            indiv_dict[bin_mzevolve_names0[4]] += [bin_dict[bin_mzevolve_names0[4]][ii]]   #logLHb_min
-            indiv_dict[bin_mzevolve_names0[5]] += [bin_dict[bin_mzevolve_names0[5]][ii]]   #logLHb_max
-            indiv_dict[bin_mzevolve_names0[6]] += [bin_dict[bin_mzevolve_names0[6]][ii]]   #logLHb_avg
-            indiv_dict[bin_mzevolve_names0[7]] += [bin_dict[bin_mzevolve_names0[7]][ii]]   #logLHb_median
+        indiv_dict[bin_names0[0]] += [bin_dict[bin_names0[0]][ii]] * len(bin_idx[ii])                     #bin_ID
+        indiv_dict[bin_names0[2]] += [detect[ii]] * len(bin_idx[ii])                                      #Detection
+        indiv_dict[bin_mzevolve_names0[0]] += [bin_dict[bin_mzevolve_names0[0]][ii]] * len(bin_idx[ii])   #logM_min
+        indiv_dict[bin_mzevolve_names0[1]] += [bin_dict[bin_mzevolve_names0[1]][ii]] * len(bin_idx[ii])   #logM_max
+        indiv_dict[bin_mzevolve_names0[2]] += [bin_dict[bin_mzevolve_names0[2]][ii]] * len(bin_idx[ii])   #logM_avg
+        indiv_dict[bin_mzevolve_names0[3]] += [bin_dict[bin_mzevolve_names0[3]][ii]] * len(bin_idx[ii])   #logM_median
+        indiv_dict[bin_mzevolve_names0[4]] += [bin_dict[bin_mzevolve_names0[4]][ii]] * len(bin_idx[ii])   #logLHb_min
+        indiv_dict[bin_mzevolve_names0[5]] += [bin_dict[bin_mzevolve_names0[5]][ii]] * len(bin_idx[ii])   #logLHb_max
+        indiv_dict[bin_mzevolve_names0[6]] += [bin_dict[bin_mzevolve_names0[6]][ii]] * len(bin_idx[ii])   #logLHb_avg
+        indiv_dict[bin_mzevolve_names0[7]] += [bin_dict[bin_mzevolve_names0[7]][ii]] * len(bin_idx[ii])   #logLHb_median
     idx_array = np.array(valid_idx)
     indiv_dict[indv_names0[0]] = objno[idx_array]      #ID     
 
