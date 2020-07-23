@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.optimize import curve_fit 
 from astropy.io import ascii as asc
-from Metallicity_Stack_Commons.column_names import npz_filename_dict, filename_dict, temp_metal_names0, bin_names0
+from Metallicity_Stack_Commons.column_names import npz_filename_dict, filename_dict
+from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_names0
 
 
 def curve_fitting(x_array, y_array, restrict_MTO = False):
@@ -23,7 +24,7 @@ def curve_fitting(x_array, y_array, restrict_MTO = False):
     '''
         
     fail = False
-    if restrict_MTO == False:
+    if not restrict_MTO:
         p0 = [8.798, 0.640, 8.901]
         para_bounds = ((8.0, 0.0, 8.0), (9.0, 1.0, 9.5))
     else:
@@ -102,23 +103,9 @@ def extract_error_bars(fitspath):
     Te_low_err = -1*np.log10(1 - Te_err[:,0]/T_e[detect])
     Te_high_err = np.log10(1 + Te_err[:,1]/T_e[detect])
     
-    err_dict = {'T_e_lowhigh_error': [Te_low_err, Te_high_err], '12+log(O/H)_lowhigh_error': [metal_err[:,0], metal_err[:,1]]}
+    err_dict = {'T_e_lowhigh_error': [Te_low_err, Te_high_err], 
+                '12+log(O/H)_lowhigh_error': [metal_err[:,0], metal_err[:,1]]}
     
     der_prop_err.close()
     
     return err_dict
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
