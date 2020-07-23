@@ -37,15 +37,18 @@ def run_function(line_file, bin_file, outfile, EBV = None):
     bin_table = asc.read(bin_file, format='fixed_width_two_line')
     bin_IDs = bin_table[bin_names0[0]].data
     
+    # Get flux ratios
     flux_dict = {line_name_short['HB']:line_table['HBETA_Flux_Observed'].data,
                  line_name_short['OII']:line_table['OII_3727_Flux_Observed'].data,
                  line_name_short['OIII']:line_table['OIII_5007_Flux_Observed'].data,
                  line_name_short['4363']:line_table['OIII_4363_Flux_Observed'].data}  
     flux_ratios_dict = flux_ratios(flux_dict)
   
+    # Calculate composite electron temperature and metallicity
     Te = temp_calculation(flux_ratios_dict['R'])
     metal_dict = metallicity_calculation(Te, flux_ratios_dict['two_beta'], flux_ratios_dict['three_beta'])
     
+    # Get bin IDs and composite measurements in one dicitonary and write to table
     tbl_dict = {bin_names0[0]:bin_IDs}
     indiv_ratios0 = indv_names0[1:3] + indv_names0[5:]
     tbl_dict.update({bin_ratios0[ii]:flux_ratios_dict[indiv_ratios0[ii]] for ii in range(len(indiv_ratios0))})
