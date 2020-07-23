@@ -40,30 +40,33 @@ def indiv_bin_info_table(fitspath, line_file, use_revised = False):
     line_table = hdu[1].data
     objno = line_table['OBJNO']
     bin_idx = bin_npz['bin_ind']     #valid mass bin indices relative to unsorted data table 
-    detect = valid_tbl[bin_names0[2]].data                   
+    detect = valid_tbl[bin_names0[2]].data  
+    N_stack = valid_tbl[bin_names0[1]].data             
     
+    valid_idx = np.hstack(bin_idx)
     
     #Get all bin valid values in dictionary
     bin_cols = [bin_names0[0], bin_names0[2], indv_names0[0]] + bin_mzevolve_names0
     indiv_dict = {}
     for name in bin_cols:
-        indiv_dict[name] = []
+        indiv_dict[name] = np.zeros(len(valid_idx))
     
-    valid_idx = []
+    start = 0
     for ii in range(len(bin_idx)):
-        valid_idx += list(bin_idx[ii])
-        indiv_dict[bin_names0[0]] += [bin_dict[bin_names0[0]][ii]] * len(bin_idx[ii])                     #bin_ID
-        indiv_dict[bin_names0[2]] += [detect[ii]] * len(bin_idx[ii])                                      #Detection
-        indiv_dict[bin_mzevolve_names0[0]] += [bin_dict[bin_mzevolve_names0[0]][ii]] * len(bin_idx[ii])   #logM_min
-        indiv_dict[bin_mzevolve_names0[1]] += [bin_dict[bin_mzevolve_names0[1]][ii]] * len(bin_idx[ii])   #logM_max
-        indiv_dict[bin_mzevolve_names0[2]] += [bin_dict[bin_mzevolve_names0[2]][ii]] * len(bin_idx[ii])   #logM_avg
-        indiv_dict[bin_mzevolve_names0[3]] += [bin_dict[bin_mzevolve_names0[3]][ii]] * len(bin_idx[ii])   #logM_median
-        indiv_dict[bin_mzevolve_names0[4]] += [bin_dict[bin_mzevolve_names0[4]][ii]] * len(bin_idx[ii])   #logLHb_min
-        indiv_dict[bin_mzevolve_names0[5]] += [bin_dict[bin_mzevolve_names0[5]][ii]] * len(bin_idx[ii])   #logLHb_max
-        indiv_dict[bin_mzevolve_names0[6]] += [bin_dict[bin_mzevolve_names0[6]][ii]] * len(bin_idx[ii])   #logLHb_avg
-        indiv_dict[bin_mzevolve_names0[7]] += [bin_dict[bin_mzevolve_names0[7]][ii]] * len(bin_idx[ii])   #logLHb_median
-    idx_array = np.array(valid_idx)
-    indiv_dict[indv_names0[0]] = objno[idx_array]      #ID     
+        end = start + N_stack[ii]
+        arr = np.arange(start, end)
+        start = end
+        indiv_dict[bin_names0[0]][arr] = bin_dict[bin_names0[0]][ii]                     #bin_ID
+        indiv_dict[bin_names0[2]][arr] = detect[ii]                                      #Detection
+        indiv_dict[bin_mzevolve_names0[0]][arr] = bin_dict[bin_mzevolve_names0[0]][ii]   #logM_min
+        indiv_dict[bin_mzevolve_names0[1]][arr] = bin_dict[bin_mzevolve_names0[1]][ii]   #logM_max
+        indiv_dict[bin_mzevolve_names0[2]][arr] = bin_dict[bin_mzevolve_names0[2]][ii]   #logM_avg
+        indiv_dict[bin_mzevolve_names0[3]][arr] = bin_dict[bin_mzevolve_names0[3]][ii]   #logM_median
+        indiv_dict[bin_mzevolve_names0[4]][arr] = bin_dict[bin_mzevolve_names0[4]][ii]   #logLHb_min
+        indiv_dict[bin_mzevolve_names0[5]][arr] = bin_dict[bin_mzevolve_names0[5]][ii]   #logLHb_max
+        indiv_dict[bin_mzevolve_names0[6]][arr] = bin_dict[bin_mzevolve_names0[6]][ii]   #logLHb_avg
+        indiv_dict[bin_mzevolve_names0[7]][arr] = bin_dict[bin_mzevolve_names0[7]][ii]   #logLHb_median
+    indiv_dict[indv_names0[0]] = objno[valid_idx]                                        #ID     
 
     
     out_ascii = fitspath + filename_dict['indv_bin_info']
