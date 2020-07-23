@@ -11,10 +11,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
+
 from Evolution_of_Galaxies.Analysis import library, emission_line_fit, indiv_gals, R_temp_calcul
 from Evolution_of_Galaxies.Plotting.composite_plots import bin_derived_props_plots
 from Evolution_of_Galaxies.Plotting.individual_plots import indiv_derived_props_plots, indiv_metal_mass_plot, get_indiv_detect
 from Evolution_of_Galaxies.Plotting.relation_fitting import extract_error_bars
+
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
 from Metallicity_Stack_Commons.column_names import filename_dict, indv_names0, temp_metal_names0, bin_mzevolve_names0, bin_names0
 from Metallicity_Stack_Commons.analysis import error_prop
@@ -45,8 +47,6 @@ def table_to_dict(tbl_name):
     cols = tbl.colnames
     
     return {cols[ii]:tbl[cols[ii]].data for ii in range(len(cols))}
-
-
 
 
 def get_HB_luminosity():
@@ -154,7 +154,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     
     #Run validation table
     valid_table.make_validation_table(fitspath)
-    if bool_hbeta_bin == True:
+    if bool_hbeta_bin:
         vtbl_rev = asc.read(fitspath + filename_dict['bin_valid_rev'], format = 'fixed_width_two_line')
         detect = vtbl_rev['Detection'].data
         detect[11] = 0.5
@@ -180,7 +180,7 @@ def run_bin_analysis(err_prop = False, indiv = False):
     R_temp_calcul.run_function(em_file, bin_file, metal_file)
     
     
-    #Run plots
+    # Run plots
     bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin)
     
     
@@ -191,16 +191,16 @@ def run_bin_analysis(err_prop = False, indiv = False):
         HbHgHd_fits(fitspath, use_revised = True)
       
         
-    if indiv == True:
-        #Create individual_bin_info table
+    if indiv:
+        # Create individual_bin_info table
         line_file = path_init2 + 'All Datasets/DEEP2_all_line_fit.fits'
-        indiv_gals.indiv_bin_info_table(fitspath, line_file, use_revised = True)
+        indiv_gals.indiv_bin_info_table(fitspath, line_file, use_revised=True)
  
         #Create individual_properties table
         indiv_gals.indiv_em_table(fitspath, line_file)
         
         #Create individual_derived_properties table
-        main(fitspath, '', revised = False, det3 = True)
+        main(fitspath, '', revised=False, det3=True)
         
         #Run individual plots
         indiv_derived_props_plots(fitspath, restrictMTO = True, revised = False, err_bars = False, hbeta_bin = bool_hbeta_bin)
