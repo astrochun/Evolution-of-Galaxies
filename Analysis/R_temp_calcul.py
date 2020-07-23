@@ -1,5 +1,6 @@
 from astropy.io import ascii as asc
 from astropy.table import Table
+
 from Metallicity_Stack_Commons.analysis.temp_metallicity_calc import temp_calculation, metallicity_calculation 
 from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_ratios0, bin_names0
 from Metallicity_Stack_Commons.analysis.ratios import flux_ratios
@@ -29,10 +30,12 @@ def run_function(line_file, bin_file, outfile, EBV = None):
         out_fits --> fits table containing bin line ratioes, temperatures, and metallicities.
     '''
     
+    print("Reading : ", line_file)
     line_table = asc.read(line_file)
     
-    #Case for stacked spectra
-    bin_table = asc.read(bin_file, format = 'fixed_width_two_line')
+    # Case for stacked spectra
+    print("Reading : ", bin_file)
+    bin_table = asc.read(bin_file, format='fixed_width_two_line')
     bin_IDs = bin_table[bin_names0[0]].data
     
     flux_dict = {line_name_short['HB']:line_table['HBETA_Flux_Observed'].data,
@@ -56,5 +59,6 @@ def run_function(line_file, bin_file, outfile, EBV = None):
                   metal_dict['O++/H']], names = n) 
 
     
-    asc.write(tab0, outfile, format = 'fixed_width_two_line', overwrite = True)
-    tab0.write(outfile.replace('.tbl', '.fits'), format = 'fits', overwrite = True) 
+    print("Writing : ", outfile)
+    asc.write(tab0, outfile, format='fixed_width_two_line', overwrite=True)
+    tab0.write(outfile.replace('.tbl', '.fits'), format='fits', overwrite=True) 
