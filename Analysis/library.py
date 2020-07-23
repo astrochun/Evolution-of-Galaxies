@@ -7,7 +7,7 @@ from os.path import exists
 import os
 
 from Metallicity_Stack_Commons import exclude_outliers
-from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0, 
+from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0
 from Metallicity_Stack_Commons.column_names import merge_column_names, remove_from_list
 
     
