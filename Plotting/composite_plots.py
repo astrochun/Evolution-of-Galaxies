@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
+
 from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_ratios0, bin_mzevolve_names0
 from Metallicity_Stack_Commons.column_names import bin_names0, filename_dict
 from .relation_fitting import extract_error_bars, AM13
@@ -52,7 +53,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     logLHb_avg = bin_table[bin_mzevolve_names0[6]].data
     detection = valid_table[bin_names0[2]].data
     
-    #Define detection and non-detection (with reliable 5007) arrays
+    # Define detection and non-detection (with reliable 5007) arrays
     detect = np.where(detection == 1)[0]
     non_detect = np.where(detection == 0.5)[0]
     
