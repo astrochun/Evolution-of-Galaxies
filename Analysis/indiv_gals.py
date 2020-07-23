@@ -1,12 +1,11 @@
 import numpy as np
 from astropy.io import fits
 from astropy.io import ascii as asc
+
 from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0, indv_names0, line_fit_suffix_add
 from Metallicity_Stack_Commons import line_name, line_type
 from Evolution_of_Galaxies.general import table_to_dict
     
-
-
 
 def indiv_bin_info_table(fitspath, line_file, use_revised = False):
     '''
@@ -34,18 +33,17 @@ def indiv_bin_info_table(fitspath, line_file, use_revised = False):
     else:
         valid_tbl = asc.read(fitspath + filename_dict['bin_valid'])
         
-    #Convert bin info table into a dictionary
+    # Convert bin info table into a dictionary
     bin_dict = table_to_dict(fitspath + filename_dict['bin_info'])
     
     line_table = hdu[1].data
     objno = line_table['OBJNO']
-    bin_idx = bin_npz['bin_ind']     #valid mass bin indices relative to unsorted data table 
+    bin_idx = bin_npz['bin_ind']  # valid mass bin indices relative to unsorted data table 
     detect = valid_tbl[bin_names0[2]].data  
     N_stack = valid_tbl[bin_names0[1]].data             
     
     valid_idx = np.hstack(bin_idx)
-    
-    #Get all bin valid values in dictionary
+    # Get all bin valid values in dictionary
     bin_cols = [bin_names0[0], bin_names0[2], indv_names0[0]] + bin_mzevolve_names0
     indiv_dict = {}
     for name in bin_cols:
@@ -68,16 +66,11 @@ def indiv_bin_info_table(fitspath, line_file, use_revised = False):
         indiv_dict[bin_mzevolve_names0[7]][arr] = bin_dict[bin_mzevolve_names0[7]][ii]   #logLHb_median
     indiv_dict[indv_names0[0]] = objno[valid_idx]                                        #ID     
 
-    
     out_ascii = fitspath + filename_dict['indv_bin_info']
-    asc.write(indiv_dict, names = tuple(bin_cols), output = out_ascii, format = 'fixed_width_two_line', overwrite = True)
-    
+    asc.write(indiv_dict, names=tuple(bin_cols), output=out_ascii, format='fixed_width_two_line', overwrite=True)
     
     hdu.close()
   
-    
-    
-    
     
 def indiv_em_table(fitspath, line_file): 
     '''
@@ -132,4 +125,4 @@ def indiv_em_table(fitspath, line_file):
         data[cols[jj]] = line_table[line_tbl_col[jj]]
 
     out_ascii = fitspath + filename_dict['indv_prop']
-    asc.write(data, names = tuple([indv_names0[0]] + indv_names0[3:5] + cols), output = out_ascii, format = 'fixed_width_two_line', overwrite = True) 
+    asc.write(data, names=tuple([indv_names0[0]] + indv_names0[3:5] + cols), output=out_ascii, format='fixed_width_two_line', overwrite = True)
