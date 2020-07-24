@@ -5,7 +5,7 @@ from astropy.io import ascii as asc
 from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0
 from Metallicity_Stack_Commons.column_names import indv_names0, line_fit_suffix_add
 from Metallicity_Stack_Commons import line_name, line_type
-from Evolution_of_Galaxies.general import table_to_dict
+from .. import table_to_dict
     
 
 def indiv_bin_info_table(fitspath, line_file, use_revised = False):
