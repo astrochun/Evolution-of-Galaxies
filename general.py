@@ -13,7 +13,7 @@ from .Plotting.individual_plots import indiv_derived_props_plots, indiv_metal_ma
 from .Plotting.relation_fitting import extract_error_bars
 
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
-from Metallicity_Stack_Commons.column_names import filename_dict, indv_names0, temp_metal_names0, 
+from Metallicity_Stack_Commons.column_names import filename_dict, indv_names0, temp_metal_names0
 from Metallicity_Stack_Commons.column_names import bin_mzevolve_names0, bin_names0
 from Metallicity_Stack_Commons.analysis import error_prop
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
@@ -24,25 +24,6 @@ from Metallicity_Stack_Commons import valid_table
 path = get_user()
 path_init = path + 'MZEvolve/'
 path_init2 = path + 'Zcalbase_gal/'
-
-
-
-def table_to_dict(tbl_name):
-    '''
-    Purpose: 
-        This function takes an astropy ascii table and converts it to a dictionary.
-        
-    Parameters:
-        tbl_name --> a string containing the full file path of the table.
-        
-    Returns:
-        A dictionary that contains key-value pairs of data column name to data array.  
-    '''
-    
-    tbl = asc.read(tbl_name)
-    cols = tbl.colnames
-    
-    return {cols[ii]:tbl[cols[ii]].data for ii in range(len(cols))}
 
 
 def get_HB_luminosity():
