@@ -1,7 +1,7 @@
 from astropy.io import ascii as asc
 
 from Metallicity_Stack_Commons.analysis.temp_metallicity_calc import temp_calculation, metallicity_calculation 
-from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_ratios0, bin_names0, indv_names0
+from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_ratios0, bin_names0
 from Metallicity_Stack_Commons.analysis.ratios import flux_ratios
 from Metallicity_Stack_Commons import line_name_short
     
@@ -42,16 +42,15 @@ def run_function(line_file, bin_file, outfile, EBV = None):
                  line_name_short['OII']:line_table['OII_3727_Flux_Observed'].data,
                  line_name_short['OIII']:line_table['OIII_5007_Flux_Observed'].data,
                  line_name_short['4363']:line_table['OIII_4363_Flux_Observed'].data}  
-    flux_ratios_dict = flux_ratios(flux_dict)
+    flux_ratios_dict = flux_ratios(flux_dict, flux_type = 'composite')
   
     # Calculate composite electron temperature and metallicity
-    Te = temp_calculation(flux_ratios_dict['R'])
-    metal_dict = metallicity_calculation(Te, flux_ratios_dict['two_beta'], flux_ratios_dict['three_beta'])
+    Te = temp_calculation(flux_ratios_dict[bin_ratios0[-1]])
+    metal_dict = metallicity_calculation(Te, flux_ratios_dict[bin_ratios0[2]], flux_ratios_dict[bin_ratios0[3]])
     
     # Get bin IDs and composite measurements in one dicitonary and write to table
     tbl_dict = {bin_names0[0]:bin_IDs}
-    indiv_ratios0 = indv_names0[1:3] + indv_names0[5:]
-    tbl_dict.update({bin_ratios0[ii]:flux_ratios_dict[indiv_ratios0[ii]] for ii in range(len(indiv_ratios0))})
+    tbl_dict.update(flux_ratios_dict)
     tbl_dict.update(T_e = Te)
     tbl_dict.update(metal_dict)
     n = tuple([bin_names0[0]] + bin_ratios0 + temp_metal_names0)
