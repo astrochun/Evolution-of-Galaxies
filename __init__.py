@@ -14,6 +14,5 @@ def table_to_dict(tbl_name):
     '''
     
     tbl = asc.read(tbl_name)
-    cols = tbl.colnames
     
-    return {cols[ii]:tbl[cols[ii]].data for ii in range(len(cols))}
+    return tbl.to_pandas().to_dict(orient='list')
