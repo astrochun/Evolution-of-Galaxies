@@ -12,7 +12,7 @@ from Metallicity_Stack_Commons.column_names import merge_column_names, remove_fr
 
     
 
-def stack_spectra(fname, mname='', plot = False, indices = 'placeholder'):
+def stack_spectra(fname, mname='', plot=False, indices='placeholder'):
     hdu = fits.open(fname)
     image = hdu[0].data
     header = hdu[0].header
@@ -26,9 +26,9 @@ def stack_spectra(fname, mname='', plot = False, indices = 'placeholder'):
         image = np.ma.array(image, mask=mask_image)
     
     if (indices == 'placeholder'):
-        flux = np.mean(image, axis = 0)
+        flux = np.mean(image, axis=0)
     else:
-        flux = np.mean(image[indices], axis = 0)
+        flux = np.mean(image[indices], axis=0)
     if plot == True:
         plt.plot(wavelen, flux)
         plt.xlabel("Wavelength")
@@ -51,8 +51,8 @@ def interpolate_data(interp_file):
     
 
 
-def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '',
-            spectra_plot = False, filename = False, adaptive = False, hbeta_bin = False, lum = []):
+def binning(temp_x, objno, bin_pts_input, interp_file, mname='', fitspath0='',
+            spectra_plot=False, filename=False, adaptive=False, hbeta_bin=False, lum=[]):
     '''
     Purpose:
         This function excludes sources with invalid mass, sorts the sources based on mass, and stacks
@@ -208,7 +208,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
                 
                 # stack spectra
                 if filename != False:
-                    _, flx, wave = stack_spectra(filename, mname, indices = valid_ind_sort[start:stop])
+                    _, flx, wave = stack_spectra(filename, mname, indices=valid_ind_sort[start:stop])
                     flux.append(flx)
                     wavelength.append(wave)
                 N.append(len(valid_ind_sort[start:stop]))
@@ -260,8 +260,8 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
                 
                 # stack spectra
                 if filename != False:
-                    _, lower_flx, lower_wave = stack_spectra(filename, mname, indices = lower_idx)
-                    _, upper_flx, upper_wave = stack_spectra(filename, mname, indices = upper_idx)
+                    _, lower_flx, lower_wave = stack_spectra(filename, mname, indices=lower_idx)
+                    _, upper_flx, upper_wave = stack_spectra(filename, mname, indices=upper_idx)
                     flux += [lower_flx] + [upper_flx]
                     wavelength += [lower_wave] + [upper_wave]
                     N += [len(lower_idx), len(upper_idx)]
@@ -284,11 +284,11 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
         The luminosity array saved here contains the 4140 luminosities (log(lum)) with the >44 and nans 
         replaced with -1.
         '''
-        np.savez(out_file, mass = np.log10(temp_x), lum = lum, bin_ind = bin_ind, bin_start = bin_start, 
-                 logM_min = bin_edge, logM_max = bin_redge, flux = flux, wavelength = wavelength, 
-                 logM_avg = mass_avg, logM_median = mass_median, bin_ID = bin_ID, N_stack = N, 
-                 logLHb_min = lowest_hbeta, logLHb_max = highest_hbeta, logLHb_avg = lum_avg, 
-                 logLHb_median = lhb_median)
+        np.savez(out_file, mass=np.log10(temp_x), lum=lum, bin_ind=bin_ind, bin_start=bin_start, 
+                 logM_min=bin_edge, logM_max=bin_redge, flux=flux, wavelength=wavelength, 
+                 logM_avg=mass_avg, logM_median=mass_median, bin_ID=bin_ID, N_stack=N, 
+                 logLHb_min=lowest_hbeta, logLHb_max=highest_hbeta, logLHb_avg=lum_avg, 
+                 logLHb_median=lhb_median)
         
         if not adaptive:
             out_ascii = fitspath0 + str(bin_pts_input) + '_binning.tbl' 
@@ -302,8 +302,8 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
         column_names0 = remove_from_list(bin_names0, [bin_names0[-1]])
         all_column_names = tuple(merge_column_names(column_names0, bin_mzevolve_names0))
         table_stack = Table([bin_ID, N, bin_edge, bin_redge, mass_avg, mass_median, lowest_hbeta, 
-                             highest_hbeta, lum_avg, lhb_median], names = all_column_names)        
-        ascii.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
+                             highest_hbeta, lum_avg, lhb_median], names=all_column_names)        
+        ascii.write(table_stack, out_ascii, format='fixed_width_two_line', overwrite=True)
         
     
     # Plotting stacked spectra
@@ -312,19 +312,19 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
         for i in range(count):
             plt.subplot(np.ceil(count/2.0), 2, i+1)
             if not hbeta_bin:
-                plt.plot(wavelength[i], flux[i], color = 'b', linestyle = 'solid')
+                plt.plot(wavelength[i], flux[i], color='b', linestyle='solid')
                 wavelen_idx = np.where((wavelength[i] > xlim[0]) & (wavelength[i] < xlim[1]))[0]
                 max0 = np.max(flux[i][wavelen_idx])   
             else:
-                plt.plot(wavelength[i*2], flux[i*2], color = 'b', linestyle = 'solid')
+                plt.plot(wavelength[i*2], flux[i*2], color='b', linestyle='solid')
                 wavelen_idx = np.where((wavelength[i*2] > xlim[0]) & (wavelength[i*2] < xlim[1]))[0]
                 max0 = np.max(flux[i*2][wavelen_idx])
-                plt.plot(wavelength[i*2+1], flux[i*2+1], color = 'orange', linestyle = 'solid')
+                plt.plot(wavelength[i*2+1], flux[i*2+1], color='orange', linestyle='solid')
                 max0 = np.max(flux[i*2+1][wavelen_idx])
             plt.ylim(-0.05e-17, max0*1.1)
             plt.xlim(xlim)
-            plt.axvline(x=5007, color='k', linestyle = 'dashed', alpha=0.5)
-            plt.axvline(x=4363, color='r', linestyle = 'dashed', alpha=0.5)
+            plt.axvline(x=5007, color='k', linestyle='dashed', alpha=0.5)
+            plt.axvline(x=4363, color='r', linestyle='dashed', alpha=0.5)
             plt.suptitle(str(i))
             if hbeta_bin == False:
                 an_text = 'N = '+str(N[i])
@@ -332,7 +332,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
                 an_text = 'N = [%i,%i]' %(N[i*2], N[i*2+1]) 
             plt.annotate(an_text, [0.05,0.95], xycoords='axes fraction', ha='left', va='top')
     else:
-        plt.bar(bin_edge, N, align = 'edge', width = bin_redge)
+        plt.bar(bin_edge, N, align='edge', width=bin_redge)
         
     
     return bin_edge, flux
@@ -340,7 +340,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname = '', fitspath0 = '
 
 
 
-def gen_hist(fname, hist, nbins = 10): 
+def gen_hist(fname, hist, nbins=10): 
 
 #hist options: mass, chi2
 
@@ -349,7 +349,7 @@ def gen_hist(fname, hist, nbins = 10):
     if hist == 'mass':
         mass = result['best.stellar.m_star']
         ind = np.where((np.isfinite(mass) == True) & (mass>0))[0]
-        plt.hist(np.log10(mass[ind]), bins = nbins)
+        plt.hist(np.log10(mass[ind]), bins=nbins)
         plt.title('Distribution of stellar mass')
         
     if hist == 'chi2':
