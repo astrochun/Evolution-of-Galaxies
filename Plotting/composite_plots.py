@@ -83,26 +83,26 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
                 pt_color = 'pink'
             else:
                 pt_color = 'red'
-            ax1[1, 2].scatter(logM_avg[non_detect[ii]], logLHb_avg[non_detect[ii]], marker = '^', 
-                              color = pt_color)
+            ax1[1, 2].scatter(logM_avg[non_detect[ii]], logLHb_avg[non_detect[ii]], marker='^', 
+                              color=pt_color)
         else:
             pt_color = 'orange'
         ax1[0, 0].scatter(logM_avg[non_detect[ii]], logR23[non_detect[ii]], marker = '^', color = pt_color)
         ax1[0, 1].scatter(logM_avg[non_detect[ii]], logO32[non_detect[ii]], marker = '^', color = pt_color)
-        ax1[0, 2].scatter(logM_avg[non_detect[ii]], log_twoBeta[non_detect[ii]], marker = '^', 
-                          color = pt_color)
-        ax1[1, 0].scatter(logM_avg[non_detect[ii]], log_threeBeta[non_detect[ii]], marker = '^', 
-                          color = pt_color)
+        ax1[0, 2].scatter(logM_avg[non_detect[ii]], log_twoBeta[non_detect[ii]], marker='^', 
+                          color=pt_color)
+        ax1[1, 0].scatter(logM_avg[non_detect[ii]], log_threeBeta[non_detect[ii]], marker='^', 
+                          color=pt_color)
         ax1[1, 1].scatter(logM_avg[non_detect[ii]], logR[non_detect[ii]], marker = '^', color = pt_color)
     
-    ax1[0, 0].annotate('$R_{23}$', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', 
-                       fontsize = '7')
-    ax1[0, 1].annotate('$O_{32}$', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', 
-                       fontsize = '7')
-    ax1[0, 2].annotate('[OII]/H$\\beta$', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', 
-                       fontsize = '7')
-    ax1[1, 0].annotate('[OIII]/H$\\beta$', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', 
-                       fontsize = '7')
+    ax1[0, 0].annotate('$R_{23}$', [0.05, 0.97], xycoords = 'axes fraction', va='top', ha='left', 
+                       fontsize='7')
+    ax1[0, 1].annotate('$O_{32}$', [0.05, 0.97], xycoords = 'axes fraction', va='top', ha = 'left', 
+                       fontsize='7')
+    ax1[0, 2].annotate('[OII]/H$\\beta$', [0.05, 0.97], xycoords='axes fraction', va='top', ha='left', 
+                       fontsize='7')
+    ax1[1, 0].annotate('[OIII]/H$\\beta$', [0.05, 0.97], xycoords='axes fraction', va='top', ha='left', 
+                       fontsize='7')
     ax1[1, 1].annotate('R', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', ha = 'left', fontsize = '7')
     ax1[1, 2].annotate('H$\\beta$ Luminosity', [0.05, 0.97], xycoords = 'axes fraction', va = 'top', 
                        ha = 'left', fontsize = '7')  
@@ -145,8 +145,8 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     ax4.scatter(logR23[detect], com_O_log[detect], marker = '.')
     ax4.scatter(logR23[non_detect], com_O_log[non_detect], marker = '^')
     if err_bars:
-        ax4.errorbar(logR23[detect], com_O_log[detect], yerr = err_dict['12+log(O/H)_lowhigh_error'], 
-                     fmt = '.')
+        ax4.errorbar(logR23[detect], com_O_log[detect], yerr=err_dict['12+log(O/H)_lowhigh_error'], 
+                     fmt='.')
     ax4.set_xlabel('log($R_{23}$)')
     ax4.set_ylabel('12+log(O/H) $T_e$')
     ax4.set_title('Composite Metallicity vs. $R_{23}$')
@@ -158,8 +158,8 @@ def bin_derived_props_plots(fitspath, hbeta_bin = False, err_bars = False, revis
     ax5.scatter(logO32[detect], com_O_log[detect], marker = '.')
     ax5.scatter(logO32[non_detect], com_O_log[non_detect], marker = '^')
     if err_bars:
-        ax5.errorbar(logO32[detect], com_O_log[detect], yerr = err_dict['12+log(O/H)_lowhigh_error'], 
-                     fmt = '.')
+        ax5.errorbar(logO32[detect], com_O_log[detect], yerr=err_dict['12+log(O/H)_lowhigh_error'], 
+                     fmt='.')
     ax5.set_xlabel('log($O_{32}$)')
     ax5.set_ylabel('12+log(O/H) $T_e$')
     ax5.set_title('Composite Metallicity vs. $O_{32}$')
