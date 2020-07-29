@@ -23,7 +23,7 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type,
         para_bound = ((working_wave - 3.0, 0.0, 0.0, med0 - 0.05 * np.abs(med0)), 
                       (working_wave + 3.0, 10.0, 100.0, med0 + 0.05 * np.abs(med0)))
         try:
-            o1, o2 = curve_fit(gauss, x0[x_idx], y_norm[x_idx], p0 = p0, sigma = None, bounds = para_bound)
+            o1, o2 = curve_fit(gauss, x0[x_idx], y_norm[x_idx], p0=p0, sigma=None, bounds=para_bound)
         except ValueError:
             print('fail')
             fail = 1
@@ -33,7 +33,7 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type,
         para_bound = ((working_wave - 3.0, 0.0, 0.0, med0 - 0.05 * np.abs(med0), 0.0, -max0), 
                       (working_wave + 3.0, 10.0, 100.0, med0 + 0.05 * np.abs(med0), 25.0, 0))
         try:
-            o1, o2 = curve_fit(double_gauss, x0[x_idx], y_norm[x_idx], p0 = p0, sigma = None, bounds = para_bound)
+            o1, o2 = curve_fit(double_gauss, x0[x_idx], y_norm[x_idx], p0=p0, sigma=None, bounds=para_bound)
         except ValueError:
             print('fail')
             fail = 1
@@ -43,8 +43,8 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type,
         para_bound = ((working_wave - 3.0, 0.0, 0.0, med0 - 0.05 * np.abs(med0), 0.0, 0.0), 
                       (working_wave + 3.0, 10.0, 100.0, med0 + 0.05 * np.abs(med0), 10.0, 100.0))
         try:
-            o1, o2 = curve_fit(oxy2_gauss, x0[x_idx], y_norm[x_idx], p0 = p0, sigma = None, 
-                               bounds = para_bound)
+            o1, o2 = curve_fit(oxy2_gauss, x0[x_idx], y_norm[x_idx], p0=p0, sigma=None, 
+                               bounds=para_bound)
         except ValueError:
             print('fail')
             fail = 1
@@ -203,7 +203,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
 
             # Plotting
             t_ax = ax_arr[row, col]
-            t_ax.plot(wave, y_norm, 'k', linewidth = 0.6, label = 'Emission')
+            t_ax.plot(wave, y_norm, 'k', linewidth=0.6, label='Emission')
             t_ax.set_xlim([x1 + 45,x2 - 45])
             t_ax.plot(x0, gauss0, 'b--', linewidth = 0.5, label = 'Gauss Fit')
             t_ax.plot(x0[x_sigsnip], resid, 'r', linestyle = 'dashed', linewidth = 0.2, label = 'Residuals')
@@ -220,25 +220,25 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
                 str6 = 'NGal:%.2f' % (N[rr])
                 str7 = 'MBin:%.2f' % (rr + 1)
                 if hbeta_bin:
-                    t_ax.annotate('HbBin:%.2f' % (rr + 1), [0.45, 0.84], xycoords = 'axes fraction', 
-                                  va = 'top', ha = 'right', fontsize = '8')
+                    t_ax.annotate('HbBin:%.2f' % (rr + 1), [0.45, 0.84], xycoords='axes fraction', 
+                                  va='top', ha='right', fontsize='8')
                     str7 = 'MBin:%.2f' % (count)
                     if rr % 2 != 0:
                         count += 1
-                t_ax.annotate(str1, [0.97, 0.98], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
-                t_ax.annotate(str2, [0.97, 0.91], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
-                t_ax.annotate(str3, [0.97, 0.84], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
-                t_ax.annotate(str4, [0.97, 0.77], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
-                t_ax.annotate(str5, [0.97, 0.70], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
-                t_ax.annotate(str6, [0.45, 0.98], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
-                t_ax.annotate(str7, [0.45, 0.91], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
+                t_ax.annotate(str1, [0.97, 0.98], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
+                t_ax.annotate(str2, [0.97, 0.91], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
+                t_ax.annotate(str3, [0.97, 0.84], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
+                t_ax.annotate(str4, [0.97, 0.77], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
+                t_ax.annotate(str5, [0.97, 0.70], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
+                t_ax.annotate(str6, [0.45, 0.98], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
+                t_ax.annotate(str7, [0.45, 0.91], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
             if line_type == 'Single':
                 #str1 = 'Amp:%.2f, Sigma:%.2f, Const:%.2f' % (o1[2], o1[1], o1[3])
                 str1 = 'Sigma:%.2f' % (o1[1])
@@ -248,26 +248,26 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
                 str5 = 'NGal:%.2f' % (N[rr])
                 str6 = 'MBin:%.2f' % (rr + 1)
                 if hbeta_bin:
-                    t_ax.annotate('HbBin:%.2f' % (rr + 1), [0.45, 0.84], xycoords = 'axes fraction', 
-                                  va = 'top', ha = 'right', fontsize = '8')
+                    t_ax.annotate('HbBin:%.2f' % (rr + 1), [0.45, 0.84], xycoords='axes fraction', 
+                                  va='top', ha='right', fontsize='8')
                     str6 = 'MBin:%.2f' % (count)
                     if rr % 2 != 0:
                         count += 1
-                t_ax.annotate(str1, [0.97, 0.98], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
-                t_ax.annotate(str2, [0.97, 0.91], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
-                t_ax.annotate(str3, [0.97, 0.84], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
-                t_ax.annotate(str4, [0.97, 0.77], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
-                t_ax.annotate(str5, [0.45, 0.98], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
-                t_ax.annotate(str6, [0.45, 0.91], xycoords = 'axes fraction', va = 'top', ha = 'right', 
-                              fontsize = '8')
+                t_ax.annotate(str1, [0.97, 0.98], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
+                t_ax.annotate(str2, [0.97, 0.91], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
+                t_ax.annotate(str3, [0.97, 0.84], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
+                t_ax.annotate(str4, [0.97, 0.77], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
+                t_ax.annotate(str5, [0.45, 0.98], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
+                t_ax.annotate(str6, [0.45, 0.91], xycoords='axes fraction', va='top', ha='right', 
+                              fontsize='8')
             
             for x in lambda0:
-                t_ax.axvline(x = x, linewidth = 0.3, color = 'k')
+                t_ax.axvline(x=x, linewidth=0.3, color='k')
 
             if rr == Spect_1D.shape[0] - 1 and rr % (nrows * ncols) != nrows * ncols - 1:
                 for jj in range(col + 1, ncols):
@@ -341,8 +341,8 @@ def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_na
     for ii in range(len(lambda0)):
         curr_line_cols = [line_col for line_col in gauss_lines_names0 if line_col.startswith(line_name[ii])]
         em_table = zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, lambda0[ii], 
-                                   curr_line_cols, line_type = line_type[ii], line_name = line_name[ii], 
-                                   hbeta_bin = hbeta_bin)
+                                   curr_line_cols, line_type=line_type[ii], line_name=line_name[ii], 
+                                   hbeta_bin=hbeta_bin)
         if ii == 0:
             tab0 = Table([ID])
             table_stack = hstack([tab0, em_table])
