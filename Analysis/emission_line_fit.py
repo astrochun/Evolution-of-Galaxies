@@ -57,7 +57,7 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type,
 
 
 def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, working_wave, curr_line_cols,
-                    line_type = '', outpdf = '', line_name = '', hbeta_bin = False):
+                    line_type='', outpdf='', line_name='', hbeta_bin=False):
     '''
     Purpose:
         This function fits each emission line with a Gaussian curve. It also calculates and saves in a table
@@ -65,7 +65,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
         
     Usage:
         emission_line_fit.zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, working_wave,
-                                          line_type = '', outpdf = '', line_name = '', hbeta_bin = False)
+                                          line_type='', outpdf='', line_name='', hbeta_bin=False)
         
     Params:
         pdf_pages --> the pdf that the emission line fit plots are saved to.
@@ -137,7 +137,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
         x1 = working_wave - 100
         x2 = working_wave + 100
 
-        y_smooth = movingaverage_box1D(Spect_1D[rr] / scalefact, 2, boundary = 'extend')
+        y_smooth = movingaverage_box1D(Spect_1D[rr] / scalefact, 2, boundary='extend')
 
         o1, med0, max0 = get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type, s2)
         
@@ -205,8 +205,8 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
             t_ax = ax_arr[row, col]
             t_ax.plot(wave, y_norm, 'k', linewidth=0.6, label='Emission')
             t_ax.set_xlim([x1 + 45,x2 - 45])
-            t_ax.plot(x0, gauss0, 'b--', linewidth = 0.5, label = 'Gauss Fit')
-            t_ax.plot(x0[x_sigsnip], resid, 'r', linestyle = 'dashed', linewidth = 0.2, label = 'Residuals')
+            t_ax.plot(x0, gauss0, 'b--', linewidth=0.5, label='Gauss Fit')
+            t_ax.plot(x0[x_sigsnip], resid, 'r', linestyle='dashed', linewidth=0.2, label='Residuals')
     
             
             if line_type == 'Balmer' or line_type == 'Oxy2':
@@ -278,7 +278,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
 
                 
         if (rr % (nrows * ncols) == nrows * ncols - 1) or rr == Spect_1D.shape[0] - 1: 
-            subplots_adjust(left = 0.1, right = 0.98, bottom = 0.06, top = 0.97, hspace = 0.05)
+            subplots_adjust(left=0.1, right=0.98, bottom=0.06, top=0.97, hspace=0.05)
             row_count = 0
             for ii in range(0, nrows):
                 for jj in range(0, ncols):
@@ -287,16 +287,16 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
                         row_count += 1
             
             fig.set_size_inches(8, 8)
-            fig.savefig(pdf_pages, format ='pdf')
+            fig.savefig(pdf_pages, format='pdf')
      
     # Writing Ascii Tables and Fits Tables  
     n = tuple(curr_line_cols)
     if line_type == 'Balmer':
         tab0 = Table([flux_g_array, flux_s_array, SN_array, center_array, norm_array, median_array, 
-                      sigma_array, RMS_array, abs_norm_array, abs_sigma_array], names = n)
+                      sigma_array, RMS_array, abs_norm_array, abs_sigma_array], names=n)
     else:
         tab0 = Table([flux_g_array, flux_s_array, SN_array, center_array, norm_array, median_array, 
-                      sigma_array, RMS_array], names = n) 
+                      sigma_array, RMS_array], names=n) 
     print('Done!')
     return tab0
 
@@ -304,7 +304,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
     
 
 def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_name, s, a,
-               c, s1, a1, s2, a2, hbeta_bin = False):
+               c, s1, a1, s2, a2, hbeta_bin=False):
     '''
     Purpose:
         This function calls the emission line fitting and plotting functions, producing a pdf of the all
@@ -312,7 +312,7 @@ def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_na
         
     Usage:
         emission_line_fit.zm_general(fitspath, Spect_1D, dispersion, wave, lambda0,
-                                     line_type, line_name, s, a, c, s1, a1, s2, a2, hbeta_bin = False)
+                                     line_type, line_name, s, a, c, s1, a1, s2, a2, hbeta_bin=False)
         
     Params:
         fitspath --> a string of the file path where the output files will be placed.
@@ -333,7 +333,7 @@ def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_na
     
     outpdf = fitspath + filename_dict['bin_fit'].replace('.tbl', '.pdf')
     pdf_pages = PdfPages(outpdf)
-    table0 = asc.read(fitspath + filename_dict['bin_info'], format = 'fixed_width_two_line')
+    table0 = asc.read(fitspath + filename_dict['bin_info'], format='fixed_width_two_line')
     out_ascii = fitspath + filename_dict['bin_fit']
     ID = table0[bin_names0[0]]
     N = table0[bin_names0[1]].data
@@ -348,7 +348,7 @@ def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_na
             table_stack = hstack([tab0, em_table])
         else:
             table_stack = hstack([table_stack, em_table])
-    asc.write(table_stack, out_ascii, format = 'fixed_width_two_line', overwrite = True)
+    asc.write(table_stack, out_ascii, format='fixed_width_two_line', overwrite=True)
 
     
     pdf_pages.close()
