@@ -30,7 +30,7 @@ def get_HB_luminosity():
     hdul = fits.open(path_init2 + 'DEEP2_Field_combined.fits')
     fits_table = hdul[1].data
     
-    cosmo = FlatLambdaCDM(H0 = 70 * u.km / u.s / u.Mpc, Om0 = 0.3)
+    cosmo = FlatLambdaCDM(H0=70 * u.km / u.s / u.Mpc, Om0=0.3)
     lum_dist = np.log10(cosmo.luminosity_distance(fits_table['ZSPEC']).to_value(u.cm))
     lum = np.log10(4 * np.pi) + np.log10(fits_table['HB_FLUX_DATA']) + (2*lum_dist)
     
@@ -39,7 +39,7 @@ def get_HB_luminosity():
     return lum   
 
 
-def run_bin_analysis(valid_rev = False, err_prop = False, indiv = False):
+def run_bin_analysis(valid_rev=False, err_prop=False, indiv=False):
     '''
     Purpose:
         This function runs the entire binning process: binning, emission line fitting, validation table,
@@ -79,7 +79,7 @@ def run_bin_analysis(valid_rev = False, err_prop = False, indiv = False):
     str_bin_pts_input = [str(val) for val in bin_pts_input]
     bin_pts_name = "_".join(str_bin_pts_input)
     
-    fitspath = dir_date(bin_type_str, path_init, year = True)
+    fitspath = dir_date(bin_type_str, path_init, year=True)
     fitspath += bin_pts_name + '/'
     try:
         os.mkdir(fitspath)
@@ -97,11 +97,11 @@ def run_bin_analysis(valid_rev = False, err_prop = False, indiv = False):
  
     plt.figure(figsize=(14,8))
     edge, flux = library.binning(mass_revised, result_revised['id'], bin_pts_input, interp_file,
-                                 filename = master_grid, mname = master_mask_array, fitspath0 = fitspath,
-                                 spectra_plot = True, adaptive = True, hbeta_bin = bool_hbeta_bin, 
-                                 lum = HB_lum)
+                                 filename=master_grid, mname=master_mask_array, fitspath0=fitspath,
+                                 spectra_plot=True, adaptive=True, hbeta_bin=bool_hbeta_bin, 
+                                 lum=HB_lum)
     plt.tight_layout()
-    plt.savefig(fitspath + 'composite_spectra_OHmasked_interp.pdf', bbox_inches = 'tight', pad_inches = 0)
+    plt.savefig(fitspath + 'composite_spectra_OHmasked_interp.pdf', bbox_inches='tight', pad_inches=0)
     
     hdr = fits.getheader(master_grid)
     flux_fits_file = fitspath + filename_dict['comp_spec']
@@ -110,7 +110,7 @@ def run_bin_analysis(valid_rev = False, err_prop = False, indiv = False):
     
     
     # Run emission line fits     
-    Spect_1D, header = fits.getdata(flux_fits_file, header = True)
+    Spect_1D, header = fits.getdata(flux_fits_file, header=True)
     dispersion = header['CDELT1']
     wave = header['CRVAL1'] + dispersion*np.arange(header['NAXIS1'])
     lambda0 = fitting_lines_dict['lambda0']
@@ -125,7 +125,7 @@ def run_bin_analysis(valid_rev = False, err_prop = False, indiv = False):
     a2 = 1.8
     
     emission_line_fit.zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type,
-                                 line_name, s, a, c, s1, a1, s2, a2, hbeta_bin = bool_hbeta_bin)
+                                 line_name, s, a, c, s1, a1, s2, a2, hbeta_bin=bool_hbeta_bin)
     
     
     
@@ -134,14 +134,14 @@ def run_bin_analysis(valid_rev = False, err_prop = False, indiv = False):
     valid_file = fitspath + filename_dict['bin_valid']
     valid_rev_file = fitspath + filename_dict['bin_valid_rev']
     if bool_hbeta_bin:
-        vtbl = asc.read(valid_file, format = 'fixed_width_two_line')
+        vtbl = asc.read(valid_file, format='fixed_width_two_line')
         detect = vtbl['Detection'].data
         detect[11] = 0.5
         vtbl.replace_column('Detection', detect)
-        asc.write(vtbl, valid_rev_file, format = 'fixed_width_two_line', overwrite = True)
+        asc.write(vtbl, valid_rev_file, format='fixed_width_two_line', overwrite=True)
     else:
-        vtbl = asc.read(valid_file, format = 'fixed_width_two_line')
-        asc.write(vtbl, valid_rev_file, format = 'fixed_width_two_line', overwrite = True)
+        vtbl = asc.read(valid_file, format='fixed_width_two_line')
+        asc.write(vtbl, valid_rev_file, format='fixed_width_two_line', overwrite=True)
     if valid_rev:
         valid_file = valid_rev_file
     
@@ -161,14 +161,14 @@ def run_bin_analysis(valid_rev = False, err_prop = False, indiv = False):
     
     
     # Run plots
-    bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin)
+    bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin)
     
     
     # Run error propagation, histograms, and revised data plots
     if err_prop:
-        error_prop.fluxes_derived_prop(fitspath, binned_data = True)
-        bin_derived_props_plots(fitspath, hbeta_bin = bool_hbeta_bin, err_bars = True, revised = True)
-        HbHgHd_fits(fitspath, use_revised = True)
+        error_prop.fluxes_derived_prop(fitspath, binned_data=True)
+        bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin, err_bars=True, revised=True)
+        HbHgHd_fits(fitspath, use_revised=True)
       
         
     if indiv:
@@ -183,16 +183,16 @@ def run_bin_analysis(valid_rev = False, err_prop = False, indiv = False):
         main(fitspath, '', revised=False, det3=True)
         
         # Run individual plots
-        indiv_derived_props_plots(fitspath, restrictMTO = True, revised = False, err_bars = False, 
-                                  hbeta_bin = bool_hbeta_bin)
-        indiv_derived_props_plots(fitspath, restrictMTO = False, revised = False, err_bars = False, 
-                                  hbeta_bin = bool_hbeta_bin)
+        indiv_derived_props_plots(fitspath, restrictMTO=True, revised=False, err_bars=False, 
+                                  hbeta_bin=bool_hbeta_bin)
+        indiv_derived_props_plots(fitspath, restrictMTO=False, revised=False, err_bars=False, 
+                                  hbeta_bin=bool_hbeta_bin)
         
         
         
 
-def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revised_files = False, 
-                              error_bars = False):
+def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO=False, revised_files=False, 
+                              error_bars=False):
     '''
     Purpose:
         This function extracts the necessary data from files and runs the individual Metallicity vs Mass
@@ -205,37 +205,50 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
         fitspathMLHb --> a string containing the partial path of the location of the mass-LHbeta bin data.
                          (e.g., 'mass_LHbeta_bin/05182020/75_112_113_300_600_1444_1443/')
         restrictMTO (OPTIONAL) --> if the mass turnover value should be held constant in the curve fit of
-                                   Metallicity vs Mass, then restrictMTO = True.
-        revised_files (OPTIONAL) --> if the revised data tables should be used, then revised_files = True.
+                                   Metallicity vs Mass, then restrictMTO=True.
+        revised_files (OPTIONAL) --> if the revised data tables should be used, then revised_files=True.
         error_bars (OPTIONAL) --> if error bars for metallicity and temperature should be plotted, then 
-                                  error_bars = True.
+                                  error_bars=True.
         
     Returns:
         None
     '''
     
     # Read in individual data tables
-    Mbin_indiv_derivedprops_tbl = asc.read(path_init + fitspathM + filename_dict['indv_derived_prop'])
-    Mbin_indiv_props_tbl = asc.read(path_init + fitspathM + filename_dict['indv_prop'])
-    Mbin_indiv_bininfo_tbl = asc.read(path_init + fitspathM + filename_dict['indv_bin_info'])
+    Mbin_indiv_derivedprops_tbl = asc.read(path_init + fitspathM + filename_dict['indv_derived_prop'], 
+                                           format='fixed_width_two_line')
+    Mbin_indiv_props_tbl = asc.read(path_init + fitspathM + filename_dict['indv_prop'], 
+                                    format='fixed_width_two_line')
+    Mbin_indiv_bininfo_tbl = asc.read(path_init + fitspathM + filename_dict['indv_bin_info'], 
+                                      format='fixed_width_two_line')
     
-    MLHbbin_indiv_derivedprops_tbl = asc.read(path_init + fitspathMLHb + filename_dict['indv_derived_prop'])
-    MLHbbin_indiv_props_tbl = asc.read(path_init + fitspathMLHb + filename_dict['indv_prop'])
-    MLHbbin_indiv_bininfo_tbl = asc.read(path_init + fitspathMLHb + filename_dict['indv_bin_info'])
+    MLHbbin_indiv_derivedprops_tbl = asc.read(path_init + fitspathMLHb + filename_dict['indv_derived_prop'], 
+                                              format='fixed_width_two_line')
+    MLHbbin_indiv_props_tbl = asc.read(path_init + fitspathMLHb + filename_dict['indv_prop'], 
+                                       format='fixed_width_two_line')
+    MLHbbin_indiv_bininfo_tbl = asc.read(path_init + fitspathMLHb + filename_dict['indv_bin_info'], 
+                                         format='fixed_width_two_line')
     
     
     # Read in composite data tables
-    Mbin_valid_tbl = asc.read(path_init + fitspathM + filename_dict['bin_valid'])
-    Mbininfo_tbl = asc.read(path_init + fitspathM + filename_dict['bin_info'])
+    Mbin_valid_tbl = asc.read(path_init + fitspathM + filename_dict['bin_valid'], 
+                              format='fixed_width_two_line')
+    Mbininfo_tbl = asc.read(path_init + fitspathM + filename_dict['bin_info'], format='fixed_width_two_line')
     
-    MLHbbin_valid_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_valid'])
-    MLHbbininfo_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_info'])
+    MLHbbin_valid_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_valid'], 
+                                 format='fixed_width_two_line')
+    MLHbbininfo_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_info'], 
+                               format='fixed_width_two_line')
     if revised_files:
-        Mbin_derivedprops_tbl = asc.read(path_init + fitspathM + filename_dict['bin_derived_prop_rev'])
-        MLHbbin_derivedprops_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_derived_prop_rev'])
+        Mbin_derivedprops_tbl = asc.read(path_init + fitspathM + filename_dict['bin_derived_prop_rev'], 
+                                         format='fixed_width_two_line')
+        MLHbbin_derivedprops_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_derived_prop_rev'], 
+                                            format='fixed_width_two_line')
     else:    
-        Mbin_derivedprops_tbl = asc.read(path_init + fitspathM + filename_dict['bin_derived_prop'])
-        MLHbbin_derivedprops_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_derived_prop'])
+        Mbin_derivedprops_tbl = asc.read(path_init + fitspathM + filename_dict['bin_derived_prop'], 
+                                         format='fixed_width_two_line')
+        MLHbbin_derivedprops_tbl = asc.read(path_init + fitspathMLHb + filename_dict['bin_derived_prop'], 
+                                            format='fixed_width_two_line')
 
 
     # Read in individual data
@@ -270,7 +283,7 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
     Mbin_indiv_detect, Mbin_indiv_nondetect = get_indiv_detect(Mbin_indiv_props_tbl, Mbin_indiv_bin_detect)
     MLHbbin_indiv_detect, MLHbbin_indiv_nondetect = get_indiv_detect(MLHbbin_indiv_props_tbl, 
                                                                      MLHbbin_indiv_bin_detect, 
-                                                                     LHbeta_bins = True)
+                                                                     LHbeta_bins=True)
     
     
     # Define mass bin and mass-LHbeta bin dictionaries
@@ -290,5 +303,5 @@ def run_indiv_metal_mass_plot(fitspathM, fitspathMLHb, restrictMTO = False, revi
         MLHbbin_dict['composite_metal_errors'] = err_dictMLHb['12+log(O/H)_lowhigh_error']
     
     
-    indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrictMTO = restrictMTO, revised = revised_files, 
-                          err_bars = error_bars)
+    indiv_metal_mass_plot(Mbin_dict, MLHbbin_dict, restrictMTO=restrictMTO, revised=revised_files, 
+                          err_bars=error_bars)
