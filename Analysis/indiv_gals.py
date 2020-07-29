@@ -8,7 +8,7 @@ from Metallicity_Stack_Commons import line_name, line_type
 from .. import table_to_dict
     
 
-def indiv_bin_info_table(fitspath, line_file, use_revised = False):
+def indiv_bin_info_table(fitspath, line_file, use_revised=False):
     '''
     Purpose:
         This function creates a table containing bin information such as bin ID numbers, minimum, 
