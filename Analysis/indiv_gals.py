@@ -30,9 +30,9 @@ def indiv_bin_info_table(fitspath, line_file, use_revised=False):
     bin_npz = np.load(fitspath + filename_dict['bin_info'].replace('.tbl', '.npz'))
     hdu = fits.open(line_file)
     if use_revised:
-        valid_tbl = asc.read(fitspath + filename_dict['bin_valid_rev'])
+        valid_tbl = asc.read(fitspath + filename_dict['bin_valid_rev'], format='fixed_width_two_line')
     else:
-        valid_tbl = asc.read(fitspath + filename_dict['bin_valid'])
+        valid_tbl = asc.read(fitspath + filename_dict['bin_valid'], format='fixed_width_two_line')
         
     # Convert bin info table into a dictionary
     bin_dict = table_to_dict(fitspath + filename_dict['bin_info'])
@@ -125,4 +125,4 @@ def indiv_em_table(fitspath, line_file):
 
     out_ascii = fitspath + filename_dict['indv_prop']
     asc.write(data, names=tuple([indv_names0[0]] + indv_names0[3:5] + cols), output=out_ascii, 
-              format='fixed_width_two_line', overwrite = True)
+              format='fixed_width_two_line', overwrite=True)
