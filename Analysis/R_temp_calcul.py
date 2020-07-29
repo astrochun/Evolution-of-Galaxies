@@ -6,7 +6,7 @@ from Metallicity_Stack_Commons.analysis.ratios import flux_ratios
 from Metallicity_Stack_Commons import line_name_short
     
     
-def run_function(line_file, bin_file, outfile, EBV = None):
+def run_function(line_file, bin_file, outfile, EBV=None):
     '''
     Purpose:
         This function gets line ratios and runs the temperature and metallicity calculation functions
@@ -30,7 +30,7 @@ def run_function(line_file, bin_file, outfile, EBV = None):
     '''
     
     print("Reading : ", line_file)
-    line_table = asc.read(line_file)
+    line_table = asc.read(line_file, format='fixed_width_two_line')
     
     # Case for stacked spectra
     print("Reading : ", bin_file)
@@ -42,7 +42,7 @@ def run_function(line_file, bin_file, outfile, EBV = None):
                  line_name_short['OII']:line_table['OII_3727_Flux_Observed'].data,
                  line_name_short['OIII']:line_table['OIII_5007_Flux_Observed'].data,
                  line_name_short['4363']:line_table['OIII_4363_Flux_Observed'].data}  
-    flux_ratios_dict = flux_ratios(flux_dict, flux_type = 'composite')
+    flux_ratios_dict = flux_ratios(flux_dict, flux_type='composite')
   
     # Calculate composite electron temperature and metallicity
     Te = temp_calculation(flux_ratios_dict[bin_ratios0[-1]])
@@ -51,7 +51,7 @@ def run_function(line_file, bin_file, outfile, EBV = None):
     # Get bin IDs and composite measurements in one dicitonary and write to table
     tbl_dict = {bin_names0[0]:bin_IDs}
     tbl_dict.update(flux_ratios_dict)
-    tbl_dict.update(T_e = Te)
+    tbl_dict.update(T_e=Te)
     tbl_dict.update(metal_dict)
     n = tuple([bin_names0[0]] + bin_ratios0 + temp_metal_names0)
     
