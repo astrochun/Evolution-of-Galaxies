@@ -96,10 +96,9 @@ def run_bin_analysis(valid_rev=False, err_prop=False, indiv=False):
     mass_revised = result_revised['best.stellar.m_star'].data
  
     plt.figure(figsize=(14,8))
-    edge, flux = library.binning(mass_revised, result_revised['id'], bin_pts_input, interp_file,
-                                 filename=master_grid, mname=master_mask_array, fitspath0=fitspath,
-                                 spectra_plot=True, adaptive=True, hbeta_bin=bool_hbeta_bin, 
-                                 lum=HB_lum)
+    flux = library.binning(mass_revised, result_revised['id'], bin_pts_input, interp_file,
+                           filename=master_grid, mname=master_mask_array, fitspath0=fitspath,
+                           spectra_plot=True, adaptive=True, hbeta_bin=bool_hbeta_bin, lum=HB_lum)
     plt.tight_layout()
     plt.savefig(fitspath + 'composite_spectra_OHmasked_interp.pdf', bbox_inches='tight', pad_inches=0)
     
@@ -147,9 +146,9 @@ def run_bin_analysis(valid_rev=False, err_prop=False, indiv=False):
     
     
     # Run dust attenuation
-    EBV = np.zeros(len(edge))
-    k_4363 = np.zeros(len(edge))
-    k_5007 = np.zeros(len(edge))
+    #EBV = np.zeros(len(edge))
+    #k_4363 = np.zeros(len(edge))
+    #k_5007 = np.zeros(len(edge))
     bin_file = fitspath + filename_dict['bin_info']
     em_file = fitspath + filename_dict['bin_fit']
     HbHgHd_fits(fitspath)
