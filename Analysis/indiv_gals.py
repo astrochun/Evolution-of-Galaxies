@@ -39,20 +39,19 @@ def indiv_bin_info_table(fitspath, line_file, use_revised=False):
     
     line_table = hdu[1].data
     objno = line_table['OBJNO']
-    bin_idx = bin_npz['bin_ind']  # valid mass bin indices relative to unsorted data table 
+    valid_idx = bin_npz['valid_ind_sort']  # valid mass bin indices relative to full 4140 table
     detect = valid_tbl[bin_names0[2]].data  
     N_stack = valid_tbl[bin_names0[1]].data             
     
     # Get all bin valid values in dictionary
-    valid_idx = np.hstack(bin_idx)
     bin_cols = [bin_names0[0], bin_names0[2], indv_names0[0]] + bin_mzevolve_names0
     indiv_dict = {}
     for name in bin_cols:
         indiv_dict[name] = np.zeros(len(valid_idx))
     
     start = 0
-    for ii in range(len(bin_idx)):
-        end = start + N_stack[ii]
+    for ii in range(len(N_stack)):
+        end = start + int(N_stack[ii])
         arr = np.arange(start, end)
         start = end
         indiv_dict[bin_names0[0]][arr] = bin_dict[bin_names0[0]][ii]                     # bin_ID
@@ -96,7 +95,7 @@ def indiv_em_table(fitspath, line_file):
     bin_npz = np.load(fitspath + filename_dict['bin_info'].replace('.tbl', '.npz'))
     
     # Get indices valid for binning
-    idx_array = np.hstack(bin_npz['bin_ind'])
+    valid_idx = bin_npz['valid_ind_sort']
     
     # Get column names from individual line measurement file
     line_tbl_names = ['_FLUX_MOD', '_FLUX_DATA', '_SNR', '_LAMBDA', '_PEAK', '_Y0', '_SIGMA', '_NOISE']
@@ -117,9 +116,9 @@ def indiv_em_table(fitspath, line_file):
     
     # Collect data in dictionary and write to output table
     line_table = hdu[1].data 
-    line_table = line_table[idx_array]
-    data = {indv_names0[0]:line_table['OBJNO'], indv_names0[3]:bin_npz['mass'][idx_array], 
-            indv_names0[4]:bin_npz['lum'][idx_array]}
+    line_table = line_table[valid_idx]
+    data = {indv_names0[0]:line_table['OBJNO'], indv_names0[3]:bin_npz['logM'][valid_idx], 
+            indv_names0[4]:bin_npz['logLHb'][valid_idx]}
     for jj in range(len(cols)):
         data[cols[jj]] = line_table[line_tbl_col[jj]]
 
