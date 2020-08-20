@@ -1,12 +1,12 @@
 from astropy.io import ascii as asc
-from astropy.table import Table
+
 from Metallicity_Stack_Commons.analysis.temp_metallicity_calc import temp_calculation, metallicity_calculation 
 from Metallicity_Stack_Commons.column_names import temp_metal_names0, bin_ratios0, bin_names0
 from Metallicity_Stack_Commons.analysis.ratios import flux_ratios
 from Metallicity_Stack_Commons import line_name_short
     
     
-def run_function(line_file, bin_file, outfile, EBV = None):
+def run_function(line_file, bin_file, outfile, EBV=None):
     '''
     Purpose:
         This function gets line ratios and runs the temperature and metallicity calculation functions
@@ -29,32 +29,32 @@ def run_function(line_file, bin_file, outfile, EBV = None):
         out_fits --> fits table containing bin line ratioes, temperatures, and metallicities.
     '''
     
-    line_table = asc.read(line_file)
+    print("Reading : ", line_file)
+    line_table = asc.read(line_file, format='fixed_width_two_line')
     
-    #Case for stacked spectra
-    bin_table = asc.read(bin_file, format = 'fixed_width_two_line')
+    # Case for stacked spectra
+    print("Reading : ", bin_file)
+    bin_table = asc.read(bin_file, format='fixed_width_two_line')
     bin_IDs = bin_table[bin_names0[0]].data
     
+    # Get flux ratios
     flux_dict = {line_name_short['HB']:line_table['HBETA_Flux_Observed'].data,
                  line_name_short['OII']:line_table['OII_3727_Flux_Observed'].data,
                  line_name_short['OIII']:line_table['OIII_5007_Flux_Observed'].data,
                  line_name_short['4363']:line_table['OIII_4363_Flux_Observed'].data}  
-    flux_ratios_dict = flux_ratios(flux_dict)
+    flux_ratios_dict = flux_ratios(flux_dict, flux_type='composite')
+  
+    # Calculate composite electron temperature and metallicity
+    Te = temp_calculation(flux_ratios_dict[bin_ratios0[-1]])
+    metal_dict = metallicity_calculation(Te, flux_ratios_dict[bin_ratios0[2]], flux_ratios_dict[bin_ratios0[3]])
     
-    logR23 = flux_ratios_dict['logR23']
-    logO32 = flux_ratios_dict['logO32']
-    two_beta = flux_ratios_dict['two_beta']
-    three_beta = flux_ratios_dict['three_beta']
-    R = flux_ratios_dict['R']
-    
-    T_e = temp_calculation(R)
-    metal_dict = metallicity_calculation(T_e, two_beta, three_beta)
-    
+    # Get bin IDs and composite measurements in one dicitonary and write to table
+    tbl_dict = {bin_names0[0]:bin_IDs}
+    tbl_dict.update(flux_ratios_dict)
+    tbl_dict.update(T_e=Te)
+    tbl_dict.update(metal_dict)
     n = tuple([bin_names0[0]] + bin_ratios0 + temp_metal_names0)
-    tab0 = Table([bin_IDs, logR23, logO32, two_beta, three_beta, R, T_e, metal_dict['12+log(O/H)'], 
-                  metal_dict['log(O+/H)'], metal_dict['log(O++/H)'], metal_dict['O+/H'],
-                  metal_dict['O++/H']], names = n) 
-
     
-    asc.write(tab0, outfile, format = 'fixed_width_two_line', overwrite = True)
-    tab0.write(outfile.replace('.tbl', '.fits'), format = 'fits', overwrite = True) 
+    print("Writing : ", outfile)
+    asc.write(tbl_dict, names=n, output=outfile, format='fixed_width_two_line', overwrite=True)
+    
