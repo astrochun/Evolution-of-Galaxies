@@ -1,6 +1,4 @@
 from astropy.io import ascii as asc
-from collections import OrderedDict
-import numpy as np
 
 
 def table_to_dict(tbl_name):
@@ -18,15 +16,3 @@ def table_to_dict(tbl_name):
     tbl = asc.read(tbl_name)
     
     return tbl.to_pandas().to_dict(orient='list')
-
-
-def create_empty_dict(key_names, arr_size=0, ordered=False):
-    if ordered:
-        dictionary = OrderedDict()
-    else:
-        dictionary = {}
-        
-    for name in key_names:
-        dictionary[name] = np.zeros(arr_size)
-        
-    return dictionary
