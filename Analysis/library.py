@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from os.path import exists
 import os
 
-from .. import create_empty_dict
 from Metallicity_Stack_Commons import exclude_outliers
 from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0
 
@@ -106,8 +105,8 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname='', fitspath0='',
     indiv_keys = ['logM', 'logLHb', 'valid_ind_sort', 'flux', 'wavelength']
     bin_keys = ['bin_ID', 'N_stack', 'logM_min', 'logM_max', 'logM_avg', 'logM_median', 'logLHb_min', 
                 'logLHb_max', 'logLHb_avg', 'logLHb_median']
-    indiv_data = create_empty_dict(indiv_keys)
-    bin_data = create_empty_dict(bin_keys)
+    indiv_data = {key: [] for key in indiv_keys}
+    bin_data = {key: [] for key in bin_keys}
     
     # Replace indices of no mass with interpolated mass
     interp_mass, no_mass_idx = interpolate_data(interp_file)    
@@ -293,7 +292,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname='', fitspath0='',
         else:
             out_ascii = fitspath0 + filename_dict['bin_info']
         if not hbeta_bin:
-            bin_data.update(create_empty_dict(bin_keys[5:], arr_size=len(bin_pts_input)))
+            bin_data.update({key: np.zeros(len(bin_pts_input)) for key in bin_keys[5:]})
         col_names = tuple(bin_names0[0:2] + bin_mzevolve_names0)
         ascii.write(bin_data, names=col_names, output=out_ascii, format='fixed_width_two_line', overwrite=True)
         
