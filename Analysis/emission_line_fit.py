@@ -10,7 +10,6 @@ from Metallicity_Stack_Commons.analysis.fitting import movingaverage_box1D, gaus
 from Metallicity_Stack_Commons.analysis.fitting import rms_func, con1
 from Metallicity_Stack_Commons import scalefact
 from Metallicity_Stack_Commons.column_names import gauss_lines_names0, filename_dict, bin_names0
-from .. import create_empty_dict
 
 
 
@@ -57,7 +56,7 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type,
 
 
 
-def zoom_gauss_plot(line_dict, col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, 
+def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, 
                     working_wave, line_type='', outpdf='', line_name='', hbeta_bin=False):
     '''
     Purpose:
@@ -87,6 +86,8 @@ def zoom_gauss_plot(line_dict, col_names, pdf_pages, N, wave, Spect_1D, dispersi
     Outputs:
         None
     '''
+    
+    line_dict = {key:np.zeros(len(N)) for key in col_names}
     
     if hbeta_bin:
         nrows = 4
@@ -316,15 +317,14 @@ def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_na
     ID = table0[bin_names0[0]].data
     N = table0[bin_names0[1]].data
     
-    em_dict = OrderedDict([(bin_names0[0], ID)])
+    em_dict = {bin_names0[0]:ID}
     for ii in range(len(lambda0)):
         curr_line_cols = [line_col for line_col in gauss_lines_names0 if line_col.startswith(line_name[ii])]
-        line_dict = create_empty_dict(curr_line_cols, arr_size=len(N), ordered=True)
-        one_line_dict = zoom_gauss_plot(line_dict, curr_line_cols, pdf_pages, N, wave, Spect_1D, dispersion, s2, 
-                                   lambda0, lambda0[ii], line_type=line_type[ii], line_name=line_name[ii], 
-                                   hbeta_bin=hbeta_bin)
+        one_line_dict = zoom_gauss_plot(curr_line_cols, pdf_pages, N, wave, Spect_1D, dispersion, 
+                                        s2, lambda0, lambda0[ii], line_type=line_type[ii], 
+                                        line_name=line_name[ii], hbeta_bin=hbeta_bin)
         em_dict.update(one_line_dict)
     asc.write(em_dict, out_ascii, format='fixed_width_two_line', overwrite=True)
-
+    print("Writing : ", out_ascii)
     
     pdf_pages.close()
