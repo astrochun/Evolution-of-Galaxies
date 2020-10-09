@@ -1,10 +1,10 @@
 import numpy as np
+import math
 import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
 from pylab import subplots_adjust
 from scipy.optimize import curve_fit 
-from collections import OrderedDict
 
 from Metallicity_Stack_Commons.analysis.fitting import movingaverage_box1D, gauss, double_gauss, oxy2_gauss
 from Metallicity_Stack_Commons.analysis.fitting import rms_func, con1
@@ -115,7 +115,6 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
     ref_ymed = -0.25
     ref_ymax_list = []
     ref_ymed_list = []
-    count = 1
 
     for rr in range(Spect_1D.shape[0]):       
         y0 = Spect_1D[rr]
@@ -198,60 +197,29 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
             t_ax.plot(x0, gauss0, 'b--', linewidth=0.5, label='Gauss Fit')
             t_ax.plot(x0[x_sigsnip], resid, 'r', linestyle='dashed', linewidth=0.2, label='Residuals')
     
-            
+            #Annotate plots
+            str1 = '$\sigma$:%.2f' % (o1[1])
+            str2 = 'S/N:%.2f' % (np.round_((flux_s / ini_sig1), decimals=2))
+            str3 = 'FluxO:%.2f' % (flux_s)
+            str4 = 'FluxG:%.2f' % (flux_g)
+            str5 = 'NGal:%.2f' % (N[rr])
+            str6 = 'MBin:%.2f' % (rr + 1)
+            str7 = ''
+            if hbeta_bin:
+                str6 = 'MBin:%.2f' % (math.ceil((rr + 1) / 2))
+                str7 = 'H$\\beta$Bin:%.2f' % (rr + 1)
+                    
             if line_type == 'Balmer' or line_type == 'Oxy2':
-                str1 = 'Sigma:%.2f' % (o1[1])
-                str2 = 'Sigma:%.2f' % (o1[4])
-                str3 = 'S/N:%.2f' % (np.round_((flux_s / ini_sig1), decimals=2))
-                str4 = 'FluxO:%.2f' % (flux_s) 
-                str5 = 'FluxG:%.2f' % (flux_g) 
-                str6 = 'NGal:%.2f' % (N[rr])
-                str7 = 'MBin:%.2f' % (rr + 1)
-                if hbeta_bin:
-                    t_ax.annotate('HbBin:%.2f' % (rr + 1), [0.45, 0.84], xycoords='axes fraction', 
-                                  va='top', ha='right', fontsize='8')
-                    str7 = 'MBin:%.2f' % (count)
-                    if rr % 2 != 0:
-                        count += 1
-                t_ax.annotate(str1, [0.97, 0.98], xycoords='axes fraction', va='top', ha='right', 
+                str1 = '$\sigma$:%.2f, %.2f' % (o1[1], o1[4])
+                    
+            strings = [str1, str2, str3, str4, str5, str6, str7]
+            position = [0.97, 0.98]
+            for ii in range(len(strings)):
+                if ii == 4:
+                    position = [0.45, 0.98] 
+                t_ax.annotate(strings[ii], position, xycoords='axes fraction', va='top', ha='right', 
                               fontsize='8')
-                t_ax.annotate(str2, [0.97, 0.91], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str3, [0.97, 0.84], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str4, [0.97, 0.77], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str5, [0.97, 0.70], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str6, [0.45, 0.98], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str7, [0.45, 0.91], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-            if line_type == 'Single':
-                str1 = 'Sigma:%.2f' % (o1[1])
-                str2 = 'S/N:%.2f' % (np.round_((flux_s / ini_sig1), decimals=2))
-                str3 = 'FluxO:%.2f' % (flux_s)
-                str4 = 'FluxG:%.2f' % (flux_g)
-                str5 = 'NGal:%.2f' % (N[rr])
-                str6 = 'MBin:%.2f' % (rr + 1)
-                if hbeta_bin:
-                    t_ax.annotate('HbBin:%.2f' % (rr + 1), [0.45, 0.84], xycoords='axes fraction', 
-                                  va='top', ha='right', fontsize='8')
-                    str6 = 'MBin:%.2f' % (count)
-                    if rr % 2 != 0:
-                        count += 1
-                t_ax.annotate(str1, [0.97, 0.98], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str2, [0.97, 0.91], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str3, [0.97, 0.84], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str4, [0.97, 0.77], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str5, [0.45, 0.98], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str6, [0.45, 0.91], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
+                position[1] -= 0.07 
             
             for x in lambda0:
                 t_ax.axvline(x=x, linewidth=0.3, color='k')
