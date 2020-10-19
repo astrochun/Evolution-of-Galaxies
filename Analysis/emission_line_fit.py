@@ -202,12 +202,12 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
             str2 = 'S/N:%.2f' % (np.round_((flux_s / ini_sig1), decimals=2))
             str3 = 'FluxO:%.2f' % (flux_s)
             str4 = 'FluxG:%.2f' % (flux_g)
-            str5 = 'NGal:%.2f' % (N[rr])
-            str6 = 'MBin:%.2f' % (rr + 1)
+            str5 = 'NGal:%d' % (N[rr])
+            str6 = 'MBin:%d' % (rr + 1)
             str7 = ''
             if hbeta_bin:
-                str6 = 'MBin:%.2f' % (math.ceil((rr + 1) / 2))
-                str7 = 'H$\\beta$Bin:%.2f' % (rr + 1)
+                str6 = 'MBin:%d' % (math.ceil((rr + 1) / 2))
+                str7 = 'H$\\beta$Bin:%d' % (rr + 1)
                     
             if line_type == 'Balmer' or line_type == 'Oxy2':
                 str1 = '$\sigma$:%.2f, %.2f' % (o1[1], o1[4])
