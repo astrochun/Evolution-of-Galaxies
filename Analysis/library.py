@@ -204,10 +204,10 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname='', fitspath0='',
                     _, flx, wave = stack_spectra(filename, mname, indices=valid_ind_sort[start:stop])
                     flux.append(flx)
                     wavelength.append(wave)
-                bin_data['N_stack'] = np.append(bin_data['N_stack'], len(valid_ind_sort[start:stop]))
+                bin_data['N_stack'].append(len(valid_ind_sort[start:stop]))
                 bin_data['logM_avg'] = np.append(bin_data['logM_avg'], np.mean(logx_sort[start:stop]))
                 bin_data['logM_median'] = np.append(bin_data['logM_median'], np.median(logx_sort[start:stop]))
-                bin_data['bin_ID'] = np.append(bin_data['bin_ID'], count)
+                bin_data['bin_ID'].append(count)
                     
             # for mass-LHbeta bins
             else:
@@ -257,16 +257,16 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname='', fitspath0='',
                     _, upper_flx, upper_wave = stack_spectra(filename, mname, indices=upper_idx)
                     flux += [lower_flx] + [upper_flx]
                     wavelength += [lower_wave] + [upper_wave]
-                    bin_data['N_stack'] = np.append(bin_data['N_stack'], len(lower_idx))
-                    bin_data['N_stack'] = np.append(bin_data['N_stack'], len(upper_idx))
+                    bin_data['N_stack'].append(len(lower_idx))
+                    bin_data['N_stack'].append(len(upper_idx))
                 bin_data['logM_avg'] = np.append(bin_data['logM_avg'], np.mean(logx[lower_idx]))
                 bin_data['logM_avg'] = np.append(bin_data['logM_avg'], np.mean(logx[upper_idx]))
                 bin_data['logM_median'] = np.append(bin_data['logM_median'], np.median(logx[lower_idx]))
                 bin_data['logM_median'] = np.append(bin_data['logM_median'], np.median(logx[upper_idx]))
                 count2 += 1
-                bin_data['bin_ID'] = np.append(bin_data['bin_ID'], count2)
+                bin_data['bin_ID'].append(count2)
                 count2 += 1
-                bin_data['bin_ID'] = np.append(bin_data['bin_ID'], count2)
+                bin_data['bin_ID'].append(count2)
                     
             start, bin_start = stop, bin_stop
             bin_data['logM_max'] = np.append(bin_data['logM_max'], bin_stop)
