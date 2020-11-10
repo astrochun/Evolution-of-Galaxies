@@ -176,14 +176,11 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
             ini_sig1, RMS_pix = rms_func(wave, dispersion, working_wave, y0, o1[1], mask_flag)
             
             # Filling In Arrays
-            line_dict[col_names[0]][rr] = flux_g                #Flux Gaussian
-            line_dict[col_names[1]][rr] = flux_s                #Flux Observed
-            line_dict[col_names[2]][rr] = (flux_s / ini_sig1)   #S/N
-            line_dict[col_names[3]][rr] = o1[0]                 #Center
-            line_dict[col_names[4]][rr] = max0                  #Norm
-            line_dict[col_names[5]][rr] = o1[3]                 #Median
-            line_dict[col_names[6]][rr] = o1[1]                 #Sigma
-            line_dict[col_names[7]][rr] = ini_sig1              #RMS
+            # Flux Gaussian, Flux Observed, S/N, Center, Norm, Median, Sigma, RMS
+            values = [flux_g, flux_s, flux_s / ini_sig1, o1[0], max0, o1[3], o1[1], ini_sig1]
+            columns = col_names[0:8]
+            for value, col in zip(values, columns):
+                line_dict[col][rr] = value
             if line_type == 'Balmer':
                 line_dict[col_names[8]][rr] = o1[5]             #Abs Norm
                 line_dict[col_names[9]][rr] = o1[4]             #Abs Sigma
