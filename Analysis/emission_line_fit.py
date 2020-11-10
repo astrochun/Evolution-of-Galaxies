@@ -1,8 +1,8 @@
 import numpy as np
+import math
 import matplotlib.pyplot as plt
 from astropy.io import ascii as asc
 from matplotlib.backends.backend_pdf import PdfPages
-from astropy.table import Table, hstack
 from pylab import subplots_adjust
 from scipy.optimize import curve_fit 
 
@@ -56,8 +56,8 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type,
 
 
 
-def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, working_wave, curr_line_cols,
-                    line_type='', outpdf='', line_name='', hbeta_bin=False):
+def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, 
+                    working_wave, line_type='', outpdf='', line_name='', hbeta_bin=False):
     '''
     Purpose:
         This function fits each emission line with a Gaussian curve. It also calculates and saves in a table
@@ -87,6 +87,8 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
         None
     '''
     
+    line_dict = {key:np.zeros(len(N)) for key in col_names}
+    
     if hbeta_bin:
         nrows = 4
         ncols = 4
@@ -106,18 +108,6 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
     x0 = wave   
     
     
-    # Initializing Arrays
-    flux_g_array = np.zeros(Spect_1D.shape[0])
-    flux_s_array = np.zeros(Spect_1D.shape[0])
-    center_array = np.zeros(Spect_1D.shape[0])
-    sigma_array = np.zeros(Spect_1D.shape[0])
-    abs_sigma_array = np.zeros(Spect_1D.shape[0])
-    median_array = np.zeros(Spect_1D.shape[0])
-    norm_array = np.zeros(Spect_1D.shape[0])
-    abs_norm_array = np.zeros(Spect_1D.shape[0])
-    RMS_array = np.zeros(Spect_1D.shape[0])
-    SN_array = np.zeros(Spect_1D.shape[0])
-    
     fig, ax_arr = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey='row', squeeze=False) 
     fig.text(0.5, 0.98, line_name)
     
@@ -125,7 +115,6 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
     ref_ymed = -0.25
     ref_ymax_list = []
     ref_ymed_list = []
-    count = 1
 
     for rr in range(Spect_1D.shape[0]):       
         y0 = Spect_1D[rr]
@@ -187,17 +176,14 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
             ini_sig1, RMS_pix = rms_func(wave, dispersion, working_wave, y0, o1[1], mask_flag)
             
             # Filling In Arrays
-            flux_g_array[rr] = flux_g 
-            flux_s_array[rr] = flux_s
-            center_array[rr] = o1[0]
-            sigma_array[rr] = o1[1]
-            median_array[rr] = o1[3]
-            norm_array[rr] = max0
-            RMS_array[rr] = ini_sig1
-            SN_array[rr] = (flux_s / ini_sig1)
+            # Flux Gaussian, Flux Observed, S/N, Center, Norm, Median, Sigma, RMS
+            values = [flux_g, flux_s, flux_s / ini_sig1, o1[0], max0, o1[3], o1[1], ini_sig1]
+            columns = col_names[0:8]
+            for value, col in zip(values, columns):
+                line_dict[col][rr] = value
             if line_type == 'Balmer':
-                abs_sigma_array[rr] = o1[4]
-                abs_norm_array[rr] = o1[5]
+                line_dict[col_names[8]][rr] = o1[5]             #Abs Norm
+                line_dict[col_names[9]][rr] = o1[4]             #Abs Sigma
 
             resid = y_norm[x_sigsnip] - gauss0[x_sigsnip] + o1[3]  
 
@@ -208,63 +194,29 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
             t_ax.plot(x0, gauss0, 'b--', linewidth=0.5, label='Gauss Fit')
             t_ax.plot(x0[x_sigsnip], resid, 'r', linestyle='dashed', linewidth=0.2, label='Residuals')
     
-            
+            #Annotate plots
+            str1 = '$\sigma$:%.2f' % (o1[1])
+            str2 = 'S/N:%.2f' % (np.round_((flux_s / ini_sig1), decimals=2))
+            str3 = 'FluxO:%.2f' % (flux_s)
+            str4 = 'FluxG:%.2f' % (flux_g)
+            str5 = 'NGal:%d' % (N[rr])
+            str6 = 'MBin:%d' % (rr + 1)
+            str7 = ''
+            if hbeta_bin:
+                str6 = 'MBin:%d' % (math.ceil((rr + 1) / 2))
+                str7 = 'H$\\beta$Bin:%d' % (rr + 1)
+                    
             if line_type == 'Balmer' or line_type == 'Oxy2':
-                #str1 = 'Amp:%.2f, Sigma:%.2f, Const:%.2f' % (o1[2], o1[1], o1[3])
-                #str2 = 'Amp:%.2f, Sigma:%.2f' % (o1[5], o1[4])
-                str1 = 'Sigma:%.2f' % (o1[1])
-                str2 = 'Sigma:%.2f' % (o1[4])
-                str3 = 'S/N:%.2f' % (np.round_(SN_array[rr], decimals=2))
-                str4 = 'FluxO:%.2f' % (flux_s_array[rr]) 
-                str5 = 'FluxG:%.2f' % (flux_g_array[rr]) 
-                str6 = 'NGal:%.2f' % (N[rr])
-                str7 = 'MBin:%.2f' % (rr + 1)
-                if hbeta_bin:
-                    t_ax.annotate('HbBin:%.2f' % (rr + 1), [0.45, 0.84], xycoords='axes fraction', 
-                                  va='top', ha='right', fontsize='8')
-                    str7 = 'MBin:%.2f' % (count)
-                    if rr % 2 != 0:
-                        count += 1
-                t_ax.annotate(str1, [0.97, 0.98], xycoords='axes fraction', va='top', ha='right', 
+                str1 = '$\sigma$:%.2f, %.2f' % (o1[1], o1[4])
+                    
+            strings = [str1, str2, str3, str4, str5, str6, str7]
+            position = [0.97, 0.98]
+            for ii in range(len(strings)):
+                if ii == 4:
+                    position = [0.45, 0.98] 
+                t_ax.annotate(strings[ii], position, xycoords='axes fraction', va='top', ha='right', 
                               fontsize='8')
-                t_ax.annotate(str2, [0.97, 0.91], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str3, [0.97, 0.84], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str4, [0.97, 0.77], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str5, [0.97, 0.70], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str6, [0.45, 0.98], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str7, [0.45, 0.91], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-            if line_type == 'Single':
-                #str1 = 'Amp:%.2f, Sigma:%.2f, Const:%.2f' % (o1[2], o1[1], o1[3])
-                str1 = 'Sigma:%.2f' % (o1[1])
-                str2 = 'S/N:%.2f' % (np.round_(SN_array[rr], decimals=2))
-                str3 = 'FluxO:%.2f' % (flux_s_array[rr])
-                str4 = 'FluxG:%.2f' % (flux_g_array[rr])
-                str5 = 'NGal:%.2f' % (N[rr])
-                str6 = 'MBin:%.2f' % (rr + 1)
-                if hbeta_bin:
-                    t_ax.annotate('HbBin:%.2f' % (rr + 1), [0.45, 0.84], xycoords='axes fraction', 
-                                  va='top', ha='right', fontsize='8')
-                    str6 = 'MBin:%.2f' % (count)
-                    if rr % 2 != 0:
-                        count += 1
-                t_ax.annotate(str1, [0.97, 0.98], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str2, [0.97, 0.91], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str3, [0.97, 0.84], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str4, [0.97, 0.77], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str5, [0.45, 0.98], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
-                t_ax.annotate(str6, [0.45, 0.91], xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
+                position[1] -= 0.07 
             
             for x in lambda0:
                 t_ax.axvline(x=x, linewidth=0.3, color='k')
@@ -289,16 +241,8 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
             fig.set_size_inches(8, 8)
             fig.savefig(pdf_pages, format='pdf')
      
-    # Writing Ascii Tables and Fits Tables  
-    n = tuple(curr_line_cols)
-    if line_type == 'Balmer':
-        tab0 = Table([flux_g_array, flux_s_array, SN_array, center_array, norm_array, median_array, 
-                      sigma_array, RMS_array, abs_norm_array, abs_sigma_array], names=n)
-    else:
-        tab0 = Table([flux_g_array, flux_s_array, SN_array, center_array, norm_array, median_array, 
-                      sigma_array, RMS_array], names=n) 
     print('Done!')
-    return tab0
+    return line_dict
 
    
     
@@ -335,20 +279,17 @@ def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_na
     pdf_pages = PdfPages(outpdf)
     table0 = asc.read(fitspath + filename_dict['bin_info'], format='fixed_width_two_line')
     out_ascii = fitspath + filename_dict['bin_fit']
-    ID = table0[bin_names0[0]]
+    ID = table0[bin_names0[0]].data
     N = table0[bin_names0[1]].data
     
+    em_dict = {bin_names0[0]:ID}
     for ii in range(len(lambda0)):
         curr_line_cols = [line_col for line_col in gauss_lines_names0 if line_col.startswith(line_name[ii])]
-        em_table = zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, lambda0[ii], 
-                                   curr_line_cols, line_type=line_type[ii], line_name=line_name[ii], 
-                                   hbeta_bin=hbeta_bin)
-        if ii == 0:
-            tab0 = Table([ID])
-            table_stack = hstack([tab0, em_table])
-        else:
-            table_stack = hstack([table_stack, em_table])
-    asc.write(table_stack, out_ascii, format='fixed_width_two_line', overwrite=True)
-
+        one_line_dict = zoom_gauss_plot(curr_line_cols, pdf_pages, N, wave, Spect_1D, dispersion, 
+                                        s2, lambda0, lambda0[ii], line_type=line_type[ii], 
+                                        line_name=line_name[ii], hbeta_bin=hbeta_bin)
+        em_dict.update(one_line_dict)
+    asc.write(em_dict, out_ascii, format='fixed_width_two_line', overwrite=True)
+    print("Writing : ", out_ascii)
     
     pdf_pages.close()

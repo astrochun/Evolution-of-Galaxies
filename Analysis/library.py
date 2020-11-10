@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from os.path import exists
 import os
 
-from .. import create_empty_dict
 from Metallicity_Stack_Commons import exclude_outliers
 from Metallicity_Stack_Commons.column_names import filename_dict, bin_names0, bin_mzevolve_names0
 
@@ -106,8 +105,8 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname='', fitspath0='',
     indiv_keys = ['logM', 'logLHb', 'valid_ind_sort', 'flux', 'wavelength']
     bin_keys = ['bin_ID', 'N_stack', 'logM_min', 'logM_max', 'logM_avg', 'logM_median', 'logLHb_min', 
                 'logLHb_max', 'logLHb_avg', 'logLHb_median']
-    indiv_data = create_empty_dict(indiv_keys)
-    bin_data = create_empty_dict(bin_keys)
+    indiv_data = {key: [] for key in indiv_keys}
+    bin_data = {key: [] for key in bin_keys}
     
     # Replace indices of no mass with interpolated mass
     interp_mass, no_mass_idx = interpolate_data(interp_file)    
@@ -205,10 +204,10 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname='', fitspath0='',
                     _, flx, wave = stack_spectra(filename, mname, indices=valid_ind_sort[start:stop])
                     flux.append(flx)
                     wavelength.append(wave)
-                bin_data['N_stack'] = np.append(bin_data['N_stack'], len(valid_ind_sort[start:stop]))
+                bin_data['N_stack'].append(len(valid_ind_sort[start:stop]))
                 bin_data['logM_avg'] = np.append(bin_data['logM_avg'], np.mean(logx_sort[start:stop]))
                 bin_data['logM_median'] = np.append(bin_data['logM_median'], np.median(logx_sort[start:stop]))
-                bin_data['bin_ID'] = np.append(bin_data['bin_ID'], count)
+                bin_data['bin_ID'].append(count)
                     
             # for mass-LHbeta bins
             else:
@@ -258,16 +257,16 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname='', fitspath0='',
                     _, upper_flx, upper_wave = stack_spectra(filename, mname, indices=upper_idx)
                     flux += [lower_flx] + [upper_flx]
                     wavelength += [lower_wave] + [upper_wave]
-                    bin_data['N_stack'] = np.append(bin_data['N_stack'], len(lower_idx))
-                    bin_data['N_stack'] = np.append(bin_data['N_stack'], len(upper_idx))
+                    bin_data['N_stack'].append(len(lower_idx))
+                    bin_data['N_stack'].append(len(upper_idx))
                 bin_data['logM_avg'] = np.append(bin_data['logM_avg'], np.mean(logx[lower_idx]))
                 bin_data['logM_avg'] = np.append(bin_data['logM_avg'], np.mean(logx[upper_idx]))
                 bin_data['logM_median'] = np.append(bin_data['logM_median'], np.median(logx[lower_idx]))
                 bin_data['logM_median'] = np.append(bin_data['logM_median'], np.median(logx[upper_idx]))
                 count2 += 1
-                bin_data['bin_ID'] = np.append(bin_data['bin_ID'], count2)
+                bin_data['bin_ID'].append(count2)
                 count2 += 1
-                bin_data['bin_ID'] = np.append(bin_data['bin_ID'], count2)
+                bin_data['bin_ID'].append(count2)
                     
             start, bin_start = stop, bin_stop
             bin_data['logM_max'] = np.append(bin_data['logM_max'], bin_stop)
@@ -293,7 +292,7 @@ def binning(temp_x, objno, bin_pts_input, interp_file, mname='', fitspath0='',
         else:
             out_ascii = fitspath0 + filename_dict['bin_info']
         if not hbeta_bin:
-            bin_data.update(create_empty_dict(bin_keys[5:], arr_size=len(bin_pts_input)))
+            bin_data.update({key: np.zeros(len(bin_pts_input)) for key in bin_keys[5:]})
         col_names = tuple(bin_names0[0:2] + bin_mzevolve_names0)
         ascii.write(bin_data, names=col_names, output=out_ascii, format='fixed_width_two_line', overwrite=True)
         
