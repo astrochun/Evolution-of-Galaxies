@@ -122,7 +122,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin=False, err_bars=False, revised=F
     ax2.scatter(np.log10(T_e[detect]), logR23[detect], marker='.')
     ax2.scatter(np.log10(T_e[non_detect]), logR23[non_detect], marker='<')
     if err_bars:
-        ax2.errorbar(np.log10(T_e[detect]), logR23[detect], xerr=err_dict['T_e_lowhigh_error'], fmt='.')
+        ax2.errorbar(np.log10(T_e[detect]), logR23[detect], xerr=err_dict['T_e_error'], fmt='.')
     ax2.set_xlabel('log($T_e$) (K)')
     ax2.set_ylabel('log($R_{23}$)')
     ax2.set_title('$R_{23}$ vs. Temperature')
@@ -134,7 +134,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin=False, err_bars=False, revised=F
     ax3.scatter(np.log10(T_e[detect]), logO32[detect], marker='.')
     ax3.scatter(np.log10(T_e[non_detect]), logO32[non_detect], marker='<')
     if err_bars:
-        ax3.errorbar(np.log10(T_e[detect]), logO32[detect], xerr=err_dict['T_e_lowhigh_error'], fmt='.')
+        ax3.errorbar(np.log10(T_e[detect]), logO32[detect], xerr=err_dict['T_e_error'], fmt='.')
     ax3.set_xlabel('log($T_e$) (K)')
     ax3.set_ylabel('log($O_{32}$)')
     ax3.set_title('$O_{32}$ vs. Temperature')
@@ -146,7 +146,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin=False, err_bars=False, revised=F
     ax4.scatter(logR23[detect], com_O_log[detect], marker='.')
     ax4.scatter(logR23[non_detect], com_O_log[non_detect], marker='^')
     if err_bars:
-        ax4.errorbar(logR23[detect], com_O_log[detect], yerr=err_dict['12+log(O/H)_lowhigh_error'], 
+        ax4.errorbar(logR23[detect], com_O_log[detect], yerr=err_dict['12+log(O/H)_error'], 
                      fmt='.')
     ax4.set_xlabel('log($R_{23}$)')
     ax4.set_ylabel('12+log(O/H) $T_e$')
@@ -159,7 +159,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin=False, err_bars=False, revised=F
     ax5.scatter(logO32[detect], com_O_log[detect], marker='.')
     ax5.scatter(logO32[non_detect], com_O_log[non_detect], marker='^')
     if err_bars:
-        ax5.errorbar(logO32[detect], com_O_log[detect], yerr=err_dict['12+log(O/H)_lowhigh_error'], 
+        ax5.errorbar(logO32[detect], com_O_log[detect], yerr=err_dict['12+log(O/H)_error'], 
                      fmt='.')
     ax5.set_xlabel('log($O_{32}$)')
     ax5.set_ylabel('12+log(O/H) $T_e$')
@@ -172,7 +172,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin=False, err_bars=False, revised=F
     ax6.scatter(logM_avg[detect], np.log10(T_e[detect]), marker='.')
     ax6.scatter(logM_avg[non_detect], np.log10(T_e[non_detect]), marker='v')
     if err_bars:
-        ax6.errorbar(logM_avg[detect], np.log10(T_e[detect]), yerr=err_dict['T_e_lowhigh_error'], fmt='.')
+        ax6.errorbar(logM_avg[detect], np.log10(T_e[detect]), yerr=err_dict['T_e_error'], fmt='.')
     ax6.set_xlabel('log($\\frac{M_\star}{M_{\odot}}$)')
     ax6.set_ylabel('log($T_e$) (K)')
     ax6.set_title('Temperature vs. Avg Mass')
@@ -184,7 +184,7 @@ def bin_derived_props_plots(fitspath, hbeta_bin=False, err_bars=False, revised=F
     ax7.scatter(logM_avg[detect], com_O_log[detect], marker='.')
     ax7.scatter(logM_avg[non_detect], com_O_log[non_detect], marker='^')
     if err_bars:
-        ax7.errorbar(logM_avg[detect], com_O_log[detect], yerr=err_dict['12+log(O/H)_lowhigh_error'], 
+        ax7.errorbar(logM_avg[detect], com_O_log[detect], yerr=err_dict['12+log(O/H)_error'], 
                      fmt='.')
     mass_range = np.arange(8.2, 9.9, 0.05)
     AM_relation = AM13(mass_range)
