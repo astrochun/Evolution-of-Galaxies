@@ -141,37 +141,47 @@ def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False, indiv=Fa
     else:
         vtbl = asc.read(valid_file, format='fixed_width_two_line')
         asc.write(vtbl, valid_rev_file, format='fixed_width_two_line', overwrite=True)
-    if valid_rev:
-        valid_file = valid_rev_file
+        
     
+    # Run raw data derived properties calculations (option to apply dust correction)
+    fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=False, revised=valid_rev)
+    if dust_atten:
+        fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=True, revised=valid_rev)
+        
+        
+    # Run Monte Carlo randomization calculations (option to apply dust correction)
+    fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=False, revised=valid_rev)
+    if dust_atten:
+        fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=True, revised=valid_rev)
+        
+    '''    
+    # Run plots
+    bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin)
+    if dust_atten:
+        HbHgHd_fits(fitspath)'''
     
+    '''
     # Run dust attenuation
     bin_file = fitspath + filename_dict['bin_info']
     em_file = fitspath + filename_dict['bin_fit']
     HbHgHd_fits(fitspath)
+    '''
     
-    
-    # Run R, Te, and Metallicity calculations 
+    '''
     metal_file = fitspath + filename_dict['bin_derived_prop']
     R_temp_calcul.run_function(em_file, bin_file, metal_file)
+    '''
+
     
-    
-    # Run plots
-    bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin)
-    
-    
+    '''
     #Run error propagation and revised data plots
     if err_prop:
-        error_prop.fluxes_derived_prop(fitspath, binned_data=True)
+        fluxes_derived_prop(fitspath, binned_data=True)
         bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin, err_bars=True, revised=True)
         HbHgHd_fits(fitspath, use_revised=True)
-        
-        
-    #Run dust attenuation
-    if dust_atten:
-        HbHgHd_fits(fitspath)
+    '''
       
-        
+    '''    
     if indiv:
         # Create individual_bin_info table
         line_file = path_init2 + 'All Datasets/DEEP2_all_line_fit.fits'
@@ -188,7 +198,7 @@ def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False, indiv=Fa
                                   hbeta_bin=bool_hbeta_bin)
         indiv_derived_props_plots(fitspath, restrictMTO=False, revised=False, err_bars=False, 
                                   hbeta_bin=bool_hbeta_bin)
-        
+    '''
         
         
 
