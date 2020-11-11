@@ -15,11 +15,10 @@ from .Plotting.relation_fitting import extract_error_bars
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
 from Metallicity_Stack_Commons.column_names import filename_dict, indv_names0, temp_metal_names0
 from Metallicity_Stack_Commons.column_names import bin_mzevolve_names0, bin_names0
-from Metallicity_Stack_Commons.analysis import error_prop
+from Metallicity_Stack_Commons.analysis.error_prop import fluxes_derived_prop
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
 from Metallicity_Stack_Commons.plotting.balmer import HbHgHd_fits
 from Metallicity_Stack_Commons import valid_table
-from Metallicity_Stack_Commons.analysis.attenuation import EBV_table_update
 
 
 path = get_user()
@@ -164,14 +163,12 @@ def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False, indiv=Fa
     #Run error propagation and revised data plots
     if err_prop:
         error_prop.fluxes_derived_prop(fitspath, binned_data=True)
-        bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin, err_bars=True, revised=True)        
-        EBV_table_update(fitspath, use_revised=True)
+        bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin, err_bars=True, revised=True)
         HbHgHd_fits(fitspath, use_revised=True)
         
         
     #Run dust attenuation
     if dust_atten:
-        EBV_table_update(fitspath)
         HbHgHd_fits(fitspath)
       
         
