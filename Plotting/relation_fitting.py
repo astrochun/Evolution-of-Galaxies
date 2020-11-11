@@ -95,16 +95,16 @@ def extract_error_bars(fitspath):
     der_prop_file = asc.read(fitspath + filename_dict['bin_derived_prop_rev'], format='fixed_width_two_line')
     valid_tbl = asc.read(fitspath + filename_dict['bin_valid_rev'], format='fixed_width_two_line')
         
-    Te_err = der_prop_err['T_e_lowhigh_error']        
-    metal_err = der_prop_err['12+log(O/H)_lowhigh_error']
+    Te_err = der_prop_err['T_e_error']        
+    metal_err = der_prop_err['12+log(O/H)_error']
     T_e = der_prop_file[temp_metal_names0[0]].data
     detect = np.where(valid_tbl[bin_names0[2]].data == 1.0)[0]
         
     Te_low_err = -1*np.log10(1 - Te_err[:,0]/T_e[detect])
     Te_high_err = np.log10(1 + Te_err[:,1]/T_e[detect])
     
-    err_dict = {'T_e_lowhigh_error': [Te_low_err, Te_high_err], 
-                '12+log(O/H)_lowhigh_error': [metal_err[:,0], metal_err[:,1]]}
+    err_dict = {'T_e_error': [Te_low_err, Te_high_err], 
+                '12+log(O/H)_error': [metal_err[:,0], metal_err[:,1]]}
     
     der_prop_err.close()
     
