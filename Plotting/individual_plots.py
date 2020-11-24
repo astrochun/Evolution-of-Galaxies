@@ -201,7 +201,7 @@ def indiv_derived_props_plots(fitspath, restrictMTO=False, revised=False, err_ba
     if err_bars:
         err_dict = extract_error_bars(fitspath)
         ax11.errorbar(bin_logM[bin_detect], bin_metal[bin_detect], 
-                      yerr=err_dict['12+log(O/H)_lowhigh_error'], fmt='.')
+                      yerr=err_dict['12+log(O/H)_error'], fmt='.')
     
     # Fit bin detections and plot relation
     o11, o21, fail = curve_fitting(bin_logM[bin_detect], bin_metal[bin_detect], restrict_MTO=restrictMTO)

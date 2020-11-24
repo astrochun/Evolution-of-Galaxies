@@ -15,7 +15,7 @@ from .Plotting.relation_fitting import extract_error_bars
 from Metallicity_Stack_Commons import get_user, dir_date, fitting_lines_dict
 from Metallicity_Stack_Commons.column_names import filename_dict, indv_names0, temp_metal_names0
 from Metallicity_Stack_Commons.column_names import bin_mzevolve_names0, bin_names0
-from Metallicity_Stack_Commons.analysis import error_prop
+from Metallicity_Stack_Commons.analysis.error_prop import fluxes_derived_prop
 from Metallicity_Stack_Commons.analysis.composite_indv_detect import main
 from Metallicity_Stack_Commons.plotting.balmer import HbHgHd_fits
 from Metallicity_Stack_Commons import valid_table
@@ -39,7 +39,7 @@ def get_HB_luminosity():
     return lum   
 
 
-def run_bin_analysis(valid_rev=False, err_prop=False, indiv=False):
+def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False, indiv=False):
     '''
     Purpose:
         This function runs the entire binning process: binning, emission line fitting, validation table,
@@ -141,35 +141,52 @@ def run_bin_analysis(valid_rev=False, err_prop=False, indiv=False):
     else:
         vtbl = asc.read(valid_file, format='fixed_width_two_line')
         asc.write(vtbl, valid_rev_file, format='fixed_width_two_line', overwrite=True)
-    if valid_rev:
-        valid_file = valid_rev_file
+        
     
+    # Run raw data derived properties calculations (option to apply dust correction)
+    fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=False, revised=False)
+    fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=False, revised=True)
+    if dust_atten:
+        fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=True, revised=False)
+        fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=True, revised=True)
+        
+        
+    # Run Monte Carlo randomization calculations (option to apply dust correction)
+    fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=False, revised=False)
+    fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=False, revised=True)
+    if dust_atten:
+        fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=True, revised=False)
+        fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=True, revised=True)
+        
+    '''   
+    # Run plots
+    bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin, err_bars=False, revised=False)  #raw data
+    if dust_atten:
+        HbHgHd_fits(fitspath)'''
+        
     
+    '''
     # Run dust attenuation
-    #EBV = np.zeros(len(edge))
-    #k_4363 = np.zeros(len(edge))
-    #k_5007 = np.zeros(len(edge))
     bin_file = fitspath + filename_dict['bin_info']
     em_file = fitspath + filename_dict['bin_fit']
     HbHgHd_fits(fitspath)
+    '''
     
-    
-    # Run R, Te, and Metallicity calculations 
+    '''
     metal_file = fitspath + filename_dict['bin_derived_prop']
     R_temp_calcul.run_function(em_file, bin_file, metal_file)
+    '''
+
     
-    
-    # Run plots
-    bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin)
-    
-    
-    # Run error propagation, histograms, and revised data plots
+    '''
+    #Run error propagation and revised data plots
     if err_prop:
-        error_prop.fluxes_derived_prop(fitspath, binned_data=True)
+        fluxes_derived_prop(fitspath, binned_data=True)
         bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin, err_bars=True, revised=True)
         HbHgHd_fits(fitspath, use_revised=True)
+    '''
       
-        
+    '''    
     if indiv:
         # Create individual_bin_info table
         line_file = path_init2 + 'All Datasets/DEEP2_all_line_fit.fits'
@@ -186,7 +203,7 @@ def run_bin_analysis(valid_rev=False, err_prop=False, indiv=False):
                                   hbeta_bin=bool_hbeta_bin)
         indiv_derived_props_plots(fitspath, restrictMTO=False, revised=False, err_bars=False, 
                                   hbeta_bin=bool_hbeta_bin)
-        
+    '''
         
         
 

@@ -179,8 +179,8 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
             # Flux Gaussian, Flux Observed, S/N, Center, Norm, Median, Sigma, RMS
             values = [flux_g, flux_s, flux_s / ini_sig1, o1[0], max0, o1[3], o1[1], ini_sig1]
             columns = col_names[0:8]
-            for value, col in zip(values, columns):
-                line_dict[col][rr] = value
+            for value, col_name in zip(values, columns):
+                line_dict[col_name][rr] = value
             if line_type == 'Balmer':
                 line_dict[col_names[8]][rr] = o1[5]             #Abs Norm
                 line_dict[col_names[9]][rr] = o1[4]             #Abs Sigma
