@@ -144,21 +144,26 @@ def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False, indiv=Fa
         
     
     # Run raw data derived properties calculations (option to apply dust correction)
-    fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=False, revised=valid_rev)
+    fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=False, revised=False)
+    fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=False, revised=True)
     if dust_atten:
-        fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=True, revised=valid_rev)
+        fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=True, revised=False)
+        fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=True, revised=True)
         
         
     # Run Monte Carlo randomization calculations (option to apply dust correction)
-    fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=False, revised=valid_rev)
+    fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=False, revised=False)
+    fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=False, revised=True)
     if dust_atten:
-        fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=True, revised=valid_rev)
+        fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=True, revised=False)
+        fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=True, revised=True)
         
-    '''    
+    '''   
     # Run plots
-    bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin)
+    bin_derived_props_plots(fitspath, hbeta_bin=bool_hbeta_bin, err_bars=False, revised=False)  #raw data
     if dust_atten:
         HbHgHd_fits(fitspath)'''
+        
     
     '''
     # Run dust attenuation
