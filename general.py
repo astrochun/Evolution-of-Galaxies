@@ -48,7 +48,7 @@ def get_HB_luminosity(log=None):
     return lum   
 
 
-def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False,
+def run_bin_analysis(valid_rev=False, apply_dust=False, err_prop=False,
                      indiv=False, log=None):
     """
     Purpose:
@@ -172,7 +172,7 @@ def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False,
                         apply_dust=False, revised=False, log=log)
     fluxes_derived_prop(fitspath, raw=True, binned_data=True,
                         apply_dust=False, revised=True, log=log)
-    if dust_atten:
+    if apply_dust:
         fluxes_derived_prop(fitspath, raw=True, binned_data=True,
                             apply_dust=True, revised=False, log=log)
         fluxes_derived_prop(fitspath, raw=True, binned_data=True,
@@ -183,7 +183,7 @@ def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False,
                         apply_dust=False, revised=False, log=log)
     fluxes_derived_prop(fitspath, raw=False, binned_data=True,
                         apply_dust=False, revised=True, log=log)
-    if dust_atten:
+    if apply_dust:
         fluxes_derived_prop(fitspath, raw=False, binned_data=True,
                             apply_dust=True, revised=False, log=log)
         fluxes_derived_prop(fitspath, raw=False, binned_data=True,
