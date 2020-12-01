@@ -39,7 +39,7 @@ def get_HB_luminosity():
     return lum   
 
 
-def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False, indiv=False):
+def run_bin_analysis(valid_rev=False, apply_dust=False, err_prop=False, indiv=False):
     '''
     Purpose:
         This function runs the entire binning process: binning, emission line fitting, validation table,
@@ -146,7 +146,7 @@ def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False, indiv=Fa
     # Run raw data derived properties calculations (option to apply dust correction)
     fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=False, revised=False)
     fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=False, revised=True)
-    if dust_atten:
+    if apply_dust:
         fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=True, revised=False)
         fluxes_derived_prop(fitspath, raw=True, binned_data=True, apply_dust=True, revised=True)
         
@@ -154,7 +154,7 @@ def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False, indiv=Fa
     # Run Monte Carlo randomization calculations (option to apply dust correction)
     fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=False, revised=False)
     fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=False, revised=True)
-    if dust_atten:
+    if apply_dust:
         fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=True, revised=False)
         fluxes_derived_prop(fitspath, raw=False, binned_data=True, apply_dust=True, revised=True)
         
