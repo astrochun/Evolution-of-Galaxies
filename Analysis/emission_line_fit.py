@@ -6,36 +6,46 @@ from matplotlib.backends.backend_pdf import PdfPages
 from pylab import subplots_adjust
 from scipy.optimize import curve_fit 
 
-from Metallicity_Stack_Commons.analysis.fitting import movingaverage_box1D, gauss, double_gauss, oxy2_gauss
+from ..log_commons import log_stdout
+
+from Metallicity_Stack_Commons.analysis.fitting import movingaverage_box1D, \
+    gauss, double_gauss, oxy2_gauss
 from Metallicity_Stack_Commons.analysis.fitting import rms_func, con1
 from Metallicity_Stack_Commons import scalefact
-from Metallicity_Stack_Commons.column_names import gauss_lines_names0, filename_dict, bin_names0
+from Metallicity_Stack_Commons.column_names import gauss_lines_names0, \
+    filename_dict, bin_names0
 
 
+def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask,
+                     line_type, s2, log=None):
 
-def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type, s2):
+    if log is None:
+        log = log_stdout()
+
     med0 = np.median(y_norm[x_idx_mask])
     max0 = np.max(y_norm[x_idx]) - med0
 
     fail = 0
     if line_type == 'Single': 
-        p0 = [working_wave, 1.0, max0, med0] # must have some reasonable values
+        p0 = [working_wave, 1.0, max0, med0]  # must have some reasonable values
         para_bound = ((working_wave - 3.0, 0.0, 0.0, med0 - 0.05 * np.abs(med0)), 
                       (working_wave + 3.0, 10.0, 100.0, med0 + 0.05 * np.abs(med0)))
         try:
-            o1, o2 = curve_fit(gauss, x0[x_idx], y_norm[x_idx], p0=p0, sigma=None, bounds=para_bound)
+            o1, o2 = curve_fit(gauss, x0[x_idx], y_norm[x_idx],
+                               p0=p0, sigma=None, bounds=para_bound)
         except ValueError:
-            print('fail')
+            log.warning('fail')
             fail = 1
             
     if line_type == 'Balmer': 
-        p0 = [working_wave, 1.0, max0, med0, s2, -0.05 * max0] # must have some reasonable values
+        p0 = [working_wave, 1.0, max0, med0, s2, -0.05 * max0]  # must have some reasonable values
         para_bound = ((working_wave - 3.0, 0.0, 0.0, med0 - 0.05 * np.abs(med0), 0.0, -max0), 
                       (working_wave + 3.0, 10.0, 100.0, med0 + 0.05 * np.abs(med0), 25.0, 0))
         try:
-            o1, o2 = curve_fit(double_gauss, x0[x_idx], y_norm[x_idx], p0=p0, sigma=None, bounds=para_bound)
+            o1, o2 = curve_fit(double_gauss, x0[x_idx], y_norm[x_idx],
+                               p0=p0, sigma=None, bounds=para_bound)
         except ValueError:
-            print('fail')
+            log.warning('fail')
             fail = 1
 
     if line_type == 'Oxy2':
@@ -46,7 +56,7 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type,
             o1, o2 = curve_fit(oxy2_gauss, x0[x_idx], y_norm[x_idx], p0=p0, sigma=None, 
                                bounds=para_bound)
         except ValueError:
-            print('fail')
+            log.warning('fail')
             fail = 1
    
     if not fail:
@@ -55,18 +65,18 @@ def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type,
         return None, med0, max0
 
 
-
-def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, 
-                    working_wave, line_type='', outpdf='', line_name='', hbeta_bin=False):
-    '''
+def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2,
+                    lambda0, working_wave, line_type='', outpdf='',
+                    line_name='', hbeta_bin=False, log=None):
+    """
     Purpose:
         This function fits each emission line with a Gaussian curve. It also calculates and saves in a table
         the Gaussian flux, observed flux, sigma, median, norm, RMS, and S/N for each provided emission line.
-        
+
     Usage:
         emission_line_fit.zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, working_wave,
                                           line_type='', outpdf='', line_name='', hbeta_bin=False)
-        
+
     Params:
         pdf_pages --> the pdf that the emission line fit plots are saved to.
         N --> the number of galaxies in each bin.
@@ -76,19 +86,24 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
         line_type (OPTIONAL) --> a string of the emission line type: Oxy2, Balmer, or Single. Default is ''.
         outpdf (OPTIONAL) --> a string naming the pdf containing the emission line fits. Default is ''.
         line_name (OPTIONAL) --> a string of the emission line name. Default is ''.
-        hbeta_bin (OPTIONAL) --> True if the binning used was mass-Hbeta luminosity binning. False if the 
+        hbeta_bin (OPTIONAL) --> True if the binning used was mass-Hbeta luminosity binning. False if the
             binning used was mass binning (default).
-        
+
     Returns:
         tab0 --> the ascii table containing each emission line's Gaussian flux, observed flux, sigma, median,
             norm, RMS, and S/N values.
-        
+
     Outputs:
         None
-    '''
-    
-    line_dict = {key:np.zeros(len(N)) for key in col_names}
-    
+    """
+
+    if log is None:
+        log = log_stdout()
+
+    log.debug("starting ...")
+
+    line_dict = {key: np.zeros(len(N)) for key in col_names}
+
     if hbeta_bin:
         nrows = 4
         ncols = 4
@@ -101,14 +116,16 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
         em_idx = np.where((wave >= (t_lam-5)) & (wave <= (t_lam+5)))[0]
         if len(em_idx) > 0: mask_flag[em_idx] = 1
 
-    x_idx = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)))[0] 
-    x_idx_mask = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)) &
+    x_idx = np.where((wave >= (working_wave - 100)) &
+                     (wave <= (working_wave + 100)))[0]
+    x_idx_mask = np.where((wave >= (working_wave - 100)) &
+                          (wave <= (working_wave + 100)) &
                           (mask_flag == 0))[0]
-    
+
     x0 = wave   
-    
-    
-    fig, ax_arr = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey='row', squeeze=False) 
+
+    fig, ax_arr = plt.subplots(nrows=nrows, ncols=ncols, sharex=True,
+                               sharey='row', squeeze=False)
     fig.text(0.5, 0.98, line_name)
     
     ref_ymax = 0
@@ -126,11 +143,13 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
         x1 = working_wave - 100
         x2 = working_wave + 100
 
-        y_smooth = movingaverage_box1D(Spect_1D[rr] / scalefact, 2, boundary='extend')
+        y_smooth = movingaverage_box1D(Spect_1D[rr] / scalefact, 2,
+                                       boundary='extend')
 
-        o1, med0, max0 = get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask, line_type, s2)
-        
-    
+        o1, med0, \
+            max0 = get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx,
+                                    x_idx_mask, line_type, s2, log=log)
+
         # Determines y limits 
         if med0 + max0 > ref_ymax:
             ref_ymax = med0 + max0
@@ -142,15 +161,14 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
             ref_ymed_list.append(ref_ymed)
             ref_ymax = 0
             ref_ymed = -0.25
-        
-        
+
         # Calculating Flux: Signal Line Fit
         if type(o1) != type(None):
             dx = x0[2] - x0[1]
             if line_type == 'Single':
                 x_sigsnip = np.where((np.abs((x0 - working_wave)) / o1[1]) <= 2.5)[0]
-                gauss0 = gauss(x0,*o1)
-            
+                gauss0 = gauss(x0, *o1)
+
             if line_type == 'Balmer':
                 x_sigsnip = np.where(np.abs((x0 - working_wave)) / o1[1] <= 2.5)[0] 
                 gauss0 = double_gauss(x0, *o1)
@@ -163,7 +181,7 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
                 x_sigsnip = np.where(((x0 - working_wave) / o1[1] >= -2.5) & 
                                      ((x0 - working_wave * con1) / o1[4] <= 2.5))[0]
                 gauss0 = oxy2_gauss(x0, *o1)
-            
+
             if line_type == 'Single' or line_type == 'Oxy2':
                 flux_g = np.sum((gauss0 - o1[3]) * dx)             # flux from gaussian distribution 
                 flux_s = np.sum((y_norm[x_sigsnip] - o1[3]) * dx)  # flux from snipping method
@@ -173,8 +191,9 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
                 flux_s = np.sum(y_norm_diff * dx)
 
             # Calculating RMS
-            ini_sig1, RMS_pix = rms_func(wave, dispersion, working_wave, y0, o1[1], mask_flag)
-            
+            ini_sig1, RMS_pix = rms_func(wave, dispersion, working_wave, y0,
+                                         o1[1], mask_flag, log=log)
+
             # Filling In Arrays
             # Flux Gaussian, Flux Observed, S/N, Center, Norm, Median, Sigma, RMS
             values = [flux_g, flux_s, flux_s / ini_sig1, o1[0], max0, o1[3], o1[1], ini_sig1]
@@ -182,8 +201,8 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
             for value, col_name in zip(values, columns):
                 line_dict[col_name][rr] = value
             if line_type == 'Balmer':
-                line_dict[col_names[8]][rr] = o1[5]             #Abs Norm
-                line_dict[col_names[9]][rr] = o1[4]             #Abs Sigma
+                line_dict[col_names[8]][rr] = o1[5]  # Abs Norm
+                line_dict[col_names[9]][rr] = o1[4]  # Abs Sigma
 
             resid = y_norm[x_sigsnip] - gauss0[x_sigsnip] + o1[3]  
 
@@ -192,9 +211,10 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
             t_ax.plot(wave, y_norm, 'k', linewidth=0.6, label='Emission')
             t_ax.set_xlim([x1 + 45,x2 - 45])
             t_ax.plot(x0, gauss0, 'b--', linewidth=0.5, label='Gauss Fit')
-            t_ax.plot(x0[x_sigsnip], resid, 'r', linestyle='dashed', linewidth=0.2, label='Residuals')
-    
-            #Annotate plots
+            t_ax.plot(x0[x_sigsnip], resid, 'r', linestyle='dashed',
+                      linewidth=0.2, label='Residuals')
+
+            # Annotate plots
             str1 = '$\sigma$:%.2f' % (o1[1])
             str2 = 'S/N:%.2f' % (np.round_((flux_s / ini_sig1), decimals=2))
             str3 = 'FluxO:%.2f' % (flux_s)
@@ -214,8 +234,8 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
             for ii in range(len(strings)):
                 if ii == 4:
                     position = [0.45, 0.98] 
-                t_ax.annotate(strings[ii], position, xycoords='axes fraction', va='top', ha='right', 
-                              fontsize='8')
+                t_ax.annotate(strings[ii], position, xycoords='axes fraction',
+                              va='top', ha='right', fontsize='8')
                 position[1] -= 0.07 
             
             for x in lambda0:
@@ -228,68 +248,80 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2, lam
                 for zz in range(ncols):
                     ax_arr[kk, zz].axis('on')
 
-                
         if (rr % (nrows * ncols) == nrows * ncols - 1) or rr == Spect_1D.shape[0] - 1: 
             subplots_adjust(left=0.1, right=0.98, bottom=0.06, top=0.97, hspace=0.05)
             row_count = 0
             for ii in range(0, nrows):
                 for jj in range(0, ncols):
-                    ax_arr[ii, jj].set_ylim([ref_ymed_list[row_count], ref_ymax_list[row_count] * 1.05])
+                    ax_arr[ii, jj].set_ylim([ref_ymed_list[row_count],
+                                             ref_ymax_list[row_count] * 1.05])
                     if jj == ncols - 1:
                         row_count += 1
-            
+
             fig.set_size_inches(8, 8)
             fig.savefig(pdf_pages, format='pdf')
-     
-    print('Done!')
+
+    log.debug('finished.')
     return line_dict
 
-   
-    
 
-def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type, line_name, s, a,
-               c, s1, a1, s2, a2, hbeta_bin=False):
-    '''
+def zm_general(fitspath, Spect_1D, dispersion, wave, lambda0, line_type,
+               line_name, s, a, c, s1, a1, s2, a2, hbeta_bin=False, log=None):
+    """
     Purpose:
         This function calls the emission line fitting and plotting functions, producing a pdf of the all
         the fits and an ascii table containing measured data about each line.
-        
+
     Usage:
         emission_line_fit.zm_general(fitspath, Spect_1D, dispersion, wave, lambda0,
                                      line_type, line_name, s, a, c, s1, a1, s2, a2, hbeta_bin=False)
-        
+
     Params:
         fitspath --> a string of the file path where the output files will be placed.
         lambda0 --> a list of wavelengths (in Angstroms) that all the emission lines are at.
         line_type --> a list of strings denoting the emission line type: Oxy2, Balmer, or Single.
         line_name --> a list of strings denoting the emission line name.
-        hbeta_bin (OPTIONAL) --> True if the binning used was mass-Hbeta luminosity binning. False if the 
-            binning used was mass binning (default).        
-        
+        hbeta_bin (OPTIONAL) --> True if the binning used was mass-Hbeta luminosity binning. False if the
+            binning used was mass binning (default).
+
     Returns:
         None
-        
+
     Outputs:
         table_stack --> an ascii table containing each emission line's Gaussian flux, observed flux, sigma,
             median, norm, RMS, and S/N values.
         pdf_pages --> a pdf of all the emission line fits.
-    '''
+    """
+
+    if log is None:
+        log = log_stdout()
+
+    log.info("starting ...")
     
-    outpdf = fitspath + filename_dict['bin_fit'].replace('.tbl', '.pdf')
-    pdf_pages = PdfPages(outpdf)
-    table0 = asc.read(fitspath + filename_dict['bin_info'], format='fixed_width_two_line')
-    out_ascii = fitspath + filename_dict['bin_fit']
+    out_pdf = fitspath + filename_dict['bin_fit'].replace('.tbl', '.pdf')
+    pdf_pages = PdfPages(out_pdf)
+
+    bin_info_file = fitspath + filename_dict['bin_info']
+    log.info(f"Reading: {bin_info_file}")
+    table0 = asc.read(bin_info_file, format='fixed_width_two_line')
     ID = table0[bin_names0[0]].data
     N = table0[bin_names0[1]].data
-    
+
     em_dict = {bin_names0[0]:ID}
     for ii in range(len(lambda0)):
-        curr_line_cols = [line_col for line_col in gauss_lines_names0 if line_col.startswith(line_name[ii])]
-        one_line_dict = zoom_gauss_plot(curr_line_cols, pdf_pages, N, wave, Spect_1D, dispersion, 
-                                        s2, lambda0, lambda0[ii], line_type=line_type[ii], 
-                                        line_name=line_name[ii], hbeta_bin=hbeta_bin)
+        curr_line_cols = [line_col for line_col in gauss_lines_names0 if
+                          line_col.startswith(line_name[ii])]
+        one_line_dict = zoom_gauss_plot(curr_line_cols, pdf_pages, N, wave,
+                                        Spect_1D, dispersion, s2, lambda0,
+                                        lambda0[ii], line_type=line_type[ii],
+                                        line_name=line_name[ii],
+                                        hbeta_bin=hbeta_bin, log=log)
         em_dict.update(one_line_dict)
+
+    out_ascii = fitspath + filename_dict['bin_fit']
+    log.info(f"Writing : {out_ascii}")
     asc.write(em_dict, out_ascii, format='fixed_width_two_line', overwrite=True)
-    print("Writing : ", out_ascii)
-    
+
     pdf_pages.close()
+
+    log.info("finished.")
