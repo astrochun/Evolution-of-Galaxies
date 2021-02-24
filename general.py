@@ -25,7 +25,7 @@ from Metallicity_Stack_Commons import valid_table
 
 path = get_user()
 path_init = path + 'MZEvolve/'
-path_init2 = path + 'Zcalbase_gal/'
+path_init2 = path + 'DEEP2_Commons/'
 
 
 def get_HB_luminosity(log=None):
@@ -33,7 +33,7 @@ def get_HB_luminosity(log=None):
         log = log_stdout()
 
     log.debug("starting ...")
-    fits_combine_file = path_init2 + 'DEEP2_Field_combined.fits'
+    fits_combine_file = path_init2 + 'Catalogs/DEEP2_Field_combined.fits'
     log.info(f"Reading: {fits_combine_file}")
     hdul = fits.open(fits_combine_file)
     fits_table = hdul[1].data
@@ -103,8 +103,8 @@ def run_bin_analysis(valid_rev=False, apply_dust=False, err_prop=False,
         log.info(f"Path already exists: {fitspath}")
     
     # Run binning (in the case of adaptive binning)
-    master_grid = path_init + 'Master_Grid.fits'
-    master_mask_array = path_init + 'MastermaskArray.fits'
+    master_grid = path_init2 + 'Images/Master_Grid.fits'
+    master_mask_array = path_init2 + 'Images/MastermaskArray.fits'
 
     deep2_revised_file = path_init + 'results_deeps_revised.tbl'
     log.info(f"Reading: {deep2_revised_file}")
@@ -219,7 +219,7 @@ def run_bin_analysis(valid_rev=False, apply_dust=False, err_prop=False,
     '''    
     if indiv:
         # Create individual_bin_info table
-        line_file = path_init2 + 'All Datasets/DEEP2_all_line_fit.fits'
+        line_file = path_init2 + 'Catalogs/DEEP2_all_line_fit.fits'
         indiv_gals.indiv_bin_info_table(fitspath, line_file, use_revised=True)
  
         # Create individual_properties table
