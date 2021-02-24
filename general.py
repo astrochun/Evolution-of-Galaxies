@@ -48,7 +48,7 @@ def get_HB_luminosity(log=None):
     return lum   
 
 
-def run_bin_analysis(valid_rev=False, dust_atten=False, err_prop=False,
+def run_bin_analysis(valid_rev=False, apply_dust=False, err_prop=False,
                      indiv=False, log=None):
     """
     Purpose:
