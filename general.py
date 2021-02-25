@@ -120,7 +120,7 @@ def run_bin_analysis(valid_rev=False, apply_dust=False, err_prop=False,
                            spectra_plot=True, adaptive=True, hbeta_bin=bool_hbeta_bin, lum=HB_lum)
     plt.tight_layout()
 
-    out_pdf = path_init + 'results_deeps_revised.tbl'
+    out_pdf = fitspath + 'composite_spectra_OHmasked_interp.pdf'
     log.info(f"Writing: {out_pdf}")
     plt.savefig(out_pdf, bbox_inches='tight', pad_inches=0)
     
