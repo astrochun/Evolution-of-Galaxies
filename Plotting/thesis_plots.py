@@ -307,7 +307,7 @@ def oxy2_gauss(x: np.ndarray, xbar: float, s1: float, a1: float, c: float,
 def Z_vs_mass():
     # Read in data tables
     pdf_pages = PdfPages(data_path + 'MZ_plot_thesis.pdf')
-    metal_table = asc.read(data_path + 'bin_derived_properties.valid1.MC.dustcorr.tbl', format='fixed_width_two_line')
+    metal_table = asc.read(data_path + 'bin_derived_properties.MC.dustcorr.tbl', format='fixed_width_two_line')
     valid_table = asc.read(data_path + 'bin_validation.revised.tbl', format='fixed_width_two_line')
     bin_table = asc.read(data_path + 'bin_info.tbl', format='fixed_width_two_line')
     
@@ -353,8 +353,8 @@ def Z_vs_mass():
     
 
 def extract_error_bars():    
-    der_prop_err = np.load(data_path + 'derived_properties_errors.valid1.dustcorr.npz')
-    der_prop_file = asc.read(data_path + 'bin_derived_properties.valid1.MC.dustcorr.tbl', format='fixed_width_two_line')
+    der_prop_err = np.load(data_path + 'derived_properties_errors.dustcorr.npz')
+    der_prop_file = asc.read(data_path + 'bin_derived_properties.MC.dustcorr.tbl', format='fixed_width_two_line')
     valid_tbl = asc.read(data_path + 'bin_validation.revised.tbl', format='fixed_width_two_line')
         
     Te_err = der_prop_err['T_e_error']        
@@ -786,6 +786,39 @@ def opt_func_mw(x, R):
     return a + b/R
 
 
+########################################################################################################
+
+
+def Te_vs_R():
+    # Read in data tables
+    pdf_pages = PdfPages(data_path + 'TevsR_plot_thesis.pdf')
+    der_props_table = asc.read(data_path + 'bin_derived_properties.MC.dustcorr.tbl', format='fixed_width_two_line')
+    valid_table = asc.read(data_path + 'bin_validation.revised.tbl', format='fixed_width_two_line')
+    
+    # Read in composite values
+    logTe = np.log10(der_props_table['T_e'].data)
+    logR = np.log10(der_props_table['R_composite'].data)
+    detection = valid_table['Detection'].data
+    
+    # Define detection and non-detection (with reliable 5007) arrays
+    detect = np.where(detection == 1)[0]
+    non_detect = np.where(detection == 0.5)[0]
+    
+    fig1, ax1 = plt.subplots()
+    plt.subplots_adjust(top=0.99)
+        
+    # Plot bin detections and non-detections
+    ax1.scatter(logR[detect], logTe[detect], color='b', s=25, label='Detections')
+    ax1.scatter(logR[non_detect], logTe[non_detect], color='b', s=25, marker='v', label='Non-Detections')
+    err_dict = extract_error_bars()
+    ax1.errorbar(logR[detect], logTe[detect], yerr=err_dict['T_e_error'], color='b', fmt='.')
+          
+    ax1.legend(fontsize=8, loc='upper left')    
+    ax1.set_xlabel('log($R$)', fontsize=12)
+    ax1.set_ylabel('log($T_e$)', fontsize=12)    
+    pdf_pages.savefig()
+    
+    pdf_pages.close()
     
     
 #comp_spectra()  
@@ -795,6 +828,7 @@ def opt_func_mw(x, R):
 #Z_vs_mass()
 #plotting_gaussian_curves()
 #run_HbHgHd_plots()
+#Te_vs_R()
     
     
     
