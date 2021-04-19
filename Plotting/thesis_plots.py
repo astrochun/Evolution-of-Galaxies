@@ -338,6 +338,7 @@ def Z_vs_mass():
     
     # Fit bin detections and plot relation
     o11, o21, fail = curve_fitting(logM_avg[detect], com_O_log[detect], restrict_MTO=True)
+    print("Fitting results [asm, gamma]:", o11)
     if not fail:
         ax11.plot(mass_range, mass_metal_fit(mass_range, *o11), alpha=0.5, color='b', 
                   linestyle='dashdot', label='Best Fit')
