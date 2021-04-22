@@ -23,6 +23,11 @@ def zoom_in_4363():
     N_stack = ['75', '112', '113', '300', '600', '1444', '1443']
     out_pdf = fitspath + 'comp_spec_zoom_in_4363_thesis.pdf'
     pdf_pages = PdfPages(out_pdf)
+    
+    flux_fits_file = fitspath + 'composite_spectra.fits'
+    Spect_1D, header = fits.getdata(flux_fits_file, header=True)
+    dispersion = header['CDELT1']
+    wave = header['CRVAL1'] + dispersion*np.arange(header['NAXIS1'])
 
     # Plotting stacked spectra
     xlim = [4335, 4370]
@@ -30,8 +35,17 @@ def zoom_in_4363():
     y = 0
     x = -1
     for i in range(0, 6):
+        working_wave = 4363.21
+        x_idx = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)))[0]
+        x_idx_mask = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)))[0]
+        
+        y0 = Spect_1D[i]
+        y_norm = y0 / 1e-17
+        o1, med0, max0 = get_gaussian_fit(working_wave, wave, y0, y_norm, x_idx, x_idx_mask, 'Single', 5)
+        gauss0 = gauss(wave, *o1)
+        
         wavelen_idx = np.where((wavelength[i] > xlim[0]) & (wavelength[i] < xlim[1]))[0]
-        max0 = np.max((flux[i][wavelen_idx] / 1e-18))
+        max0 = np.max((flux[i][wavelen_idx] / 1e-17))
         an_text = f"N = {int(N_stack[i])}"
         if x < 2:
             x += 1
@@ -39,26 +53,72 @@ def zoom_in_4363():
             x = 0
             y = 1
         ax[y, x].axvline(x=4363.21, color='k', linestyle='dashed', alpha=0.5, linewidth=0.5) #OIII4363
-        ax[y, x].text(4364, 3.8, '$\\mathrm{[O}$ III]$\\lambda4363$', rotation=90, verticalalignment='center', size=8)
+        ax[y, x].text(4364, 0.3, '$\\mathrm{[O}$ III]$\\lambda4363$', rotation=90, verticalalignment='center', size=8)
         ax[y, x].axvline(x=4340.46, color='k', linestyle='dashed', alpha=0.5, linewidth=0.5) #HG
-        ax[y, x].text(4342, 3.8, '$\\mathrm{H\\gamma}$', rotation=90, verticalalignment='center', size=8)
+        ax[y, x].text(4342, 0.3, '$\\mathrm{H\\gamma}$', rotation=90, verticalalignment='center', size=8)
         
         ax[y, x].plot(wavelength[i], np.zeros(len(wavelength[i])), color='k', linestyle='dashed', linewidth=0.5)
-        ax[y, x].plot(wavelength[i], flux[i] / 1e-18, color='b', linestyle='solid', linewidth=0.2)
+        ax[y, x].plot(wave, Spect_1D[i] / 1e-17, color='b', linestyle='solid', linewidth=0.2)
+        
+        OIII4363range = np.where((wave >= 4355) & (wave <= 4371))[0]
+        ax[y, x].plot(wave[OIII4363range], gauss0[OIII4363range], color='r', linestyle='solid', linewidth=0.5)
+        
         ax[y, x].set_xlim(xlim)
-        #ax[y, x].set_ylim(-0.05e-17, max0*1.1)
-        ax[y, x].set_ylim(-0.5, max0*1.1)
+        ax[y, x].set_ylim(-0.05, max0*1.1)
         ax[y, x].annotate(an_text, [0.37, 0.96], xycoords='axes fraction', ha='center', va='top', size=8)
         
     
     plt.subplots_adjust(wspace=0.1, hspace=0.08)
     fig.text(0.5, 0.04, 'Wavelength ($\\mathrm{\\AA}$)', ha='center', va='center')
-    fig.text(0.07, 0.5, 'Intensity ($10^{-18} \\mathrm{erg}\\ \\mathrm{s^{-1}}\\ \\mathrm{cm^{-2}}\\ \\mathrm{\\AA^{-1}}$)',
+    fig.text(0.06, 0.5, 'Intensity ($10^{-17} \\mathrm{erg}\\ \\mathrm{s^{-1}}\\ \\mathrm{cm^{-2}}\\ \\mathrm{\\AA^{-1}}$)',
              ha='center', va='center', rotation='vertical') 
     pdf_pages.savefig()
     
     bin_file.close()
     pdf_pages.close()
+    
+    
+    
+def get_gaussian_fit(working_wave, x0, y0, y_norm, x_idx, x_idx_mask,
+                     line_type, s2):
+    med0 = np.median(y_norm[x_idx_mask])
+    max0 = np.max(y_norm[x_idx]) - med0
+
+    fail = 0
+    if line_type == 'Single': 
+        p0 = [working_wave, 1.0, max0, med0]  # must have some reasonable values
+        para_bound = ((working_wave - 3.0, 0.0, 0.0, med0 - 0.05 * np.abs(med0)), 
+                      (working_wave + 3.0, 10.0, 100.0, med0 + 0.05 * np.abs(med0)))
+        try:
+            o1, o2 = curve_fit(gauss, x0[x_idx], y_norm[x_idx],
+                               p0=p0, sigma=None, bounds=para_bound)
+        except ValueError:
+            fail = 1
+            
+    if line_type == 'Balmer': 
+        p0 = [working_wave, 1.0, max0, med0, s2, -0.05 * max0]  # must have some reasonable values
+        para_bound = ((working_wave - 3.0, 0.0, 0.0, med0 - 0.05 * np.abs(med0), 0.0, -max0), 
+                      (working_wave + 3.0, 10.0, 100.0, med0 + 0.05 * np.abs(med0), 25.0, 0))
+        try:
+            o1, o2 = curve_fit(double_gauss, x0[x_idx], y_norm[x_idx],
+                               p0=p0, sigma=None, bounds=para_bound)
+        except ValueError:
+            fail = 1
+
+    if line_type == 'Oxy2':
+        p0 = [working_wave, 1.0, 0.75 * max0, med0, 1.0, max0] # must have some reasonable values
+        para_bound = ((working_wave - 3.0, 0.0, 0.0, med0 - 0.05 * np.abs(med0), 0.0, 0.0), 
+                      (working_wave + 3.0, 10.0, 100.0, med0 + 0.05 * np.abs(med0), 10.0, 100.0))
+        try:
+            o1, o2 = curve_fit(oxy2_gauss, x0[x_idx], y_norm[x_idx], p0=p0, sigma=None, 
+                               bounds=para_bound)
+        except ValueError:
+            fail = 1
+   
+    if not fail:
+        return o1, med0, max0
+    else:
+        return None, med0, max0
     
     
 ########################################################################################################
