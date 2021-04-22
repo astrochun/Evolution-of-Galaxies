@@ -280,9 +280,9 @@ def plotting_gaussian_curves():
     # Balmer Emission Lines
     x = np.arange(1, 100)
     xbar = 50.0
-    s1 = 15.0
+    s1 = 5.0 #15
     a1 = 20.0
-    s2 = 25.0
+    s2 = 15.0 #25
     a2 = -2.0
     c = 0.0
 
