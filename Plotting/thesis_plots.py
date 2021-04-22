@@ -6,6 +6,7 @@ from scipy.optimize import curve_fit
 from astropy.io import ascii as asc
 from astropy.io import fits
 import astropy.units as u
+#from Metallicity_Stack_Commons.plotting.balmer import HbHgHd_fits
 
 
 #TEMPORARY FILE TO RUN THESIS PLOTS (TO MAKE CHANGING THINGS EASIER & NOT WORRY ABOUT BREAKING CODE)
@@ -531,7 +532,7 @@ def run_HbHgHd_plots():
 
         ax_arr[row][2].plot(wave, y_norm, 'k', linewidth=0.3, label='Emission')
         ax_arr[row][2].plot(wave, Hb_fit_dict['gauss'], 'm', linewidth=0.25, label='Beta Fit')
-        ax_arr[row][2].set_xlim(4857, 4865)
+        ax_arr[row][2].set_xlim(4810, 4910)
 
         ax_arr[row][2].annotate(txt0, [0.95, 0.95], xycoords='axes fraction',
                                 va='top', ha='right', fontsize='8')
@@ -549,7 +550,7 @@ def run_HbHgHd_plots():
         ax_arr[row][1].plot(wave, y_norm, 'k', linewidth=0.3, label='Emission')
         ax_arr[row][1].plot(wave, Hg_fit_dict['gauss'], 'm', linewidth=0.25,
                             label='Gamma Fit')
-        ax_arr[row][1].set_xlim(4336, 4344)
+        ax_arr[row][1].set_xlim(4290, 4390)
 
         ax_arr[row][1].annotate(txt1, [0.95, 0.95], xycoords='axes fraction',
                                 va='top', ha='right', fontsize='8')
@@ -567,7 +568,7 @@ def run_HbHgHd_plots():
         ax_arr[row][0].plot(wave, y_norm, 'k', linewidth=0.3, label='Emission')
         ax_arr[row][0].plot(wave, Hd_fit_dict['gauss'], 'm', linewidth=0.25,
                             label='Delta Fit')
-        ax_arr[row][0].set_xlim(4097, 4105)
+        ax_arr[row][0].set_xlim(4050, 4150)
 
         ax_arr[row][0].set_ylim(0, 1.6)
         
@@ -588,6 +589,8 @@ def run_HbHgHd_plots():
             ax_arr[row][0].set_xticklabels([])
             ax_arr[row][1].set_xticklabels([])
             ax_arr[row][2].set_xticklabels([])
+        else:
+            ax_arr[row][0].set_xticklabels([4050, 4075, 4100, 4125])
 
         for col in range(n_cols):
             ax_arr[row][col].tick_params(direction='in')  # ticks on the inside
