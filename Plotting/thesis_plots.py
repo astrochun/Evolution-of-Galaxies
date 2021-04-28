@@ -892,9 +892,9 @@ def Te_vs_R():
     fig1, ax1 = plt.subplots()
     plt.subplots_adjust(top=0.99)
     
-    logR_range = np.logspace(-2.4, -1.5, 10)
+    logR_range = np.log10(np.logspace(-2.32, -1.85, num=10))
     T_e = 13025 * (-logR_range - 0.92506) ** (-1 * 0.98062)
-    #sorted_logR, sorted_logT_e = zip(*sorted(zip(logR_range, np.log10(T_e))))
+    #sorted_logR, sorted_logT_e = zip(*sorted(zip(logR[0:-1], np.log10(T_e[0:-1]))))
         
     # Plot bin detections and non-detections
     ax1.scatter(logR[detect], logTe[detect], color='b', s=25, label='Detections')
