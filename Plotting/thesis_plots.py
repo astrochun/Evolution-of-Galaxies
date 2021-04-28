@@ -336,13 +336,13 @@ def plotting_gaussian_curves():
     positive1 = gauss(x, xbar3, s3, a3, oxycurve[0])
     positive2 = gauss(x, xbar4, s4, a4, oxycurve[0])
 
-    ax1.plot(x, singlecurve)
-    ax2.plot(x, doublecurve)
-    ax2.plot(x, positive, 'r', linestyle='--')
-    ax2.plot(x, negative, 'g', linestyle='--')
-    ax3.plot(x, oxycurve)
-    ax3.plot(x, positive1, 'r', linestyle='--')
-    ax3.plot(x, positive2, 'r', linestyle='--', )
+    ax1.plot(x, singlecurve, 'k')
+    ax2.plot(x, doublecurve, 'k')
+    ax2.plot(x, positive, c='C0', linestyle='--')
+    ax2.plot(x, negative, 'r', linestyle='--')
+    ax3.plot(x, oxycurve, 'k')
+    ax3.plot(x, positive1, c='C0', linestyle='--')
+    ax3.plot(x, positive2, c='C0', linestyle='--')
     ax1.set_yticklabels([])
     ax2.set_yticklabels([])
     ax1.set_ylim(-3, 25.5)
@@ -351,7 +351,7 @@ def plotting_gaussian_curves():
     ax3.set_yticklabels([])
     ax1.set_title('Single Gaussian Fitting')
     ax2.set_title('Balmer Fitting')
-    ax3.set_title('$[OII]\lambda3727$ Fitting')
+    ax3.set_title('[OII]$\lambda3727$ Fitting')
     txt1 = '(a)'
     txt2 = '(b)'
     txt3 = '(c)'
