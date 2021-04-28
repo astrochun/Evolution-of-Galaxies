@@ -549,12 +549,12 @@ def run_HbHgHd_plots():
         # The below code could be refactored or simplified
         txt0 = "+$\\sigma$: " + str(np.round_(Hb_dict['line_fit'][1], decimals=3)) + \
                "; -$\\sigma$: " + str(np.round_(Hb_dict['line_fit_neg'][1], decimals=3)) + "\n"
-        txt0 += "F_G: " + str(np.round_(Hb_fit_dict['flux_gauss'], decimals=3)) + \
-                "; F_S: " + str(np.round_(Hb_fit_dict['flux_spec'], decimals=3)) + "\n"
+        txt0 += "$F_G$: " + str(np.round_(Hb_fit_dict['flux_gauss'], decimals=3)) + \
+                "; $F_S$: " + str(np.round_(Hb_fit_dict['flux_spec'], decimals=3)) + "\n"
 
         ax_arr[row][2].plot(wave, y_norm, 'k', linewidth=0.3, label='Emission')
         ax_arr[row][2].plot(wave, Hb_fit_dict['gauss'], 'm', linewidth=0.25, label='Beta Fit')
-        ax_arr[row][2].set_xlim(4810, 4910)
+        ax_arr[row][2].set_xlim(4846.32, 4876.32)
 
         ax_arr[row][2].annotate(txt0, [0.95, 0.95], xycoords='axes fraction',
                                 va='top', ha='right', fontsize='8')
@@ -563,8 +563,8 @@ def run_HbHgHd_plots():
 
         txt1 = "+$\\sigma$: " + str(np.round_(Hg_dict['line_fit'][1], decimals=3)) + \
                "; -$\\sigma$: " + str(np.round_(Hg_dict['line_fit_neg'][1], decimals=3)) + "\n"
-        txt1 += "F_G: " + str(np.round_(Hg_fit_dict['flux_gauss'], decimals=3)) + \
-                "; F_S: " + str(np.round_(Hg_fit_dict['flux_spec'], decimals=3)) + "\n"
+        txt1 += "$F_G$: " + str(np.round_(Hg_fit_dict['flux_gauss'], decimals=3)) + \
+                "; $F_S$: " + str(np.round_(Hg_fit_dict['flux_spec'], decimals=3)) + "\n"
         HgHb = Hg_fit_dict['flux_gauss']/Hb_fit_dict['flux_gauss']
         txt1 += "H$\\gamma$/H$\\beta$: " + str(np.round_(HgHb, decimals=2)) + "; E(B-V): " + \
                 str(np.round_(EBV_HgHb, decimals=2))
@@ -572,7 +572,7 @@ def run_HbHgHd_plots():
         ax_arr[row][1].plot(wave, y_norm, 'k', linewidth=0.3, label='Emission')
         ax_arr[row][1].plot(wave, Hg_fit_dict['gauss'], 'm', linewidth=0.25,
                             label='Gamma Fit')
-        ax_arr[row][1].set_xlim(4290, 4390)
+        ax_arr[row][1].set_xlim(4325.46, 4355.46)
 
         ax_arr[row][1].annotate(txt1, [0.95, 0.95], xycoords='axes fraction',
                                 va='top', ha='right', fontsize='8')
@@ -581,8 +581,8 @@ def run_HbHgHd_plots():
 
         txt2 = "+$\\sigma$: " + str(np.round_(Hd_dict['line_fit'][1], decimals=3)) + \
                "; -$\\sigma$: " + str(np.round_(Hd_dict['line_fit_neg'][1], decimals=3)) + "\n"
-        txt2 += "F_G: " + str(np.round_(Hd_fit_dict['flux_gauss'], decimals=3)) + \
-                "; F_S: " + str(np.round_(Hd_fit_dict['flux_spec'], decimals=3)) + "\n"
+        txt2 += "$F_G$: " + str(np.round_(Hd_fit_dict['flux_gauss'], decimals=3)) + \
+                "; $F_S$: " + str(np.round_(Hd_fit_dict['flux_spec'], decimals=3)) + "\n"
         HdHb = Hd_fit_dict['flux_gauss']/Hb_fit_dict['flux_gauss']
         txt2 += "H$\\delta$/H$\\beta$: " + str(np.round_(HdHb, decimals=2)) + "; E(B-V): " + \
                 str(np.round_(EBV_HdHb, decimals=2))
@@ -590,7 +590,7 @@ def run_HbHgHd_plots():
         ax_arr[row][0].plot(wave, y_norm, 'k', linewidth=0.3, label='Emission')
         ax_arr[row][0].plot(wave, Hd_fit_dict['gauss'], 'm', linewidth=0.25,
                             label='Delta Fit')
-        ax_arr[row][0].set_xlim(4050, 4150)
+        ax_arr[row][0].set_xlim(4086.73, 4116.73)
 
         ax_arr[row][0].set_ylim(0, 1.6)
         
@@ -612,7 +612,7 @@ def run_HbHgHd_plots():
             ax_arr[row][1].set_xticklabels([])
             ax_arr[row][2].set_xticklabels([])
         else:
-            ax_arr[row][0].set_xticklabels([4050, 4075, 4100, 4125])
+            ax_arr[row][0].set_xticklabels([4090, 4098, 4106, 4112])
 
         for col in range(n_cols):
             ax_arr[row][col].tick_params(direction='in')  # ticks on the inside
