@@ -19,8 +19,10 @@ data_path = 'C:\\Users\\carol\\Google Drive\\MZEvolve\\massbin\\20210224\\75_112
 def zoom_in_4363():
     fitspath = data_path
     bin_file = np.load(fitspath + "bin_info.npz")
+    em_table = asc.read(data_path + 'bin_emission_line_fit.MC.tbl', format='fixed_width_two_line')
     flux = bin_file['flux']
     wavelength = bin_file['wavelength']
+    OIII4363_SN = em_table['OIII_4363_S/N'].data
     N_stack = ['75', '112', '113', '300', '600', '1444', '1443']
     out_pdf = fitspath + 'comp_spec_zoom_in_4363_thesis.pdf'
     pdf_pages = PdfPages(out_pdf)
@@ -31,23 +33,29 @@ def zoom_in_4363():
     wave = header['CRVAL1'] + dispersion*np.arange(header['NAXIS1'])
 
     # Plotting stacked spectra
-    xlim = [4335, 4370]
+    xlim = [4325, 4370]
     fig, ax = plt.subplots(2, 3, sharex=True, sharey=True)
     y = 0
     x = -1
     for i in range(0, 6):
-        working_wave = 4363.21
-        x_idx = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)))[0]
-        x_idx_mask = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)))[0]
+        working_wave4363 = 4363.21
+        #working_waveHG = 4340.46
+        x_idx4363 = np.where((wave >= (working_wave4363 - 100)) & (wave <= (working_wave4363 + 100)))[0]
+        x_idx_mask4363 = np.where((wave >= (working_wave4363 - 100)) & (wave <= (working_wave4363 + 100)))[0]
+        #x_idxHG = np.where((wave >= (working_waveHG - 100)) & (wave <= (working_waveHG + 100)))[0]
+        #x_idx_maskHG = np.where((wave >= (working_waveHG - 100)) & (wave <= (working_waveHG + 100)))[0]
         
         y0 = Spect_1D[i]
         y_norm = y0 / 1e-17
-        o1, med0, max0 = get_gaussian_fit(working_wave, wave, y0, y_norm, x_idx, x_idx_mask, 'Single', 5)
-        gauss0 = gauss(wave, *o1)
+        o1_4363, med0_4363, max0_4363 = get_gaussian_fit(working_wave4363, wave, y0, y_norm, x_idx4363, 
+                                                         x_idx_mask4363, 'Single', 5)
+        #o1_HG, med0_HG, max0_HG = get_gaussian_fit(working_waveHG, wave, y0, y_norm, x_idxHG, x_idx_maskHG, 'Balmer', 5)
+        gauss0_4363 = gauss(wave, *o1_4363)
+        #gauss0_HG = double_gauss(wave, *o1_HG)
         
         wavelen_idx = np.where((wavelength[i] > xlim[0]) & (wavelength[i] < xlim[1]))[0]
         max0 = np.max((flux[i][wavelen_idx] / 1e-17))
-        an_text = f"N = {int(N_stack[i])}"
+        
         if x < 2:
             x += 1
         else:
@@ -59,17 +67,31 @@ def zoom_in_4363():
         ax[y, x].text(4342, 0.3, '$\\mathrm{H\\gamma}$', rotation=90, verticalalignment='center', size=8)
         
         ax[y, x].plot(wavelength[i], np.zeros(len(wavelength[i])), color='k', linestyle='dashed', linewidth=0.5)
+        
+        OIII4363range = np.where((wave >= 4358.21) & (wave <= 4368.21))[0]
+        ax[y, x].plot(wave[OIII4363range], gauss0_4363[OIII4363range], color='r', linestyle='solid', linewidth=0.5)
+        
+        #HGrange = np.where((wave >= 4324) & (wave <= 4355))[0]
+        #ax[y, x].plot(wave[HGrange], gauss0_HG[HGrange], color='r', linestyle='solid', linewidth=0.5)
+        
         ax[y, x].plot(wave, Spect_1D[i] / 1e-17, color='b', linestyle='solid', linewidth=0.2)
         
-        OIII4363range = np.where((wave >= 4355) & (wave <= 4371))[0]
-        ax[y, x].plot(wave[OIII4363range], gauss0[OIII4363range], color='r', linestyle='solid', linewidth=0.5)
+        an_text = f"N = {int(N_stack[i])}"
+        if i == 3 or i == 5:
+            sn_text = "ND"
+            ax[y, x].annotate(sn_text, [0.92, 0.96], xycoords='axes fraction', ha='center', va='top', size=8)
+        else:
+            sn_text = f"S/N = {np.round_(OIII4363_SN[i], decimals=2)}"
+            ax[y, x].annotate(sn_text, [0.78, 0.96], xycoords='axes fraction', ha='center', va='top', size=8)
+
         
+        ax[y, x].tick_params(direction='in')
         ax[y, x].set_xlim(xlim)
         ax[y, x].set_ylim(-0.05, max0*1.1)
-        ax[y, x].annotate(an_text, [0.37, 0.96], xycoords='axes fraction', ha='center', va='top', size=8)
+        ax[y, x].annotate(an_text, [0.17, 0.96], xycoords='axes fraction', ha='center', va='top', size=8) #ax[y, x].annotate(an_text, [0.37, 0.96], xycoords='axes fraction', ha='center', va='top', size=8)
         
     
-    plt.subplots_adjust(wspace=0.1, hspace=0.08)
+    plt.subplots_adjust(wspace=0, hspace=0)
     fig.text(0.5, 0.04, 'Wavelength ($\\mathrm{\\AA}$)', ha='center', va='center')
     fig.text(0.06, 0.5, 'Intensity ($10^{-17} \\mathrm{erg}\\ \\mathrm{s^{-1}}\\ \\mathrm{cm^{-2}}\\ \\mathrm{\\AA^{-1}}$)',
              ha='center', va='center', rotation='vertical') 
@@ -870,13 +892,14 @@ def Te_vs_R():
     fig1, ax1 = plt.subplots()
     plt.subplots_adjust(top=0.99)
     
-    T_e = 13025 * (-logR[0:-1] - 0.92506) ** (-1 * 0.98062)
-    sorted_logR, sorted_logT_e = zip(*sorted(zip(logR[0:-1], np.log10(T_e))))
+    logR_range = np.logspace(-2.4, -1.5, 10)
+    T_e = 13025 * (-logR_range - 0.92506) ** (-1 * 0.98062)
+    #sorted_logR, sorted_logT_e = zip(*sorted(zip(logR_range, np.log10(T_e))))
         
     # Plot bin detections and non-detections
     ax1.scatter(logR[detect], logTe[detect], color='b', s=25, label='Detections')
     ax1.scatter(logR[non_detect], logTe[non_detect], color='b', s=25, marker=(3, 0, 135), label='Non-Detections')
-    ax1.plot(sorted_logR, sorted_logT_e, color='k', linestyle='dashed', label='Eq. 3')
+    ax1.plot(logR_range, np.log10(T_e), color='k', linestyle='dashed', label='Eq. 3')
     err_dict = extract_error_bars()
     ax1.errorbar(logR[detect], logTe[detect], yerr=err_dict['T_e_error'], color='b', fmt='.')
           
