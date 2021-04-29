@@ -39,19 +39,19 @@ def zoom_in_4363():
     x = -1
     for i in range(0, 6):
         working_wave4363 = 4363.21
-        #working_waveHG = 4340.46
+        working_waveHG = 4340.46
         x_idx4363 = np.where((wave >= (working_wave4363 - 100)) & (wave <= (working_wave4363 + 100)))[0]
         x_idx_mask4363 = np.where((wave >= (working_wave4363 - 100)) & (wave <= (working_wave4363 + 100)))[0]
-        #x_idxHG = np.where((wave >= (working_waveHG - 100)) & (wave <= (working_waveHG + 100)))[0]
-        #x_idx_maskHG = np.where((wave >= (working_waveHG - 100)) & (wave <= (working_waveHG + 100)))[0]
+        x_idxHG = np.where((wave >= (working_waveHG - 100)) & (wave <= (working_waveHG + 100)))[0]
+        x_idx_maskHG = np.where((wave >= (working_waveHG - 100)) & (wave <= (working_waveHG + 100)))[0]
         
         y0 = Spect_1D[i]
         y_norm = y0 / 1e-17
         o1_4363, med0_4363, max0_4363 = get_gaussian_fit(working_wave4363, wave, y0, y_norm, x_idx4363, 
                                                          x_idx_mask4363, 'Single', 5)
-        #o1_HG, med0_HG, max0_HG = get_gaussian_fit(working_waveHG, wave, y0, y_norm, x_idxHG, x_idx_maskHG, 'Balmer', 5)
+        o1_HG, med0_HG, max0_HG = get_gaussian_fit(working_waveHG, wave, y0, y_norm, x_idxHG, x_idx_maskHG, 'Balmer', 5)
         gauss0_4363 = gauss(wave, *o1_4363)
-        #gauss0_HG = double_gauss(wave, *o1_HG)
+        gauss0_HG = double_gauss(wave, *o1_HG)
         
         wavelen_idx = np.where((wavelength[i] > xlim[0]) & (wavelength[i] < xlim[1]))[0]
         max0 = np.max((flux[i][wavelen_idx] / 1e-17))
@@ -71,8 +71,8 @@ def zoom_in_4363():
         OIII4363range = np.where((wave >= 4358.21) & (wave <= 4368.21))[0]
         ax[y, x].plot(wave[OIII4363range], gauss0_4363[OIII4363range], color='r', linestyle='solid', linewidth=0.5)
         
-        #HGrange = np.where((wave >= 4324) & (wave <= 4355))[0]
-        #ax[y, x].plot(wave[HGrange], gauss0_HG[HGrange], color='r', linestyle='solid', linewidth=0.5)
+        HGrange = np.where((wave >= 4330.46) & (wave <= 4350.46))[0]
+        ax[y, x].plot(wave[HGrange], gauss0_HG[HGrange], color='r', linestyle='solid', linewidth=0.5)
         
         ax[y, x].plot(wave, Spect_1D[i] / 1e-17, color='b', linestyle='solid', linewidth=0.2)
         
@@ -252,36 +252,7 @@ def interpolation(filename, band, mag_no_mass, no_mass_idx):
 ########################################################################################################
     
 #Fig TBD
-def mass_bin_cut_offs(filename, band):
-    npz_file = np.load(filename)
-    grid, avg_mass, valid_mag, valid_mass, standard_dev, N_gals = npz_file['grid'], npz_file['average_mass'], npz_file['valid_mag'], npz_file['valid_mass'], npz_file['standard_deviation'], npz_file['N_gals']
-    gals_in_bin = np.where(N_gals > 0)[0]
-    interp_data = interp1d(grid[gals_in_bin], avg_mass[gals_in_bin], fill_value="extrapolate")
-    exclude = np.where(valid_mag <= 24.1)[0]
-    #nonzero = np.where(avg_mass != 0)[0]
-    #nonzero = nonzero[:-2]
-    ##out_pdf = data_path + "interpolation.pdf"
-    ##pdf_pages = PdfPages(out_pdf)
-    
-    plt.figure(figsize = (15, 5))
-    plt.scatter(valid_mag[exclude], valid_mass[exclude], s = 10, alpha = 0.5)
-    plt.annotate(band, [0.95, 0.95], xycoords = "axes fraction", ha = "right", va = "top")
-    #plt.scatter(grid[nonzero] + 0.125, avg_mass[nonzero], s = 50, color = "black")
-    #plt.errorbar(grid[nonzero] + 0.125, avg_mass[nonzero], yerr = standard_dev[nonzero], color = "black", fmt = "none")
-    #plt.plot(grid[nonzero] + 0.125, avg_mass[nonzero], grid[nonzero] + 0.125, interp_data(grid[nonzero]), 'r-')
-    plt.xlabel('I-Band Magnitude', fontsize=50)
-    plt.ylabel('log($\\frac{M_\star}{M_{\odot}}$)', fontsize=50)
-    plt.tick_params(labelsize=12)
-    plt.subplots_adjust(wspace=0.1, hspace=0.08)
-    
-    print(len(valid_mass[exclude]))
-    print(len(gals_in_bin))
-    print(len(np.array(interp_data(mag_no_mass))))
-    
-    npz_file.close()
-    
-    ##pdf_pages.savefig()
-    #pdf_pages.close()
+#def mass_cut_offs():
     
     
 ########################################################################################################
@@ -408,16 +379,24 @@ def Z_vs_mass():
     
     # Andrews & Martini fit
     mass_range = np.arange(8.2, 9.9, 0.05)
+    AM_mass = np.arange(8.15, 9.95, 0.1)
+    AM_Z = [8.12, 8.23, 8.31, 8.27, 8.27, 8.44, 8.51, 8.54, 8.52, 8.53, 8.58, 8.56, 8.64, 8.62, 
+            8.67, 8.66, 8.72, 8.75]
+    AM_err = [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 
+              0.02, 0.02, 0.03, 0.02]
     AM_relation = 8.798 - np.log10(1 + ((10**8.901)/(10**mass_range))**0.640)
     ax11.plot(mass_range, AM_relation, color='k', linestyle='dotted', label='A & M (2013)')
+    #ax11.scatter(AM_mass, AM_Z, color='k', s=25, facecolors='None', label='AM Bins')
+    ax11.errorbar(AM_mass, AM_Z, yerr=AM_err, color='k', fmt='.', mfc='w', capsize=3, 
+                  markersize=10, label='A & M Composites')
         
     # Plot bin detections and non-detections
-    ax11.scatter(logM_avg[detect], com_O_log[detect], color='b', s=25, label='Detections')
+    #ax11.scatter(logM_avg[detect], com_O_log[detect], color='b', s=25, label='Detections')
     ax11.scatter(logM_avg[non_detect], com_O_log[non_detect], color='b', s=25, marker='^', 
                  label='Non-Detections')
     err_dict = extract_error_bars()
     ax11.errorbar(logM_avg[detect], com_O_log[detect], yerr=err_dict['12+log(O/H)_error'], 
-                  color='b', fmt='.')
+                  color='b', fmt='.', capsize=3, markersize=10, label='Detections')
     
     # Fit bin detections and plot relation
     o11, o21, fail = curve_fitting(logM_avg[detect], com_O_log[detect], restrict_MTO=True)
@@ -426,7 +405,9 @@ def Z_vs_mass():
         ax11.plot(mass_range, mass_metal_fit(mass_range, *o11), alpha=0.5, color='b', 
                   linestyle='dashdot', label='Best Fit')
           
-    ax11.legend(fontsize=8, loc='upper left')    
+    #ax11.legend(fontsize=8, loc='upper left')
+    ax11.legend(*([x[i] for i in [0,1,3,4,2]] for x in plt.gca().get_legend_handles_labels()), 
+                fontsize=8, loc='upper left')
     ax11.set_xlabel('log($M_{\star}/M_{\odot}$)', fontsize=12)
     ax11.set_ylabel('12+log(O/H) $T_e$', fontsize=12)    
     pdf_pages.savefig()
@@ -914,13 +895,11 @@ def Te_vs_R():
 #comp_spectra()  
 #zoom_in_4363()    
 #interpolation("C:\\Users\\carol\\Google Drive\\MZEvolve\\revised_mag_mass_cfht_I.npz", phot_cols[2], mag_no_mass, no_mass_idx)
-#mass_bin_cut_offs("C:\\Users\\carol\\Google Drive\\MZEvolve\\revised_mag_mass_cfht_I.npz", phot_cols[2])
+#mass_bin_cut_offs()
 #Z_vs_mass()
 #plotting_gaussian_curves()
 #run_HbHgHd_plots()
 #Te_vs_R()
-    
-    
     
     
     
