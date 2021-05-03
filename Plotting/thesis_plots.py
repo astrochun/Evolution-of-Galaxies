@@ -24,8 +24,8 @@ def zoom_in_4363():
     wavelength = bin_file['wavelength']
     OIII4363_SN = em_table['OIII_4363_S/N'].data
     N_stack = ['75', '112', '113', '300', '600', '1444', '1443']
-    #out_pdf = fitspath + 'comp_spec_zoom_in_4363_thesis.pdf'
-    #pdf_pages = PdfPages(out_pdf)
+    out_pdf = fitspath + 'comp_spec_zoom_in_4363_thesis.pdf'
+    pdf_pages = PdfPages(out_pdf)
     
     flux_fits_file = fitspath + 'composite_spectra.fits'
     Spect_1D, header = fits.getdata(flux_fits_file, header=True)
@@ -68,13 +68,11 @@ def zoom_in_4363():
         
         ax[y, x].plot(wavelength[i], np.zeros(len(wavelength[i])), color='k', linestyle='dashed', linewidth=0.5)
         
-        #OIII4363range = np.where((wave >= 4358.21) & (wave <= 4368.21))[0]
-        #ax[y, x].plot(wave[OIII4363range], gauss0_4363[OIII4363range], color='r', linestyle='solid', linewidth=0.5)
+        OIII4363range = np.where((wave >= 4358.21) & (wave <= 4368.21))[0]
+        HGrange = np.where((wave >= 4330.46) & (wave <= 4350.46))[0]
+        ax[y, x].plot(wave[HGrange], gauss0_HG[HGrange], color='r', linestyle='solid', linewidth=0.5)
         
-        #HGrange = np.where((wave >= 4330.46) & (wave <= 4350.46))[0]
-        #ax[y, x].plot(wave[HGrange], gauss0_HG[HGrange], color='r', linestyle='solid', linewidth=0.5)
-        
-        ###
+        '''
         OIII4363range = np.where((wave >= 4358.21) & (wave <= 4368.21))[0]
         HGrange = np.where((wave >= 4330.46) & (wave <= 4350.46))[0]
         wholerange = np.where((wave >= 4325) & (wave <= 4370))[0]
@@ -83,24 +81,21 @@ def zoom_in_4363():
         # interpolate y1 and y2 on the combined x values
         yi1 = np.interp(wave, wave, gauss0_4363)
         yi2 = np.interp(wave, wave, gauss0_HG)
-        print(Spect_1D[i][wholerange][0] / 1e-17)
-        print("..................................")
-        print((yi1 + yi2)[0])
-        idx = len(wholerange) // 2
         diff = (yi1 + yi2)[-1] - (Spect_1D[i][wholerange][-1] / 1e-17)
         ax[y, x].plot(wave, (yi1 + yi2) - diff, color='r', linestyle='solid', linewidth=0.5)
-        ###
-        
-        ax[y, x].plot(wave, Spect_1D[i] / 1e-17, color='b', linestyle='solid', linewidth=0.2)
+        '''
         
         an_text = f"N = {int(N_stack[i])}"
         if i == 3 or i == 5:
+            ax[y, x].plot(wave[OIII4363range], gauss0_4363[OIII4363range], color='r', linestyle='dashed', linewidth=0.5)
             sn_text = "ND"
             ax[y, x].annotate(sn_text, [0.92, 0.96], xycoords='axes fraction', ha='center', va='top', size=8)
         else:
+            ax[y, x].plot(wave[OIII4363range], gauss0_4363[OIII4363range], color='r', linestyle='solid', linewidth=0.5)
             sn_text = f"S/N = {np.round_(OIII4363_SN[i], decimals=2)}"
             ax[y, x].annotate(sn_text, [0.78, 0.96], xycoords='axes fraction', ha='center', va='top', size=8)
 
+        ax[y, x].plot(wave, Spect_1D[i] / 1e-17, color='b', linestyle='solid', linewidth=0.2)
         
         ax[y, x].tick_params(direction='in')
         ax[y, x].set_xlim(xlim)
@@ -112,10 +107,10 @@ def zoom_in_4363():
     fig.text(0.5, 0.04, 'Wavelength ($\\mathrm{\\AA}$)', ha='center', va='center')
     fig.text(0.06, 0.5, 'Intensity ($10^{-17} \\mathrm{erg}\\ \\mathrm{s^{-1}}\\ \\mathrm{cm^{-2}}\\ \\mathrm{\\AA^{-1}}$)',
              ha='center', va='center', rotation='vertical') 
-    #pdf_pages.savefig()
+    pdf_pages.savefig()
     
     bin_file.close()
-    #pdf_pages.close()
+    pdf_pages.close()
     
     
     
