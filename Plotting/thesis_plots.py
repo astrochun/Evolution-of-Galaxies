@@ -12,7 +12,8 @@ import astropy.units as u
 #TEMPORARY FILE TO RUN THESIS PLOTS (TO MAKE CHANGING THINGS EASIER & NOT WORRY ABOUT BREAKING CODE)
 #WILL INTEGRATE THIS INTO MAIN CODES LATER
 
-data_path = 'C:\\Users\\carol\\Google Drive\\MZEvolve\\massbin\\20210224\\75_112_113_300_600_1444_1443\\'
+#data_path = 'C:\\Users\\carol\\Google Drive\\MZEvolve\\massbin\\20210224\\75_112_113_300_600_1444_1443\\'
+data_path = 'C:\\Users\\carol\\Google Drive\\MZEvolve\\massbin\\20210503\\75_112_113_300_600_1444_1443\\'
 
 ########################################################################################################
 #Fig 4
