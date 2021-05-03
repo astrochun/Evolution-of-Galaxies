@@ -419,6 +419,8 @@ def Z_vs_mass():
                   linestyle='dashdot', label='Best Fit')
           
     #ax11.legend(fontsize=8, loc='upper left')
+    ax11.annotate('z$\\approx$0', [0.95, 0.86], xycoords='axes fraction', ha='center', va='top', size=8)
+    ax11.annotate('z$\\approx$1', [0.95, 0.74], xycoords='axes fraction', ha='center', va='top', size=8)
     ax11.legend(*([x[i] for i in [0,1,3,4,2]] for x in plt.gca().get_legend_handles_labels()), 
                 fontsize=8, loc='upper left')
     ax11.set_xlabel('log($M_{\star}/M_{\odot}$)', fontsize=12)
