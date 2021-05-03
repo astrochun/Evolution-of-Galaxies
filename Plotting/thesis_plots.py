@@ -176,7 +176,8 @@ def comp_spectra():
     xlim = [3700, 5100]
     fig, ax_arr = plt.subplots()
     ax_arr.axvline(x=3726.18, color='k', linestyle='dashed', alpha=0.5, linewidth=0.5) #OII3727
-    plt.text(3734, 3e-17, '$\\mathrm{[O}$ II]$\\lambda3727}$', rotation=90, verticalalignment='center', size=8)
+    ax_arr.axvline(x=3728.91, color='k', linestyle='dashed', alpha=0.5, linewidth=0.5) #OII3727
+    plt.text(3734, 3e-17, '$\\mathrm{[O}$ II]$\\lambda\\lambda3726,3729}$', rotation=90, verticalalignment='center', size=8)
     
     ax_arr.axvline(x=3868.74, color='k', linestyle='dashed', alpha=0.5, linewidth=0.5) #NeIII3869
     plt.text(3828, 3e-17, '$\\mathrm{[Ne}$ III]$\\lambda3869}$', rotation=90, verticalalignment='center', size=8)
@@ -914,7 +915,7 @@ def Te_vs_R():
 #interpolation("C:\\Users\\carol\\Google Drive\\MZEvolve\\revised_mag_mass_cfht_I.npz", phot_cols[2], mag_no_mass, no_mass_idx)
 #mass_bin_cut_offs()
 #Z_vs_mass()
-plotting_gaussian_curves()
+#plotting_gaussian_curves()
 #run_HbHgHd_plots()
 #Te_vs_R()
     
