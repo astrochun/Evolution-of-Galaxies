@@ -192,7 +192,7 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
             center_array[rr] = o1[0]
             sigma_array[rr] = o1[1]
             median_array[rr] = o1[3]
-            norm_array[rr] = max0
+            norm_array[rr] = o1[2]
             RMS_array[rr] = ini_sig1
             SN_array[rr] = (flux_s / ini_sig1)
             if line_type == 'Balmer':
