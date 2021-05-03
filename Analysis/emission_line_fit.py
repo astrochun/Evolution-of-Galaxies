@@ -99,13 +99,13 @@ def zoom_gauss_plot(pdf_pages, N, wave, Spect_1D, dispersion, s2, lambda0, worki
         em_idx = np.where((wave >= (t_lam-5)) & (wave <= (t_lam+5)))[0]
         if len(em_idx) > 0: mask_flag[em_idx] = 1
 
-    x_idx = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)))[0] 
+    x_idx = np.where((wave >= (working_wave - 40)) & (wave <= (working_wave + 40)))[0]
     x_idx_mask = np.where((wave >= (working_wave - 100)) & (wave <= (working_wave + 100)) &
                           (mask_flag == 0))[0]
-    
+
     x0 = wave   
-    
-    
+
+
     # Initializing Arrays
     flux_g_array = np.zeros(Spect_1D.shape[0])
     flux_s_array = np.zeros(Spect_1D.shape[0])
