@@ -24,8 +24,8 @@ def zoom_in_4363():
     wavelength = bin_file['wavelength']
     OIII4363_SN = em_table['OIII_4363_S/N'].data
     N_stack = ['75', '112', '113', '300', '600', '1444', '1443']
-    out_pdf = fitspath + 'comp_spec_zoom_in_4363_thesis.pdf'
-    pdf_pages = PdfPages(out_pdf)
+    #out_pdf = fitspath + 'comp_spec_zoom_in_4363_thesis.pdf'
+    #pdf_pages = PdfPages(out_pdf)
     
     flux_fits_file = fitspath + 'composite_spectra.fits'
     Spect_1D, header = fits.getdata(flux_fits_file, header=True)
@@ -68,11 +68,28 @@ def zoom_in_4363():
         
         ax[y, x].plot(wavelength[i], np.zeros(len(wavelength[i])), color='k', linestyle='dashed', linewidth=0.5)
         
-        OIII4363range = np.where((wave >= 4358.21) & (wave <= 4368.21))[0]
-        ax[y, x].plot(wave[OIII4363range], gauss0_4363[OIII4363range], color='r', linestyle='solid', linewidth=0.5)
+        #OIII4363range = np.where((wave >= 4358.21) & (wave <= 4368.21))[0]
+        #ax[y, x].plot(wave[OIII4363range], gauss0_4363[OIII4363range], color='r', linestyle='solid', linewidth=0.5)
         
+        #HGrange = np.where((wave >= 4330.46) & (wave <= 4350.46))[0]
+        #ax[y, x].plot(wave[HGrange], gauss0_HG[HGrange], color='r', linestyle='solid', linewidth=0.5)
+        
+        ###
+        OIII4363range = np.where((wave >= 4358.21) & (wave <= 4368.21))[0]
         HGrange = np.where((wave >= 4330.46) & (wave <= 4350.46))[0]
-        ax[y, x].plot(wave[HGrange], gauss0_HG[HGrange], color='r', linestyle='solid', linewidth=0.5)
+        wholerange = np.where((wave >= 4325) & (wave <= 4370))[0]
+        # get a sorted list of all x values
+        #x = np.unique(np.concatenate((wave, wave)))
+        # interpolate y1 and y2 on the combined x values
+        yi1 = np.interp(wave, wave, gauss0_4363)
+        yi2 = np.interp(wave, wave, gauss0_HG)
+        print(Spect_1D[i][wholerange][0] / 1e-17)
+        print("..................................")
+        print((yi1 + yi2)[0])
+        idx = len(wholerange) // 2
+        diff = (yi1 + yi2)[-1] - (Spect_1D[i][wholerange][-1] / 1e-17)
+        ax[y, x].plot(wave, (yi1 + yi2) - diff, color='r', linestyle='solid', linewidth=0.5)
+        ###
         
         ax[y, x].plot(wave, Spect_1D[i] / 1e-17, color='b', linestyle='solid', linewidth=0.2)
         
@@ -95,10 +112,10 @@ def zoom_in_4363():
     fig.text(0.5, 0.04, 'Wavelength ($\\mathrm{\\AA}$)', ha='center', va='center')
     fig.text(0.06, 0.5, 'Intensity ($10^{-17} \\mathrm{erg}\\ \\mathrm{s^{-1}}\\ \\mathrm{cm^{-2}}\\ \\mathrm{\\AA^{-1}}$)',
              ha='center', va='center', rotation='vertical') 
-    pdf_pages.savefig()
+    #pdf_pages.savefig()
     
     bin_file.close()
-    pdf_pages.close()
+    #pdf_pages.close()
     
     
     
@@ -307,11 +324,11 @@ def plotting_gaussian_curves():
     positive1 = gauss(x, xbar3, s3, a3, oxycurve[0])
     positive2 = gauss(x, xbar4, s4, a4, oxycurve[0])
 
-    ax1.plot(x, singlecurve, 'k')
-    ax2.plot(x, doublecurve, 'k')
+    ax1.plot(x, singlecurve, 'k', linewidth=2)
+    ax2.plot(x, doublecurve, 'k', linewidth=2)
     ax2.plot(x, positive, c='C0', linestyle='--')
     ax2.plot(x, negative, 'r', linestyle='--')
-    ax3.plot(x, oxycurve, 'k')
+    ax3.plot(x, oxycurve, 'k', linewidth=2)
     ax3.plot(x, positive1, c='C0', linestyle='--')
     ax3.plot(x, positive2, c='C0', linestyle='--')
     ax1.set_yticklabels([])
@@ -326,12 +343,12 @@ def plotting_gaussian_curves():
     txt1 = '(a)'
     txt2 = '(b)'
     txt3 = '(c)'
-    ax1.annotate(txt1, [0.95, 0.95], xycoords='axes fraction', va='top',
-                 ha='right', fontsize='10')
-    ax2.annotate(txt2, [0.95, 0.95], xycoords='axes fraction', va='top',
-                 ha='right', fontsize='10')
-    ax3.annotate(txt3, [0.95, 0.95], xycoords='axes fraction', va='top',
-                 ha='right', fontsize='10')
+    ax1.annotate(txt1, [0.125, 0.98], xycoords='axes fraction', va='top',
+                 ha='right', fontsize='12')
+    ax2.annotate(txt2, [0.125, 0.98], xycoords='axes fraction', va='top',
+                 ha='right', fontsize='12')
+    ax3.annotate(txt3, [0.125, 0.98], xycoords='axes fraction', va='top',
+                 ha='right', fontsize='12')
 
     pdf_pages.savefig()
     pdf_pages.close()
@@ -897,7 +914,7 @@ def Te_vs_R():
 #interpolation("C:\\Users\\carol\\Google Drive\\MZEvolve\\revised_mag_mass_cfht_I.npz", phot_cols[2], mag_no_mass, no_mass_idx)
 #mass_bin_cut_offs()
 #Z_vs_mass()
-#plotting_gaussian_curves()
+plotting_gaussian_curves()
 #run_HbHgHd_plots()
 #Te_vs_R()
     
