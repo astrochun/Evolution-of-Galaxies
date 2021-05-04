@@ -116,8 +116,8 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2,
         em_idx = np.where((wave >= (t_lam-5)) & (wave <= (t_lam+5)))[0]
         if len(em_idx) > 0: mask_flag[em_idx] = 1
 
-    x_idx = np.where((wave >= (working_wave - 100)) &
-                     (wave <= (working_wave + 100)))[0]
+    x_idx = np.where((wave >= (working_wave - 40)) &
+                     (wave <= (working_wave + 40)))[0]
     x_idx_mask = np.where((wave >= (working_wave - 100)) &
                           (wave <= (working_wave + 100)) &
                           (mask_flag == 0))[0]
@@ -126,6 +126,7 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2,
 
     fig, ax_arr = plt.subplots(nrows=nrows, ncols=ncols, sharex=True,
                                sharey='row', squeeze=False)
+
     fig.text(0.5, 0.98, line_name)
     
     ref_ymax = 0
@@ -196,10 +197,11 @@ def zoom_gauss_plot(col_names, pdf_pages, N, wave, Spect_1D, dispersion, s2,
 
             # Filling In Arrays
             # Flux Gaussian, Flux Observed, S/N, Center, Norm, Median, Sigma, RMS
-            values = [flux_g, flux_s, flux_s / ini_sig1, o1[0], max0, o1[3], o1[1], ini_sig1]
+            values = [flux_g, flux_s, flux_s / ini_sig1, o1[0], o1[2], o1[3], o1[1], ini_sig1]
             columns = col_names[0:8]
             for value, col_name in zip(values, columns):
                 line_dict[col_name][rr] = value
+
             if line_type == 'Balmer':
                 line_dict[col_names[8]][rr] = o1[5]  # Abs Norm
                 line_dict[col_names[9]][rr] = o1[4]  # Abs Sigma
