@@ -415,13 +415,14 @@ def Z_vs_mass():
     # Fit bin detections and plot relation
     o11, o21, fail = curve_fitting(logM_avg[detect], com_O_log[detect], restrict_MTO=True)
     print("Fitting results [asm, gamma]:", o11)
+    print("Curve difference:", AM_relation - mass_metal_fit(mass_range, *o11))
     if not fail:
         ax11.plot(mass_range, mass_metal_fit(mass_range, *o11), alpha=0.5, color='b', 
                   linestyle='dashdot', label='Best Fit')
           
     #ax11.legend(fontsize=8, loc='upper left')
-    ax11.annotate('z$\\approx$0', [0.95, 0.86], xycoords='axes fraction', ha='center', va='top', size=8)
-    ax11.annotate('z$\\approx$1', [0.95, 0.74], xycoords='axes fraction', ha='center', va='top', size=8)
+    ax11.annotate('z$\\approx$0', [0.95, 0.89], xycoords='axes fraction', ha='center', va='top', size=8)
+    ax11.annotate('z$\\approx$1', [0.95, 0.77], xycoords='axes fraction', ha='center', va='top', size=8)
     ax11.legend(*([x[i] for i in [0,1,3,4,2]] for x in plt.gca().get_legend_handles_labels()), 
                 fontsize=8, loc='upper left')
     ax11.set_xlabel('log($M_{\star}/M_{\odot}$)', fontsize=12)
@@ -589,7 +590,8 @@ def run_HbHgHd_plots():
                             label='Delta Fit')
         ax_arr[row][0].set_xlim(4086.73, 4116.73)
 
-        ax_arr[row][0].set_ylim(0, 1.6)
+        for p in [0, 1, 2]:
+            ax_arr[row][p].set_ylim(0, 1.6)
         
         ax_arr[row][0].annotate(txt2, [0.95, 0.95], xycoords='axes fraction',
                                 va='top', ha='right', fontsize='8')
@@ -889,7 +891,7 @@ def Te_vs_R():
     fig1, ax1 = plt.subplots()
     plt.subplots_adjust(top=0.99)
     
-    logR_range = np.log10(np.logspace(-2.32, -1.85, num=10))
+    logR_range = np.log10(np.logspace(-2.32, -1.7, num=10))
     T_e = 13025 * (-logR_range - 0.92506) ** (-1 * 0.98062)
     #sorted_logR, sorted_logT_e = zip(*sorted(zip(logR[0:-1], np.log10(T_e[0:-1]))))
         
